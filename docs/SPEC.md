@@ -19,7 +19,9 @@ It's a fly, not a judge — the humor is part of the product.
 1. **The fly decides.** No AI/LLM in the decision path, verdict text, or
    moderation. (Using AI to *write code* is fine.)
 2. **Deterministic.** Same case + same arguments + same `sim_version` →
-   bit-identical result. All randomness is seeded.
+   bit-identical result **on the same platform** (CPU architecture +
+   torch version). All randomness is seeded. Each run is computed once
+   and stored; the verdict card always reads the stored result.
 3. **Transparent.** The verdict card shows what the brain did. There's a
    public "how it works" page.
 4. **Fair.** Arguments hidden until both are submitted. Which side goes to
@@ -68,6 +70,8 @@ It's a fly, not a judge — the humor is part of the product.
 - `hunger` ∈ [0, 1] — seeded from case id; rises while waiting
   (**+0.1 / hour** from case open until both submitted, capped at 1).
   Shown in UI ("the fly has been hungry for 3 hours").
+  Intentional: after ~8 h of waiting hunger exceeds 0.8, so a close case
+  becomes "went for food" — a late side starves the fly.
 - `arousal` ∈ [0, 1] — seeded from case id. Sets background noise →
   more flee / dither.
 
@@ -87,7 +91,10 @@ It's a fly, not a judge — the humor is part of the product.
   family — *verify in POC*). 50 ms bins. Steering signal:
   `(L − R) / (L + R)`.
 - **Metrics (per run):**
-  - `margin` — winner's share of total turning drive
+  - `A`, `B` — total turning-DN activity toward each side over the
+    whole run (L/R mapped to sides via the antenna assignment)
+  - `margin = max(A, B) / (A + B)` — winner's share, in [0.5, 1]
+  - `gap = |A − B| / (A + B) = 2·margin − 1` (gap ≥ 5% ⇔ ≥ 52.5/47.5)
   - `decision_time_ms` — when cumulative steering crosses threshold and
     stays
   - `direction_flips` — number of sign flips in steering
@@ -100,7 +107,8 @@ It's a fly, not a judge — the humor is part of the product.
 
 ## 7. Outcomes
 
-First matching row wins. Thresholds calibrated in POC.
+First matching row wins. `gap` as defined in §6. Thresholds calibrated
+in POC.
 
 | Outcome        | Condition                                   | Card headline (HE)                  |
 |---              |---                                           |---                                   |
@@ -144,7 +152,7 @@ by case.
   `defender_name`, `created_at`.
 - **Run:** `id`, `case_id`, `round`, `side_assignment`, `input_rates`
   (jsonb), `metrics` (jsonb), `outcome`, `replay_url`, `sim_version`,
-  `duration_ms`.
+  `platform`, `duration_ms`.
 - **Template:** `id`, `outcome_type`, `text`, `weight`.
 - **Report:** `id`, `case_id`, `reason`, `created_at`.
 
@@ -175,8 +183,13 @@ Supersedes any earlier version of the spec.
 
 1. **POC (now)** — Python only.
    **Exit:**
-   - different texts → different verdicts
-   - over 1,000 random argument pairs each side wins ~50%
+   - **Balance:** over 1,000 seeded random argument pairs, side A wins
+     45–55% **and** the left antenna wins 45–55%.
+   - **Swap test:** 200 pairs run as (X vs Y) and (Y vs X) with the same
+     seed, mood and antenna assignment → the winner flips in ≥ 75% of
+     decided cases.
+   - **Outcome mix:** ≥ 50% of runs end in Win; each special outcome
+     (Fled / Froze / Went for food / Dithered) ≤ 15%.
    - run ≤ 15 s
    - RAM fits in 12 GB (ideally much less).
 2. **MVP** — full flow, card, OG preview, animation, all tie types, sudden

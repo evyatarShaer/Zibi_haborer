@@ -26,7 +26,7 @@ fly's choice is the verdict — the humor is the point.
   moderation.** The verdict is purely the simulated fly brain. Using AI
   to *write code* is fine.
 - **Determinism.** Same case + same arguments + same `sim_version` =
-  bit-identical result. All randomness seeded.
+  bit-identical result on the same platform. All randomness seeded.
 - **Platform.** User is on Windows. Prefer WSL2 (Ubuntu) for Python
   work. Python 3.12 with `uv` (fallback: `venv`).
 - **Large data files never go into git.** `sim/data/raw/` and

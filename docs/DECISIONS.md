@@ -84,3 +84,32 @@ reference implementation.
 - FlyWire data license terms for commercial use — read before any
   commercial launch.
 - Publish mapping table openly, or let players discover it by playing?
+
+---
+
+## 2026-10-19 — Measurable POC exit criteria, gap definition, determinism scope
+
+**Context:** Review of the spec found that "side A wins ~50%" passes even
+if the fly always turns left (side→antenna is a coin flip), "different
+texts → different verdicts" wasn't measurable, `gap` was never defined,
+and bit-identical results can't be guaranteed across CPU architectures
+(home PC x86 vs. Oracle ARM).
+
+**Decision:**
+- Balance: side A **and** left antenna each win 45–55% over 1,000 pairs.
+- Swap test: 200 pairs, (X vs Y) then (Y vs X) with identical seed, mood
+  and antenna assignment → winner flips in ≥ 75% of decided cases.
+- Outcome mix: Win ≥ 50%; each special outcome ≤ 15%.
+- `margin = max(A,B)/(A+B)`, `gap = 2·margin − 1`.
+- Determinism promised per platform only. Runs are computed once and
+  stored; `Run.platform` added.
+- Hunger rate stays +0.1/h on purpose: after ~8 h a close case becomes
+  "went for food" (a late side starves the fly).
+
+**Why:** Turn vague criteria into numbers the phase gate can check.
+
+**Alternatives considered:** Swap-flip threshold 70% or 80%; slowing
+hunger to +0.05/h — both rejected for now, revisit after POC data.
+
+**Impacts:** `docs/SPEC.md` §2, §5, §6, §7, §10, §12; `docs/TASKS.md`;
+`CLAUDE.md`; `.claude/skills/sim-change`.

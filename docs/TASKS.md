@@ -10,8 +10,11 @@ deterministic, roughly-balanced verdicts from text inputs within the
 performance budget.
 
 **Exit criteria** (from `SPEC.md §12`):
-- different texts → different verdicts
-- over 1,000 random argument pairs → each side wins ~50% (45–55%)
+- balance: 1,000 random pairs → side A wins 45–55% and left antenna
+  wins 45–55%
+- swap test: 200 pairs, (X,Y) vs (Y,X) → winner flips in ≥ 75% of
+  decided cases
+- outcome mix: Win ≥ 50%; each special outcome ≤ 15%
 - run ≤ 15 s per hearing
 - RAM fits in 12 GB (ideally much less)
 
@@ -39,8 +42,9 @@ performance budget.
 - [ ] **P1-8 — Implement readout.py.** All metrics and outcome
   classification.
 - [ ] **P1-9 — Determinism + balance tests.** Determinism: same input
-  twice → identical metrics. Balance: 1,000 seeded random argument pairs
-  → side A win rate in 45–55%. Measure runtime and peak RAM.
+  twice → identical metrics. Balance, swap test and outcome mix
+  exactly as in the exit criteria above. Measure runtime and peak RAM.
+  Record `platform` with every run.
 - [ ] **P1-10 — Subcircuit (if needed).** Only if full-brain runs blow
   the budget. Compare against full-brain results.
 - [ ] **P1-11 — docs/POC_REPORT.md.** All numbers + decisions made during

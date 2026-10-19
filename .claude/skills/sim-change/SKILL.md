@@ -21,7 +21,10 @@ simulator is the product; silent changes break determinism guarantees.
    `giant_fiber_fired`).
 3. **Balance test.**
    `pytest sim/tests/test_balance.py` — 1,000 seeded random argument
-   pairs. Side A win rate must land in **45–55%**. Report:
+   pairs. Side A win rate **and** left-antenna win rate must each land
+   in **45–55%**. Swap test (200 pairs, X/Y then Y/X, same seed): winner
+   flips in **≥ 75%** of decided cases. Outcome mix: Win ≥ 50%, each
+   special outcome ≤ 15%. Report:
    - margin distribution (histogram, percentiles)
    - outcome frequencies (Win / Tie / Fled / Froze / Dithered /
      Went-for-food)
