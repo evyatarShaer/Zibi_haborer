@@ -1,0 +1,39 @@
+[project]
+name = "borer-sim"
+version = "0.0.1"
+description = "HaBorer fly-brain simulation (Phase 1 POC)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch>=2.4",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=17",
+    "jupyter>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+# Only for reproducing Shiu et al. 2024 reference results in Phase 1.
+# Our own simulator is in PyTorch; brian2 must stay out of borer_sim/.
+validation = [
+    "brian2>=2.6",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev", "validation"]
+
+# PyTorch CPU-only wheels — CUDA bundle is ~2 GB and unused on this box.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
