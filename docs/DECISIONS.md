@@ -113,3 +113,38 @@ hunger to +0.05/h — both rejected for now, revisit after POC data.
 
 **Impacts:** `docs/SPEC.md` §2, §5, §6, §7, §10, §12; `docs/TASKS.md`;
 `CLAUDE.md`; `.claude/skills/sim-change`.
+
+---
+
+## 2026-10-19 — Project moved into WSL filesystem
+
+**Context:** During P1-1 verification the smoke tests in `sim/` took
+**233 s** when the repo lived on the Windows Desktop
+(`/mnt/c/Users/evyatar 2/Desktop/Zibi_haborer`) and we ran `uv run
+pytest -q` through WSL. The cause is well-known cross-filesystem I/O
+cost on `/mnt/c` — every file read in `.venv` crosses the 9P boundary.
+
+**Decision:** The canonical working copy of the project now lives at
+`~/projects/Zibi_haborer` **inside the WSL2 Ubuntu filesystem**. All
+development — Claude Code sessions, `git`, `uv`, pytest, future data
+downloads under `sim/data/raw/` — happens there. The Desktop copy is
+kept as a stale backup; it will not be edited and will not receive
+future commits.
+
+**Why:** After moving the repo into the native ext4 filesystem the
+same `uv run pytest -q` runs in **9.08 s** (~26× faster). Keeping data
+and the virtualenv on `/mnt/c` would make Phase 1 unworkable once we
+load the ~130 MB FlyWire v783 tables.
+
+**Alternatives considered:**
+- Leave the repo on Desktop and only move `.venv` and `sim/data/`
+  into WSL — rejected: splits the tree, breaks git hygiene, and
+  `uv sync` would re-fetch cross-FS anyway.
+- Use a Windows-native Python toolchain — rejected: Shiu's model and
+  Brian2 are far better supported on Linux, and the production host
+  (Oracle ARM) is Linux.
+
+**Impacts:** `CLAUDE.md` Platform rule rewritten. Credentials in WSL
+now go through Windows Git Credential Manager
+(`"/mnt/c/Program Files/Git/mingw64/bin/git-credential-manager.exe"`)
+so the GitHub token is shared with the Windows install.

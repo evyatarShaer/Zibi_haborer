@@ -27,8 +27,13 @@ fly's choice is the verdict — the humor is the point.
   to *write code* is fine.
 - **Determinism.** Same case + same arguments + same `sim_version` =
   bit-identical result on the same platform. All randomness seeded.
-- **Platform.** User is on Windows. Prefer WSL2 (Ubuntu) for Python
-  work. Python 3.12 with `uv` (fallback: `venv`).
+- **Platform.** Workstation runs Windows, but the project **lives in
+  the WSL2 (Ubuntu) filesystem at `~/projects/Zibi_haborer`**. Always
+  run Claude Code, git, `uv`, and pytest from inside WSL on that path.
+  Never work from `/mnt/c/...` — cross-filesystem I/O is ~25× slower
+  (233 s vs 9 s for the smoke tests; see DECISIONS.md 2026-10-19). The
+  `/mnt/c/Users/evyatar 2/Desktop/Zibi_haborer` copy is a stale backup
+  only; do not edit it. Python 3.12 with `uv` (fallback: `venv`).
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting
