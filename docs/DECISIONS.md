@@ -175,3 +175,34 @@ connectome — none with comparable whole-brain coverage.
 **Impacts:** `README.md`, `docs/DATA_SOURCES.md`. Resolves the FlyWire
 license open question for non-commercial use; the commercial-launch
 question stays open (license required first).
+
+---
+
+## 2026-10-19 — `borer_sim.data`: single v783 loader (SIM_VERSION 0.0.2)
+
+**Context:** P1-3 needs the connectome in a model; the flywire-data
+skill requires every load to go through one `data.py`.
+
+**Decision:** Add `sim/src/borer_sim/data.py` — cached loaders
+`neuron_ids()` (Completeness order = model index), `connectivity()`
+(pre/post index + signed synapse count), `annotations()` (indexed by
+root_id) and `to_index()`. Bump `SIM_VERSION` 0.0.1 → **0.0.2**
+(patch: new module, no verdict pipeline exists yet).
+
+**Why:** One source of truth for paths and schemas; P1-5's PyTorch
+model and the Brian2 validation load identical tables.
+
+**sim-change steps 2–4:** not applicable yet — the determinism and
+balance tests and the verdict pipeline arrive in P1-9 / P1-5–P1-8.
+`tests/test_data.py` checks row counts and that the connectivity
+`*_Index` columns match Completeness order exactly (all 15.1 M edges).
+
+**Surprise (documented for P1-4/P1-8):** annotation `side` is the
+**mirror** of the side labels in Shiu et al. 2024 (v630-era
+convention). All 20 of Shiu's "right" sugar GRNs are `side == "left"`
+in the v783 annotations; his "left" MN9 is `side == "right"`. Treat
+annotation `side` as the source of truth and never mix in side labels
+from older papers or code without checking.
+
+**Impacts:** `sim/src/borer_sim/data.py`, `version.py`,
+`sim/tests/test_data.py`.

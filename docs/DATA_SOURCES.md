@@ -157,3 +157,16 @@ approved exactly these three files on 2026-10-19.
   `Completeness_783.csv`; 623 do not (the model's neuron set is
   `Completeness_783.csv`).
 - Load with `low_memory=False` (mixed-type columns).
+
+## Added for P1-3 — Shiu reference output (0.9 MB)
+
+- **File:** `sim/data/raw/shiu_reference/sugarR_v630.parquet` (gitignored)
+- **URL:** https://raw.githubusercontent.com/philshiu/Drosophila_brain_model/main/results/example/sugarR.parquet
+- **Downloaded:** 2026-10-19 · 948,526 bytes ·
+  sha256 `83921d50089d966785e402d6c0e3be5ab3eba5beb680410a09c557b0f22dcc28`
+- **Content:** Shiu's published model output — 511,566 spikes, columns
+  `t` (float64, s), `trial` (int64, 0–29), `flywire_id` (int64),
+  `exp_name` (str, `sugarR`). 21 right-side sugar GRNs driven at 200 Hz,
+  30 × 1 s trials, **FlyWire v630** IDs.
+- **Purpose:** the quantitative target for the P1-3 baseline (MN9
+  rates, active-neuron count). License: CC BY-NC 4.0 (derived data).
