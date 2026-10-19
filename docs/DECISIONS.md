@@ -148,3 +148,30 @@ load the ~130 MB FlyWire v783 tables.
 now go through Windows Git Credential Manager
 (`"/mnt/c/Program Files/Git/mingw64/bin/git-credential-manager.exe"`)
 so the GitHub token is shared with the Windows install.
+
+---
+
+## 2026-10-19 — Non-commercial use only (FlyWire CC BY-NC 4.0)
+
+**Context:** P1-2 downloaded the FlyWire v783 data (connectivity,
+completeness, annotations). flywire.ai/guidelines states the public
+release data is licensed **CC BY-NC 4.0**; the Shiu and
+flyconnectome files are derived from it and inherit the same terms.
+
+**Decision:** HaBorer is **non-commercial only** until a separate
+license is obtained from Princeton/FlyWire. No ads, payments,
+sponsorships or other revenue while it runs on FlyWire data. Required
+attribution and citations live in `README.md` → "Data & license" and
+must also appear in the product's About/credits page (Phase 2).
+
+**Why:** Using CC BY-NC data commercially would breach the license.
+The current stack is already non-commercial (Vercel Hobby), so this
+costs nothing now.
+
+**Alternatives considered:** Seek a commercial license now — premature
+before the POC proves the idea works. Replace FlyWire with another
+connectome — none with comparable whole-brain coverage.
+
+**Impacts:** `README.md`, `docs/DATA_SOURCES.md`. Resolves the FlyWire
+license open question for non-commercial use; the commercial-launch
+question stays open (license required first).
