@@ -23,10 +23,12 @@ performance budget.
 - [x] **P1-1 — Environment.** WSL2 + Python 3.12 + `uv`. Project in
   `sim/` with `pyproject.toml`. Deps: `torch`, `numpy`, `pandas`,
   `pyarrow`, `pytest`, `jupyter` (`brian2` only for validation).
-- [ ] **P1-2 — Locate data.** Find official FlyWire v783 downloads
+- [x] **P1-2 — Locate data.** Find official FlyWire v783 downloads
   (FlyWire Codex) and Shiu et al. 2024's published code (likely GitHub
   `philshiu/Drosophila_brain_model` — **verify**). If downloads need a
   login, stop and tell the user which files to download and where.
+  *Done 2026-10-19: 3 files downloaded + verified (sha256, schemas) —
+  see `docs/DATA_SOURCES.md`.*
 - [ ] **P1-3 — Validate baseline.** Reproduce one known result from
   Shiu's model (e.g. sugar-sensing neurons activating feeding-related
   neurons).
