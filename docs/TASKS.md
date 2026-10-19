@@ -20,7 +20,7 @@ performance budget.
 
 ### Tasks
 
-- [ ] **P1-1 — Environment.** WSL2 + Python 3.12 + `uv`. Project in
+- [x] **P1-1 — Environment.** WSL2 + Python 3.12 + `uv`. Project in
   `sim/` with `pyproject.toml`. Deps: `torch`, `numpy`, `pandas`,
   `pyarrow`, `pytest`, `jupyter` (`brian2` only for validation).
 - [ ] **P1-2 — Locate data.** Find official FlyWire v783 downloads
