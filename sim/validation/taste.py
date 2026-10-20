@@ -22,6 +22,7 @@ VALENCE = {  # GRN sub-class -> valence used for the mapping (labellar taste lit
     "putative_aversive": smell.AVERSIVE,
 }
 PUNCT = {"!": "bitter:LB1a", "?": "high_salt/heavy_metal:LB3d"}  # one aversive type each
+EXCLUDED: set[str] = set()  # groups that ignite the runaway (taste_probe screen)
 
 
 def grns() -> pd.DataFrame:
@@ -42,8 +43,10 @@ def _groups(g: pd.DataFrame) -> list[tuple[str, str, pd.Index]]:
     """(name, valence, root_ids) for every group with enough GRNs on both sides."""
     out = []
     for (sub, ct), d in g.groupby(["cell_sub_class", "cell_type"], dropna=True):
-        if d["side"].value_counts().reindex(anatomy.SIDES, fill_value=0).min() >= MIN_PER_SIDE:
-            out.append((f"{sub}:{ct}", d["valence"].iloc[0], d.index))
+        name = f"{sub}:{ct}"
+        if (name not in EXCLUDED and
+                d["side"].value_counts().reindex(anatomy.SIDES, fill_value=0).min() >= MIN_PER_SIDE):
+            out.append((name, d["valence"].iloc[0], d.index))
     return out
 
 
