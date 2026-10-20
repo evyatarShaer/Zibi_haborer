@@ -39,8 +39,10 @@ performance budget.
   (geosmin), DNa02 family, Giant Fiber (DNp01 — verify).
   *Done 2026-10-20: skill verified, `borer_sim.anatomy` added, side =
   fly's own side — see DECISIONS.md.*
-- [ ] **P1-5 — Implement LIF in PyTorch.** Match Shiu's outputs on the
+- [x] **P1-5 — Implement LIF in PyTorch.** Match Shiu's outputs on the
   same input within tolerance.
+  *Done 2026-10-20: 13/13 checks vs Brian2; 2 s run 13.05 s at 2
+  threads — see `docs/POC_REPORT.md`.*
 - [ ] **P1-6 — Implement smell.py.** Normalization, letter→glomerulus
   mapping, saturation, `!`/`?` handling. Unit tests.
 - [ ] **P1-7 — Implement mood.py.** Hunger and arousal with their
