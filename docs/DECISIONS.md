@@ -308,3 +308,141 @@ deferred to P1-9's measurements.
 **Impacts:** `model.py`, `params.py`, `data.py`, `version.py`,
 `validation/{shiu_brian2,sugar_mn9,torch_vs_brian2,bench}.py`,
 `tests/test_model_vs_brian2.py`, `tests/test_determinism.py`.
+
+---
+
+## 2026-10-20 — Smell of words: letter → glomerulus table and rates (SIM_VERSION 0.2.0)
+
+**Context:** P1-6, SPEC §4. Decisions given by the user (not revisited
+here): antennal glomeruli only (palp VA4, VA7l, VC1, VC2, VM7d, VM7v
+excluded); `!` → V, `?` → DA2, both capped; 22 letters → 22 distinct
+glomeruli (not V/DA2), ~1/3 attractive / aversive / neutral, attractive
+and aversive letter frequency within ±10%; ד, ב, ש attractive;
+left/right total drive equal per glomerulus.
+
+**Decision:** `borer_sim/smell.py` with the table below in
+`smell.LETTERS` (the only copy in code); all rate constants in
+`params.SMELL`.
+
+### Valence rule
+
+Valence = net sign of adult behavioural results for the glomerulus's
+receptor in the compilation of Tumkaya et al. 2022 (Supp. File 1),
+plus dedicated-circuit papers and Seki et al. 2017's PN-level odor
+clusters. **Neutral** if the sign nets to 0, or neutral results
+outnumber a lone signed result. **Strong** = ≥ 2 concordant signed
+results or a dedicated-circuit paper; **weak** = one signed result.
+Eligible: antennal (`nerve == "AN"`), ≥ 5 ORNs per side, L/R ratio
+< 1.5 (excludes DC2, VC4, VM5v). Receptor → glomerulus per Couto et al.
+2005, Fishilevich & Vosshall 2005, Silbering et al. 2011.
+
+### Table
+
+Freq = share of Hebrew letters (finals merged). ORNs = in-model L/R.
+
+| Letter | Glom. | Receptor | Valence | Evidence | Freq | ORNs L/R |
+|---|---|---|---|---|---|---|
+| ד | DM1 | Or42b | attractive (strong) | + SW09, Ga15ᶜ, BW16ᶜ, Tu22; o Ch18ᶜ, Ju15ᶜ | 2.67% | 35/33 |
+| ב | VA2 | Or92a | attractive (strong) | + SW09, BW16ᶜ; attractive cluster Se17; o Ch18ᶜ, Tu22 | 5.21% | 34/33 |
+| ש | DM2 | Or22a | attractive (strong) | + Kn12ᶜ, SW09, BW16ᶜ; − Ga15ᶜ; o Ch18ᶜ, Tu22 | 4.79% | 29/25 |
+| ו | DC3 | Or83c | attractive (strong) | + Ro14ᶜ, Tu22; − Ch18ᶜ | 10.91% | 15/18 |
+| ל | VM1 | Ir92a | attractive (strong) | dedicated ammonia/amine attraction Mi13, Se17 | 6.66% | 12/13 |
+| ט | VC5 | Ir41a | attractive (strong) | dedicated polyamine attraction Hu16 | 1.33% | 13/12 |
+| ג | VL2a | Ir84a | attractive (strong) | food odour, promotes courtship Gr11 | 1.44% | 33/38 |
+| מ | DM5 | Or85a/Or33b | aversive (strong, contested) | − SW09, Ga15ᶜ, Ch18ᶜ; + Kn12ᶜ, BW16ᶜ; o Tu22 | 8.31% | 21/21 |
+| ר | DL4 | Or49a/Or85f | aversive (strong) | dedicated parasitoid avoidance Eb15; − Ch18ᶜ | 5.81% | 27/25 |
+| ע | D | Or69a | aversive (weak) | in both aversive odor patterns Se17; no response Tu22 | 3.22% | 16/15 |
+| ת | DL5 | Or7a | aversive (weak) | − Ch18ᶜ; o Tu22 | 5.73% | 18/24 |
+| נ | DM6 | Or67a | aversive (weak) | in both aversive odor patterns Se17 | 4.67% | 27/25 |
+| א | VA6 | Or82a | aversive (weak) | − Ch18ᶜ; o Tu22 | 4.82% | 32/28 |
+| ז | DC4 | Ir64a | aversive (strong) | dedicated acid avoidance Ai10, Se17 | 0.86% | 11/11 |
+| י | VA1d | Or88a | neutral | o Ch18ᶜ, Tu22 | 11.86% | 48/45 |
+| ה | DL3 | Or65a | neutral | o Ch18ᶜ, Tu22 | 8.78% | 36/42 |
+| כ | DA4l | Or43a | neutral | o Ch18ᶜ, Tu22 | 2.63% | 19/18 |
+| ח | DA3 | Or23a | neutral | o Ch18ᶜ, Tu22 | 2.45% | 14/16 |
+| ק | VA1v | Or47b | neutral (net 0) | − Ch18ᶜ; + Tu22 (males only) | 2.33% | 46/38 |
+| פ | DC1 | Or19a | neutral | + Dw13ᶜ (oviposition); o Ch18ᶜ, Tu22 | 2.29% | 21/18 |
+| ס | VM2 | Or43b | neutral (non-specific) | in attractive and aversive patterns Se17 | 1.74% | 19/18 |
+| צ | VA3 | Or67b | neutral (net 0) | + BW16ᶜ; − Ch18ᶜ; o Tu22 | 1.49% | 13/13 |
+| `!` | V | Gr21a/Gr63a | aversive (CO₂) | Suh et al. 2004 Nature 431:854 | — | 34/33 |
+| `?` | DA2 | Or56a | aversive (geosmin) | Stensmyr et al. 2012 Cell 151:1345 | — | 16/22 |
+
+**Group totals (Hebrew letter share):** attractive (דבשולטג) **33.00%**;
+aversive (מרעתנאז) **33.44%**, a **1.3%** gap (criterion ±10%); neutral
+(יהכחקפסצ) **33.57%**. Weighted by mean ORN count (a proxy for total
+drive): attractive 7.25 vs aversive 7.72 (6.2% gap).
+**Easter eggs:** דבש (honey) → DM1/VA2/DM2, the classic food-attraction
+glomeruli (required). Also טוב ("good", ט ו ב) all attractive and רע
+("bad", ר ע) both aversive, with ר → DL4 (parasitoid wasps): my
+addition, fine to drop.
+**Caveat:** 4 of 7 aversive letters are weak (one study each). With V,
+DA2 and the palp excluded, few antennal glomeruli have solid aversive
+evidence (Tumkaya 2022: only 4 of 45 ORN types aversive, all of them V,
+DA2 or palp).
+
+### Sources
+
+Read directly: **Tu22** Tumkaya T et al. 2022, *eLife* 11:e71238 (incl.
+Supp. File 1, the compiled valence table); **Se17** Seki Y et al. 2017,
+*BMC Biol* 15:56; **Ai10** Ai M et al. 2010, *Nature* 468:691
+(doi 10.1038/nature09537); **Eb15** Ebrahim SAM et al. 2015, *PLoS Biol*
+13:e1002318; **SW09** Semmelhack JL & Wang JW 2009, *Nature* 459:218.
+Cited from the literature (titles not re-checked here): **Mi13** Min S
+et al. 2013, *PNAS* (ammonia/amines, Ir92a); **Hu16** Hussain A et al.
+2016, *PLoS Biol* (polyamines, Ir41a); **Gr11** Grosjean Y et al. 2011,
+*Nature* (Ir84a).
+ᶜ = as compiled in Tu22 Supp. File 1: **Kn12** Knaden et al. 2012 *Cell
+Rep* 1:392; **Ga15** Gao et al. 2015; **BW16** Bell & Wilson 2016;
+**Ch18** Chin et al. 2018 (olfactogenetic oviposition); **Ju15** Jung
+et al. 2015; **Ro14** Ronderos et al. 2014; **Dw13** Dweck et al. 2013.
+
+**Letter frequencies:** Rabinovich E & Wintner S (2016), "Frequencies
+of letter n-grams in Hebrew and Arabic", Univ. of Haifa (unpublished
+manuscript): 12 M words of HaAretz (1991). Unigram file (432 bytes)
+from shuly.cs.haifa.ac.il/research/projects/ngrams; finals merged into
+regular letters; values in `sim/tests/test_smell.py`.
+
+### Rate constants (`params.SMELL`)
+
+| Constant | Value | Basis |
+|---|---|---|
+| `max_chars` | 280 | SPEC §4 |
+| `r_base` | 8 Hz | ORN spontaneous rates are typically ~3–13 Hz (de Bruyne et al. 2001; Hallem & Carlson 2006) |
+| `r_max` | 150 Hz | ORN odor responses span ~30–300 Hz (Hallem & Carlson 2006); mid-range chosen |
+| `k` | 0.05 | half-saturation in letter share (~1/22): a typical letter sits at half-max |
+| `len_ref` | 140 chars | length gain = 1; gain(280) = 1.14, gain(10) = 0.49 |
+| `punct_max` | 75 Hz | cap on the rate added by `!` / `?` (= r_max / 2) |
+| `punct_k` | 2 marks | half-saturation: `!` +25 Hz, `!!!` +45 Hz, flood ≤ +75 Hz |
+| `verbose_marks` | 1.0 | a 280-char text adds the equivalent of one `!` to V |
+
+Formula per glomerulus: `r = r_base + gain(L) · r_max · f / (f + k)`,
+with f = letter share and `gain(L) = ln(1+L) / ln(1+len_ref)`. V and
+DA2: `r = r_base + punct_max · n / (n + punct_k)`, with n = mark count
+(plus verbosity for V). Per-ORN rate on side s = r · mean(n_L, n_R) / n_s.
+
+### Sanity check (`validation/smell_sanity.py`, left antenna, 2 threads)
+
+- 3 arguments → 589 ORNs driven (mean 43–52 Hz); all 589 spike.
+- Downstream: **~8,500 neurons active at ~57 Hz for all three texts**
+  (8,603 / 8,520 / 8,491): 3,452 Kenyon cells, ~560 ALPN, 454 LHLN, 367
+  ALLN, 262 non-driven ORNs (feedback), 152 DAN, 68 MBON, ~175 DNs.
+- **Surprise: the response barely depends on the input.** Scaling all
+  rates ×1 / ×0.5 / ×0.25 / ×0.1 / ×0.05 / ×0.02 (30.6k → 0.6k input
+  spikes/s) still recruits 8,200–8,500 neurons at 41–57 Hz. Broad
+  olfactory input puts Shiu's model into a near-uniform active state;
+  no r_base/r_max choice avoids it. Text has to show up in *which*
+  side wins, not in global activity. That is for P1-8 (readout) and
+  P1-9 (balance / swap) to test. Recorded, not tuned.
+- **Runtime:** one antenna, 2 s: 13.3 / 13.6 / **15.9 s** (one over
+  15 s). A full hearing (arg 1 left + arg 2 right), 2 s: 13.15 s; 1 s:
+  6.9 s. Above P1-5's sugar numbers (8.9 s / 2 s), and about the same as
+  its worst case (13.05 s), because cost now tracks the ~8.5k active
+  neurons, not the input. The 2 s budget is marginal; 1 s hearings fit
+  easily.
+
+**sim-change steps:** determinism holds (`smell` is pure; model test
+unchanged). The balance test is not applicable until P1-8. Full suite:
+33 passed.
+
+**Impacts:** `smell.py`, `params.py`, `version.py`,
+`tests/test_smell.py`, `validation/smell_sanity.py`.
