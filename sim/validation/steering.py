@@ -11,6 +11,7 @@ import os
 from functools import cache
 from pathlib import Path
 
+import numpy as np
 import torch
 
 from borer_sim import anatomy
@@ -20,6 +21,7 @@ CANDIDATE_DNS = ["DNa01", "DNa03", "DNa04", "DNa11", "DNb05", "DNb06", "DNg13", 
 DURATION_MS = 1000
 
 _model = None
+_metric = None
 
 
 @cache
@@ -48,19 +50,22 @@ def metrics(counts) -> dict:
 def _work(job):
     key, drives, seed, threads = job
     torch.set_num_threads(threads)
-    return key, metrics(_model.run(drives, DURATION_MS, seed).counts)
+    return key, _metric(_model.run(drives, DURATION_MS, seed).counts)
 
 
-def run_jobs(jobs: dict, out: Path, workers: int, threads: int) -> dict:
-    """jobs: {key: (drives, seed)}. Returns {key: metrics}, including earlier results."""
-    global _model
+def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics) -> dict:
+    """jobs: {key: (drives, seed)}. Returns {key: metric(counts)}, incl. earlier results.
+
+    `metric` must be warmed (its caches filled) here, before the fork."""
+    global _model, _metric
+    _metric = metric
     done = {}
     if out.exists():
         done = {r["key"]: r["m"] for r in map(json.loads, out.read_text().splitlines())}
     todo = [(k, d, s, threads) for k, (d, s) in jobs.items() if k not in done]
     if todo:
-        _dn_sets()
         _model = _model or Model.from_connectome()
+        metric(np.zeros(_model.n, dtype=np.int32))  # warm caches pre-fork (no torch op)
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
             for i, (key, m) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
                 done[key] = m
