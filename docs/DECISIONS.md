@@ -260,3 +260,51 @@ L/R disjointness. Full suite: 19 passed.
 **Impacts:** `anatomy.py`, `version.py`, `tests/test_anatomy.py`,
 `tests/conftest.py` (shared `needs_data` skip marker),
 `.claude/skills/flywire-data/SKILL.md`.
+
+---
+
+## 2026-10-20 — PyTorch whole-brain LIF model (SIM_VERSION 0.1.0)
+
+**Context:** P1-5 — the product simulator must reproduce Shiu's model
+(validated via Brian2 in P1-3) within the performance budget.
+
+**Decision:** `sim/src/borer_sim/model.py` (CPU PyTorch, float32,
+0.1 ms exact linear integration, CSR delivery of spiking neurons only,
+seeded Bernoulli Poisson drive, returns counts + 20 ms bins).
+`borer_sim/params.py` is the single source of LIF constants for both
+engines; `data.edges()` feeds both. `SIM_VERSION` 0.0.3 → **0.1.0**
+(minor: the simulator now exists and produces output).
+
+**Brian2 semantics adopted:** `(unless refractory)` is a conditional
+write, so synaptic input reaching a refractory neuron is **discarded**.
+Found by tracing Brian2 after the first torch version ran about 25% hot.
+Shiu's published results include this behaviour, so we match it.
+
+**Numbers (30 trials/condition vs Brian2, criteria ±10% MN9, ±15%
+active):** sugar MN9 88.93 vs 89.93 Hz (−1.1%), partner 62.40 vs 62.83
+(−0.7%), active 390.7 vs 395.0 (−1.1%); sugar+bitter MN9 6.73 vs 6.80
+(−1.0%), partner 12.13 vs 11.70 (+3.7%), active 355.3 vs 352.1
+(+0.9%); bitter active 82.9 vs 83.4; baseline and bitter MN9 exactly
+0. 13/13 PASS. Exact spike-for-spike match on a deterministic 3-neuron
+test.
+
+**Performance (x86 WSL2, median of 5, loaded model):** 2 threads —
+sugar 3.80 s / 8.86 s, ORN 7.27 s / 13.05 s for 1 s / 2 s simulated;
+1 thread ORN 2 s = 16.33 s (over target); 4 threads no better.
+Load 0.3–0.4 s, build 0.3–0.5 s, peak RSS 1.98 GB.
+
+**sim-change steps:** determinism test added and passing
+(`test_determinism.py`). The balance test is not applicable until the
+verdict pipeline exists (P1-6–P1-9). Full suite: 23 passed.
+
+**On P1-10 (subcircuit):** not needed on these numbers — every case
+fits ≤ 15 s at 2 threads. But the 2 s worst case leaves only about 13%
+margin, measured on x86 not the ARM server. If P1-9 or ARM
+measurements exceed the budget, try cheaper fixes **before** a
+subcircuit: (a) 1 s hearings, (b) skipping quiescent neurons (the
+2.1 s/sim-s no-input floor is pure per-step overhead). Decision
+deferred to P1-9's measurements.
+
+**Impacts:** `model.py`, `params.py`, `data.py`, `version.py`,
+`validation/{shiu_brian2,sugar_mn9,torch_vs_brian2,bench}.py`,
+`tests/test_model_vs_brian2.py`, `tests/test_determinism.py`.

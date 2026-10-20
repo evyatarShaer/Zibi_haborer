@@ -67,3 +67,70 @@ agreement with the paper otherwise.
   the JSON is inflated by the PC sleeping overnight and is not a
   measurement. This is the baseline P1-5's PyTorch model must match on
   output and beat on speed (target ≤ 15 s per hearing).
+
+## P1-5 — PyTorch LIF model vs Brian2
+
+**Result: PASS (13/13 checks).** Run 2026-10-20. `SIM_VERSION` 0.1.0.
+
+- **Model:** `sim/src/borer_sim/model.py` — CPU PyTorch, float32, exact
+  linear integration at 0.1 ms, CSR delivery of only the neurons that
+  spiked, Brian2's step order. Constants from `borer_sim/params.py`
+  (shared with the Brian2 port).
+- **Found while matching:** Brian2's `(unless refractory)` is a
+  *conditional write*. Synaptic input that reaches a refractory neuron
+  is **discarded**, not deferred. The first torch version let `g`
+  accumulate during refractoriness and ran about 25% hot (MN9
+  114–125 Hz). Matching the conditional write fixed it. Shiu's
+  published numbers include this behaviour, so it is part of "the
+  model".
+- **Exact-equivalence test:** `tests/test_model_vs_brian2.py` drives a
+  3-neuron net (with inhibition) at p = 1, so both engines get identical
+  input. Spike trains are identical over 500 ms.
+- **Statistical comparison:** `validation/torch_vs_brian2.py`, the four
+  P1-3 conditions, 30 × 1 s trials, seeds 783 + k, 2 torch threads.
+  Brian2 = the P1-3 results.
+
+### Validation table (mean over 30 trials)
+
+| Condition | Metric | Brian2 | PyTorch (± SE) | Δ | Criterion | Result |
+|---|---|---|---|---|---|---|
+| Baseline | MN9 / partner / active | 0 / 0 / 0 | 0 / 0 / 0 | — | exactly 0 | PASS |
+| Sugar 200 Hz | MN9 (Hz) | 89.93 | 88.93 ± 0.74 | −1.1% | ±10% | PASS |
+| | MN9 partner (Hz) | 62.83 | 62.40 ± 0.77 | −0.7% | ±10% | PASS |
+| | active neurons | 395.0 | 390.7 | −1.1% | ±15% | PASS |
+| Bitter 200 Hz | MN9 / partner (Hz) | 0 / 0 | 0 / 0 | — | exactly 0 | PASS |
+| | active neurons | 83.4 | 82.9 | −0.6% | ±15% | PASS |
+| Sugar + bitter | MN9 (Hz) | 6.80 | 6.73 ± 0.50 | −1.0% | ±10% | PASS |
+| | MN9 partner (Hz) | 11.70 | 12.13 ± 0.55 | +3.7% | ±10% | PASS |
+| | active neurons | 352.1 | 355.3 | +0.9% | ±15% | PASS |
+| Pattern | bitter suppresses MN9 | 89.9 → 6.8 | 88.9 → 6.7 | — | lower | PASS |
+
+Every difference is within about 1 SE (seed noise). Determinism
+(`tests/test_determinism.py`): same seed → bit-identical counts and
+20 ms bins; a different seed → different counts.
+
+### Performance (this workstation: WSL2, x86, model already loaded)
+
+Median of 5 runs. Drives: *sugar* = 20 sugar GRNs at 200 Hz (the
+validated workload); *ORN* = left V + right DA2 ORNs at 100 Hz (56
+ORNs, closest to a real hearing).
+
+| Threads | Load (s) | Build (s) | Sugar 1 s | Sugar 2 s | ORN 1 s | ORN 2 s | Peak RSS |
+|---|---|---|---|---|---|---|---|
+| 1 | 0.29 | 0.34 | 4.75 s | 10.23 s | 8.54 s | **16.33 s** ✗ | 1.99 GB |
+| **2** | 0.42 | 0.54 | 3.80 s | 8.86 s | 7.27 s | **13.05 s** ✓ | 1.98 GB |
+| 4 | 0.43 | 0.48 | 3.68 s | 8.06 s | 8.75 s | 14.32 s ✓ | 1.98 GB |
+
+- **Target (≤ 15 s per run, 1–2 s simulated):** met at 2 threads for
+  every case. The worst case (ORN, 2 s) is 13.05 s, a margin of only
+  about 13%.
+- **Scaling:** 4 threads gains little, and loses on ORN, because the
+  arrays are small (138k) and per-step overhead dominates. With no
+  input at all a run still costs about 2.1 s per simulated second at
+  2 threads (the P1-5 baseline condition), because every step touches
+  every neuron.
+- **Load times are warm-cache** (files in the OS page cache). Build is
+  well under 1 s either way, so a worker can load once and reuse.
+- **Caveat:** the production server is a 2-core **ARM** (Oracle
+  Ampere); these numbers are x86. Re-measure there before relying on
+  the margin.
