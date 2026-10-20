@@ -13,21 +13,13 @@ from brian2 import (Hz, Network, NeuronGroup, PoissonInput, SpikeMonitor,
                     Synapses, mV, ms, prefs, seed)
 
 from borer_sim import data
+from borer_sim.params import LIF
 
 prefs.codegen.target = "cython"
 
-PARAMS = {
-    "t_run": 1000 * ms,
-    "v_0": -52 * mV,
-    "v_rst": -52 * mV,
-    "v_th": -45 * mV,
-    "t_mbr": 20 * ms,
-    "tau": 5 * ms,
-    "t_rfc": 2.2 * ms,
-    "t_dly": 1.8 * ms,
-    "w_syn": 0.275 * mV,
-    "f_poi": 250,
-}
+UNITS = {"v_0": mV, "v_rst": mV, "v_th": mV, "t_mbr": ms, "tau": ms,
+         "t_rfc": ms, "t_dly": ms, "w_syn": mV, "f_poi": 1}
+PARAMS = {k: v * UNITS[k] for k, v in LIF.items()} | {"t_run": 1000 * ms}
 
 EQS = dedent("""
     dv/dt = (v_0 - v + g) / t_mbr : volt (unless refractory)
@@ -36,14 +28,15 @@ EQS = dedent("""
 """)
 
 
-def build(drives: list[tuple[list[int], float]]) -> tuple[Network, SpikeMonitor]:
-    """Whole-brain network with Poisson drive.
+def build(drives: list[tuple[list[int], float]], edges=None) -> tuple[Network, SpikeMonitor]:
+    """Network with Poisson drive; whole brain unless `edges` is given.
 
     drives: (model indices, rate in Hz) pairs — Shiu's `exc` / `exc2`.
+    edges: (n, pre, post, signed_count) as returned by data.edges().
     """
     p = PARAMS
-    con = data.connectivity()
-    neu = NeuronGroup(len(data.neuron_ids()), EQS, method="linear",
+    n, pre, post, signed_count = edges if edges is not None else data.edges()
+    neu = NeuronGroup(n, EQS, method="linear",
                       threshold="v > v_th", reset="v = v_rst; g = 0 * mV",
                       refractory="rfc", namespace=p, name="neurons")
     neu.v = p["v_0"]
@@ -51,9 +44,8 @@ def build(drives: list[tuple[list[int], float]]) -> tuple[Network, SpikeMonitor]
     neu.rfc = p["t_rfc"]
 
     syn = Synapses(neu, neu, "w : volt", on_pre="g += w", delay=p["t_dly"])
-    syn.connect(i=con["Presynaptic_Index"].to_numpy(),
-                j=con["Postsynaptic_Index"].to_numpy())
-    syn.w = con["Excitatory x Connectivity"].to_numpy() * p["w_syn"]
+    syn.connect(i=pre, j=post)
+    syn.w = signed_count * p["w_syn"]
 
     pois = []
     for idx, rate in drives:
@@ -61,7 +53,7 @@ def build(drives: list[tuple[list[int], float]]) -> tuple[Network, SpikeMonitor]
             pois.append(PoissonInput(neu[i:i + 1], "v", N=1, rate=rate * Hz,
                                      weight=p["w_syn"] * p["f_poi"]))
             neu.rfc[i] = 0 * ms  # Shiu: no refractory period for driven neurons
-    mon = SpikeMonitor(neu, record=False)
+    mon = SpikeMonitor(neu, record=edges is not None)  # small nets: keep spike times
     return Network(neu, syn, mon, *pois), mon
 
 

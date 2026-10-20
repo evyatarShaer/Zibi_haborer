@@ -6,6 +6,7 @@ per process and cached.
 from functools import cache
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw" / "flywire_v783"
@@ -24,6 +25,14 @@ def neuron_ids(raw_dir: Path = RAW_DIR) -> pd.Index:
 def connectivity(raw_dir: Path = RAW_DIR) -> pd.DataFrame:
     """Directed edges: pre/post model index and signed synapse count."""
     return pd.read_parquet(raw_dir / "Connectivity_783.parquet", columns=CONNECTIVITY_COLS)
+
+
+def edges() -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+    """(n_neurons, pre index, post index, signed synapse count) for a model."""
+    con = connectivity()
+    return (len(neuron_ids()), con["Presynaptic_Index"].to_numpy(),
+            con["Postsynaptic_Index"].to_numpy(),
+            con["Excitatory x Connectivity"].to_numpy())
 
 
 @cache

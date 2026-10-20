@@ -1,0 +1,20 @@
+"""LIF constants from Shiu et al. 2024 (model.py default_params), unitless.
+
+Times in ms, potentials in mV. The single source for both borer_sim.model
+and the Brian2 port in sim/validation/shiu_brian2.py.
+"""
+
+LIF = {
+    "v_0": -52.0,     # resting potential (mV)
+    "v_rst": -52.0,   # reset potential after a spike (mV)
+    "v_th": -45.0,    # spike threshold (mV)
+    "t_mbr": 20.0,    # membrane time constant (ms)
+    "tau": 5.0,       # synaptic time constant (ms)
+    "t_rfc": 2.2,     # refractory period (ms)
+    "t_dly": 1.8,     # synaptic delay (ms)
+    "w_syn": 0.275,   # weight per synapse (mV)
+    "f_poi": 250,     # Poisson input weight = f_poi * w_syn
+}
+
+DT_MS = 0.1           # integration step (Brian2 default)
+BIN_MS = 20.0         # spike-count bins kept for replay

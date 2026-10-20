@@ -35,6 +35,6 @@ explicit = true
 torch = { index = "pytorch-cpu" }
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 testpaths = ["tests"]
 markers = ["needs_data: requires the FlyWire v783 raw files in sim/data/raw/"]
