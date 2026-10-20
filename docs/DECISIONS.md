@@ -206,3 +206,57 @@ from older papers or code without checking.
 
 **Impacts:** `sim/src/borer_sim/data.py`, `version.py`,
 `sim/tests/test_data.py`.
+
+---
+
+## 2026-10-20 — `borer_sim.anatomy` + side convention verified (SIM_VERSION 0.0.3)
+
+**Context:** P1-4. The turning readout and the left/right antenna input
+depend on knowing what annotation `side` means, and the simulator needs
+named neuron sets without hard-coded IDs.
+
+**Decision:**
+- Add `sim/src/borer_sim/anatomy.py`: `cell_type`, `orns`,
+  `turning_dns` (DNa02), `giant_fiber` (DNp01), `orn_glomeruli`. Sets
+  are filters on `data.annotations()`, restricted to the model, returned
+  as sorted model indices via `data.to_index()`. No root_id in code.
+- **Annotation `side` = the fly's own side**, and it stays the source
+  of truth. Bump `SIM_VERSION` 0.0.2 → **0.0.3** (patch: new module, no
+  verdict pipeline yet).
+
+**Evidence for the side convention:**
+1. FlyWire Codex FAQ: FAFB was imaged L/R inverted; FlyWire inverted
+   all side labels to correct it (imagery unchanged). fafbseg docs: the
+   official `side` labels "are biologically correct".
+2. Soma coordinates: `left` median `soma_x` 77,736 (max 136,224,
+   n=58,611); `right` median 183,856 (min 123,632, n=59,395); 0.004% of
+   left somas above the global median. Low x = image left = fly's left
+   per fafbseg.
+3. Shiu 2024 (v630, pre-correction labels) is mirrored exactly — logged
+   2026-10-19.
+4. Asymmetric-body types are strongly lateralized (`SA1` 0 L / 12 R,
+   `SA2` 9 L / 0 R) — suggestive only; confirming needs per-neuropil
+   synapse data we haven't downloaded.
+
+**Findings for P1-6 / P1-8 (not decided here):**
+- 53 ORN glomeruli, 1,114 L / 1,132 R ORNs. None below 3 per side (min
+  VA5: 6 L / 5 R). L/R ratio ≥ 1.5: **DC2** 8/12, **VC4** 9/14,
+  **VM5v** 9/14. **DA2** (geosmin) 16/22 = 1.38 — a raw-count side bias
+  the smell mapping must normalize if DA2 is used. **V** (CO₂) 34/33.
+- Six glomeruli are fed by the **maxillary palp** (`nerve == "MxLbN"`),
+  not the antenna: VA4, VA7l, VC1, VC2, VM7d, VM7v. P1-6 decides whether
+  "left antenna" may use them.
+- Steering-DN candidates for P1-8 (one per side each, all in model):
+  DNa01, DNa03, DNa04, DNa11, DNb05, DNb06, DNg13, DNp09 (DNb02: two per
+  side). DNa02 remains the spec's turning DN; nothing chosen yet.
+- Giant Fiber pair has mismatched predicted NT (L acetylcholine,
+  R glutamate) — a prediction artifact to keep in mind if the GF output
+  sign ever matters.
+
+**sim-change steps 2–4:** not applicable yet (no verdict pipeline);
+`tests/test_anatomy.py` pins counts, model membership, filter match and
+L/R disjointness. Full suite: 19 passed.
+
+**Impacts:** `anatomy.py`, `version.py`, `tests/test_anatomy.py`,
+`tests/conftest.py` (shared `needs_data` skip marker),
+`.claude/skills/flywire-data/SKILL.md`.

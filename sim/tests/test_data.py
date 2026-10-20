@@ -4,10 +4,7 @@ import pytest
 
 from borer_sim import data
 
-pytestmark = pytest.mark.skipif(
-    not (data.RAW_DIR / "Connectivity_783.parquet").exists(),
-    reason="FlyWire v783 raw data not downloaded",
-)
+pytestmark = pytest.mark.needs_data
 
 
 def test_row_counts():
