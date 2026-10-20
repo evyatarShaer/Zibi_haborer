@@ -53,10 +53,17 @@ def _work(job):
     return key, _metric(_model.run(drives, DURATION_MS, seed).counts)
 
 
-def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics) -> dict:
+@cache
+def _connectome_model() -> Model:
+    return Model.from_connectome()
+
+
+def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
+             model: Model | None = None) -> dict:
     """jobs: {key: (drives, seed)}. Returns {key: metric(counts)}, incl. earlier results.
 
-    `metric` must be warmed (its caches filled) here, before the fork."""
+    `model` defaults to the whole-brain model. `metric` is warmed (its caches
+    filled) here, before the fork."""
     global _model, _metric
     _metric = metric
     done = {}
@@ -64,7 +71,7 @@ def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics) 
         done = {r["key"]: r["m"] for r in map(json.loads, out.read_text().splitlines())}
     todo = [(k, d, s, threads) for k, (d, s) in jobs.items() if k not in done]
     if todo:
-        _model = _model or Model.from_connectome()
+        _model = model if model is not None else _connectome_model()
         metric(np.zeros(_model.n, dtype=np.int32))  # warm caches pre-fork (no torch op)
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
             for i, (key, m) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
