@@ -69,23 +69,28 @@ def checks(res, repeat_identical):
     }
 
 
-def main(n_trials):
-    sugar, bitter = present(SUGAR_V630), present(BITTER_V630)
-    si, bi = data.to_index(sugar), data.to_index(bitter)
-    conditions = {
+def conditions():
+    """The four P1-3 conditions as {name: drives}."""
+    si, bi = data.to_index(present(SUGAR_V630)), data.to_index(present(BITTER_V630))
+    return {
         "baseline": [],
         "sugar200": [(si, 200)],
         "bitter200": [(bi, 200)],
         "sugar200+bitter200": [(si, 200), (bi, 200)],
     }
+
+
+def main(n_trials):
+    sugar, bitter = present(SUGAR_V630), present(BITTER_V630)
+    conds = conditions()
     res, timing, counts = {}, {}, {}
-    for name, drives in conditions.items():
+    for name, drives in conds.items():
         t = time.time()
         counts[name] = shiu_brian2.run_trials(drives, n_trials, SEED)
         timing[name] = round(time.time() - t, 1)
         res[name] = summarize(counts[name])
         print(name, res[name], f"{timing[name]} s", flush=True)
-    repeat = shiu_brian2.run_trials(conditions["sugar200"], 2, SEED)
+    repeat = shiu_brian2.run_trials(conds["sugar200"], 2, SEED)
     ok = checks(res, bool(np.array_equal(repeat, counts["sugar200"][:2])))
 
     OUT.mkdir(parents=True, exist_ok=True)
