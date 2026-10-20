@@ -86,7 +86,8 @@ It's a fly, not a judge — the humor is part of the product.
   from predicted neurotransmitter.
 - **Data version.** FlyWire **v783**.
 - **Input.** Seeded Poisson spikes in ORNs at computed rates.
-- **Duration.** 1–2 s simulated.
+- **Duration.** **1 s** simulated per hearing (decided 2026-10-20; SPEC
+  originally allowed 1–2 s — see DECISIONS.md).
 - **Readout.** Left vs. right turning descending neurons (e.g. DNa02
   family — *verify in POC*). 50 ms bins. Steering signal:
   `(L − R) / (L + R)`.

@@ -446,3 +446,22 @@ unchanged). The balance test is not applicable until P1-8. Full suite:
 
 **Impacts:** `smell.py`, `params.py`, `version.py`,
 `tests/test_smell.py`, `validation/smell_sanity.py`.
+
+---
+
+## 2026-10-20 — Hearings simulate 1 s
+
+**Context:** SPEC §6 allowed 1–2 s simulated. P1-6 measured a full 2 s
+hearing (both antennas) at 13.15 s on 2 threads, and one 2 s run at
+15.9 s — at or over the ≤ 15 s budget, before ARM is measured.
+
+**Decision (user):** every hearing simulates **1 s**. SPEC §6 updated.
+
+**Why:** a 1 s hearing costs ~6.9 s (2 threads, x86), leaving ~2×
+headroom for the ARM server and for readout/replay overhead.
+
+**Alternatives considered:** 2 s (marginal budget); a subcircuit
+(P1-10) — not needed at 1 s.
+
+**Impacts:** `docs/SPEC.md` §6; P1-8 readout windows and P1-9
+measurements use 1 s.
