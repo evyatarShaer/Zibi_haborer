@@ -29,9 +29,11 @@ performance budget.
   login, stop and tell the user which files to download and where.
   *Done 2026-10-19: 3 files downloaded + verified (sha256, schemas) —
   see `docs/DATA_SOURCES.md`.*
-- [ ] **P1-3 — Validate baseline.** Reproduce one known result from
+- [x] **P1-3 — Validate baseline.** Reproduce one known result from
   Shiu's model (e.g. sugar-sensing neurons activating feeding-related
   neurons).
+  *Done 2026-10-20: sugar GRNs → MN9 reproduced on v783, 7/7 checks —
+  see `docs/POC_REPORT.md`.*
 - [ ] **P1-4 — Fill flywire-data skill.** Replace placeholders with real
   column names, IDs, side labels, and the specific IDs for V (CO₂), DA2
   (geosmin), DNa02 family, Giant Fiber (DNp01 — verify).
