@@ -337,3 +337,100 @@ escape the global state (consistent with the P1-6 sanity probe down to
   glomeruli turn the model consistently toward or away.
 - Lower input does not help: either it still cascades (fixed output)
   or it stays quiet (no DN output at all).
+
+## Sub-cascade readout probe (option 1)
+
+**Question:** below the cascade threshold, is there a readout upstream of
+the DNs that is side-dependent, graded and text-dependent?
+**Answer: no. Below the threshold the brain does not respond at all.**
+Run 2026-10-20, `SIM_VERSION` 0.2.0, 690 runs, 33 min. Code:
+`validation/readout_probe.py`, `readout_report.py`,
+`cascade_diagnostics.py`; raw data in
+`sim/data/processed/validation/readout_*.jsonl`. No change to
+`model.py`, `smell.py` or the mapping.
+
+### 1. Cascade threshold with both antennas driven
+
+Three hearing pairs (attractive, natural, aversive letter-sets), all
+`smell.drives` rates × scale, 5 seeds each. Cascade = > 1,000 active.
+
+| Scale | Input spikes/s (both antennas) | Cascades | Mean active | Max active |
+|---|---|---|---|---|
+| ×0.02 | 751 | 12/15 | 7,058 | 8,918 |
+| ×0.01 | 375 | 10/15 | 5,817 | 8,741 |
+| ×0.005 | 188 | 8/15 | 4,528 | 8,525 |
+| ×0.002 | 75 | 0/15 | 74 | 134 |
+| ×0.001 | 38 | 0/15 | 40 | 77 |
+| ×0.0005 | 19 | 0/15 | 20 | 37 |
+
+**Threshold: ×0.002 of `smell.py` rates ≈ 75 ORN spikes/s in total**
+(≈ 0.06 Hz per ORN). Even there it isn't fully safe: 4 of the 500 swap
+runs at ×0.002 (0.8%) still cascaded.
+
+### 2–3. Candidate readouts at the threshold level
+
+Pass criteria (fixed before running): (a) stimulated side > opposite in
+≥ 90% of one-antenna runs; (b) stimulated-side activity strictly rises
+over ¼ → ½ → 1 × threshold and is > 0 at ¼; (c) swap flip rate ≥ 75%
+with ≥ 80% of the 250 (pair, seed) cases decided. Candidates: every
+cell_class × hemisphere with both sides present (26 brain populations,
+incl. uniglomerular and multiglomerular ALPNs, LHLN, LHCENT, ALLN,
+Kenyon cells, MBON, DAN, mAL, CX, descending).
+
+| Population | stim / opp (spikes) | side ok | ¼ → ½ → 1 | graded | flips | decided | verdict |
+|---|---|---|---|---|---|---|---|
+| olfactory (the input itself) | 38.2 / 0.0 | 100% | 9.5 → 19.6 → 38.2 | yes | 150/245 (61%) | 245/250 | reference only |
+| all 26 brain populations | 0 / 0 | 0% | 0 → 0 → 0 | no | — | 0–4/250 | **fail** |
+
+- In **586 of 590** sub-threshold runs **not a single non-ORN neuron
+  spiked**. The only brain activity came from the 4 swap runs that
+  cascaded.
+- There is no graded middle regime: the brain is either silent or in
+  the full cascade. No quiet run ever showed a handful of brain spikes,
+  so the first downstream spike seems to set off the rest.
+- Even a perfect readout of the input fails the text test (61% flips):
+  at ~37 ORN spikes per antenna per second, Poisson noise swamps the
+  difference between texts.
+
+### 4. Control: a known lateralised circuit (sugar GRNs → MN9)
+
+Annotation sugar GRNs (`cell_sub_class == "sugar"`, 20 L / 12 R), one
+side at 200 Hz, 5 seeds.
+
+| Sugar GRNs | MN9 L (spikes/s) | MN9 R (spikes/s) | ipsi / contra | active |
+|---|---|---|---|---|
+| left | 47.8 | 83.8 | 47.8 / 83.8 | 392 |
+| right | 39.2 | 28.8 | 28.8 / 39.2 | 209 |
+
+The gustatory circuit **does** lateralise: the dominant MN9 follows the
+stimulated side (contralateral-dominant), the response is graded, and
+4,000 input spikes/s never cascade. **The cascade is olfactory-specific.**
+
+### Diagnostics: where does the cascade live?
+
+`validation/cascade_diagnostics.py` rebuilds the model with edge subsets
+(validation code only):
+
+| Variant | Edge rows removed | Hearing active (2 seeds) | DM1 60 Hz L / R active | DL2d 20 Hz (2 seeds) | Sugar MN9 Hz |
+|---|---|---|---|---|---|
+| full | 0 | 9,605 / 9,674 | 8,467 / 8,415 | 8,373 / 14 | 87 / 66 |
+| no synaptic input to ORNs | 66,603 | 9,404 / 9,413 | 7,981 / 7,978 | 7,945 / 14 | 87 / 66 |
+| no KC → KC | 293,762 | 9,104 / 9,081 | 7,871 / 7,887 | 7,811 / 14 | 87 / 66 |
+
+- Neither ORN axo-axonal input nor KC→KC excitation causes the cascade;
+  the runaway is in the central olfactory network.
+- The network has high gain and no brake: in Shiu's LIF a single
+  presynaptic spike fires a target through ≥ 162 synapses (peak factor
+  0.157); **1,914** edges are that strong, **12,884** fire with 2
+  coincident spikes, **29,414** with 3. The model has no short-term
+  depression and no spike-frequency adaptation.
+
+### Verdict
+
+**No readout passes.** Below the threshold there is nothing to read;
+above it the output is fixed. ORN adaptation alone can't fix this. Any
+input-side mechanism only moves the operating point along the same
+silent ↔ cascade axis: even a 500× cut still cascades 0.8% of the
+time. And removing ORN input synapses did not prevent the cascade.
+The option 2 plan therefore targets central dynamics; see DECISIONS.md
+2026-10-20 "Option 2 plan".

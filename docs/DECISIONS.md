@@ -465,3 +465,68 @@ headroom for the ARM server and for readout/replay overhead.
 
 **Impacts:** `docs/SPEC.md` §6; P1-8 readout windows and P1-9
 measurements use 1 s.
+
+---
+
+## 2026-10-20 — Steering readout: option 1 failed; Option 2 plan (proposed, not decided)
+
+**Context:** The steering probe found no side- or text-dependent DN
+output (flip rate 0%). Option 1 (sub-cascade readout upstream of the
+DNs) also failed: below ≈ 75 ORN spikes/s the brain is silent, above it
+the olfactory network cascades. Details: POC_REPORT "Steering probe" and
+"Sub-cascade readout probe".
+
+**Finding that shapes option 2:** the user framed option 2 as ORN
+adaptation. The data argue it cannot work alone. (1) Cutting input 500×
+still cascades 0.8% of the time and otherwise leaves the brain silent,
+so there is no graded regime for an input-side brake to land in.
+(2) Removing all synaptic input to ORNs did not prevent the cascade.
+The runaway is central and high-gain (1,914 edges let one spike fire
+the target), and the model has no brake.
+
+**Proposed plan (needs user approval: it changes the P1-5 model):**
+
+1. **Mechanism: short-term synaptic depression (STD)**, Tsodyks–Markram
+   form, first on olfactory-pathway synapses (ORN→PN), then on all
+   synapses if needed. Each synapse has a resource x ∈ [0,1]: each
+   presynaptic spike delivers `w·U·x`, then `x -= U·x`; between spikes
+   `dx/dt = (1 − x)/τ_rec`. Repeated firing weakens exactly the strong
+   recurrent links that sustain the cascade. Biological basis: ORN→PN
+   synapses depress strongly (Kazama & Wilson 2008, *Neuron*; Nagel,
+   Hong & Wilson 2015, *Nat Neurosci*).
+2. **Backup or addition: spike-frequency adaptation (SFA)** in central
+   neurons: an adaptation current `a` subtracted in `dv/dt`,
+   `da/dt = −a/τ_a`, `a += b` per spike.
+3. **Optional, input side: ORN adaptation** (Nagel & Wilson 2011,
+   *Nat Neurosci*), for realistic ORN rates only, not as the fix.
+4. **Parameters:** U and τ_rec for ORN→PN from Kazama & Wilson 2008
+   (paired-pulse ratio, recovery time constant), read from the paper
+   at implementation time, not guessed here. Other synapses use the
+   same form with one global parameter, calibrated so P1-3 still passes
+   (calibrated on P1-3, never tuned on verdicts).
+5. **Implementation:** in `model.py` and the Brian2 port together
+   (Brian2 supports STD natively), constants in `params.py`;
+   `SIM_VERSION` 0.3.0.
+6. **Re-validation, in order (stop at the first failure):**
+   a. `test_model_vs_brian2`: torch and Brian2 still spike-for-spike
+      identical with STD on (deterministic 3-neuron test).
+   b. P1-3 sugar→MN9 against Shiu's v630 reference (±30%) and the
+      bitter-suppression pattern; record how far STD moves MN9 from
+      the no-STD result (88.9 / 62.4 Hz).
+   c. P1-5 statistical comparison, torch vs Brian2 (±10% / ±15%), both
+      with STD.
+   d. Cascade check: the P1-6 sanity hearings and the threshold sweep.
+      Success = active counts that grow with input, and no
+      whole-system ignition at `smell.py` rates.
+   e. Steering criteria from option 1 (side ≥ 90%, graded,
+      flip ≥ 75%) on DNa02 and on upstream populations.
+   f. Performance: 1 s hearing ≤ 15 s on 2 threads.
+7. **Order of work:** prototype STD in validation code first (like the
+   diagnostics) and check steps d–e on ~50 runs (~10 min) before
+   touching `model.py`.
+
+**Alternatives considered:** sub-cascade readout (option 1): failed.
+Baseline subtraction: the output is fixed, so there is nothing to
+subtract. ORN-only adaptation: ruled out by the data above.
+
+**Impacts:** none yet. P1-6 stays open.
