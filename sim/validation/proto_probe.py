@@ -47,7 +47,7 @@ def run(name, jobs, model=None):
 
 def prototype_a(tag, u, tau_rec_ms):
     model = STDModel(u, tau_rec_ms)
-    print(f"STD on {int(model.std.sum()):,} ORN->PN synapse rows, U={u}, tau_rec={tau_rec_ms} ms")
+    print(f"STD on {model.n_std:,} ORN->PN synapse rows, U={u}, tau_rec={tau_rec_ms} ms")
     run(f"proto_{tag}_side.jsonl", side_jobs(smell_drive, ["x_nat"], (0.1, 0.3, 1.0), SEEDS[:2]), model)
     run(f"proto_{tag}_swap.jsonl", swap_jobs(smell_drive, MATCHED, SEEDS[:5]), model)
 

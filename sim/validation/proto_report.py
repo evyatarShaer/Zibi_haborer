@@ -16,6 +16,7 @@ from validation.steering_report import load, winner
 
 OPP = {"left": "right", "right": "left"}
 RUNAWAY = 4000
+INPUTS = {"a1": "olfactory", "a2": "olfactory", "b": "gustatory"}  # driven class: reference only
 
 
 def value(m, readout, side):
@@ -76,8 +77,9 @@ def main(proto):
         if not any(grade) and d == 0:
             continue
         flip = f / d if d else 0.0
-        verdict = "PASS" if ok >= 0.9 and graded and flip >= 0.75 and d >= 0.8 * n else "fail"
-        rows.append((verdict == "PASS", flip, r, direction, ok, grade, graded, f, d, n, verdict))
+        verdict = ("input (ref)" if r == INPUTS.get(proto) else
+                   "PASS" if ok >= 0.9 and graded and flip >= 0.75 and d >= 0.8 * n else "fail")
+        rows.append((verdict != "fail", flip, r, direction, ok, grade, graded, f, d, n, verdict))
     for _, flip, r, direction, ok, grade, graded, f, d, n, verdict in sorted(rows, reverse=True):
         g = " → ".join(f"{x:.1f}" for x in grade)
         print(f"| {r} | {direction} | {ok:.0%} | {g} | {'yes' if graded else 'no'} | "

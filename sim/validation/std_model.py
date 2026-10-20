@@ -8,6 +8,7 @@ Constants U, tau_rec: Kazama & Wilson 2008 (see POC_REPORT). model.py is
 not changed; this subclass re-implements Model._deliver with the extra
 scaling (prototype duplication, to be folded into model.py if adopted).
 """
+import numpy as np
 import torch
 
 from borer_sim import data
@@ -18,10 +19,13 @@ from borer_sim.params import DT_MS
 class STDModel(Model):
     def __init__(self, u: float, tau_rec_ms: float):
         super().__init__(*data.edges())
+        # NumPy only: a torch op here would start OpenMP before the runner forks
+        # its workers, and forked workers then deadlock.
         cc = data.annotations()["cell_class"].reindex(data.neuron_ids()).fillna("na").to_numpy()
-        pre_of_syn = torch.repeat_interleave(torch.arange(self.n), self.indptr[1:] - self.indptr[:-1])
-        self.std = (torch.from_numpy(cc == "olfactory")[pre_of_syn]
-                    & torch.from_numpy(cc == "ALPN")[self.post])
+        pre_of_syn = np.repeat(np.arange(self.n), np.diff(self.indptr.numpy()))
+        std = (cc == "olfactory")[pre_of_syn] & (cc == "ALPN")[self.post.numpy()]
+        self.n_std = int(std.sum())
+        self.std = torch.from_numpy(std)
         self.u, self.steps_per_tau = u, tau_rec_ms / DT_MS
 
     def run(self, drives, duration_ms, seed):

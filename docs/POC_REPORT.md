@@ -434,3 +434,125 @@ silent ↔ cascade axis: even a 500× cut still cascades 0.8% of the
 time. And removing ORN input synapses did not prevent the cascade.
 The option 2 plan therefore targets central dynamics; see DECISIONS.md
 2026-10-20 "Option 2 plan".
+
+## Prototypes A (ORN→PN depression) and B (taste of words)
+
+Run 2026-10-20, validation code only (`validation/std_model.py`,
+`taste.py`, `proto_probe.py`, `proto_report.py`); no change to
+`model.py`, `smell.py` or the mapping. Raw data:
+`sim/data/processed/validation/proto_*.jsonl`. Pass criteria as in the
+sub-cascade probe: one direction (ipsi or contra) in ≥ 90% of one-side
+runs, graded over the levels, swap flip rate ≥ 75% with ≥ 80% decided.
+The driven input class is shown for reference only.
+
+**Runtime note:** the estimate was ~20 min; actual ~70 min of compute
+plus ~25 min lost to a fork deadlock I introduced (torch ops in the
+parent before forking workers — fixed with NumPy) and to stuck
+processes. STD runs in the cascade state were ~4 min each per worker,
+so A was cut short once its gate result was clear (below).
+
+### Prototype A — short-term depression on ORN→PN synapses only
+
+Resource model on the 19,438 ORN→ALPN synapse rows: a spike delivers
+`w·x` (an isolated spike keeps the validated weight), then
+`x ← x·(1 − U)`; recovery `x → 1` with τ_rec. Checked: U = 0 reproduces
+the base model exactly (84,060 = 84,060 spikes).
+
+- **A1 (primary): U = 0.22, τ_rec = 893 ms** — Nagel, Hong & Wilson
+  2015 (*Nat Neurosci* 18:56), fit of the whole ORN→PN EPSC at 10 Hz:
+  f = 0.78, τ = 893 ms. Kazama & Wilson 2008 give strong depression
+  above ~50 spikes/s and release probability p = 0.79 ± 0.02 (Fig. 5C)
+  but no recovery constant.
+- **A2 (upper bound): U = 0.79** (Kazama & Wilson's p used as depletion
+  per spike), τ_rec = 893 ms.
+
+| Run set | Runs | Active neurons | DNa02 L/R (Hz) | uPN spikes L / R | Result |
+|---|---|---|---|---|---|
+| A1 one antenna, ×0.1 / ×0.3 / ×1 | 12 | 8,756 → 8,858 | ~50 / ~0 for every side | ~17.8k / ~16.2k for both stimulated sides | runaway, no side signal, not graded |
+| A1 hearings (x_att vs y_att, both orders) | 6 | 9,322–9,382 | ~50 / ~0 | — | SI +0.93…+1.00 in both orders: 0/3 flips |
+| A2 one antenna, ×0.1 / ×1 | 4 | 8,760–8,852 | 46–57 / 0–3 | 17.7–18.0k / 16.1–16.5k for both sides | runaway persists |
+
+**A fails the gate:** depression at ORN→PN, even at the strongest
+bound, does not stop the runaway or create any side signal — consistent
+with the diagnostics placing the runaway in the central network. The
+remaining A swap runs were not run.
+
+### Prototype B — taste of words
+
+**1. GRN inventory (v783, in model, by organ = nerve):**
+
+| GRN class | Organ (nerve) | L | R |
+|---|---|---|---|
+| sugar (LB3c) | labellum (MxLbN) | 20 | 12 |
+| sugar/low_salt (LB3b) | labellum | 13 | 12 |
+| water (LB3a) | labellum | 15 | 15 |
+| putative_attractive (LB4a, LB4b) | labellum | 6 | 8 |
+| bitter (LB1a–d) | labellum | 21 | 21 |
+| high_salt/heavy_metal (LB3d) | labellum | 15 | 14 |
+| putative_aversive (LB2a–c) | labellum | 7 | 8 |
+| glutamate (LB1e) | labellum | 11 | 12 |
+| taste peg (claw_tpGRN, dorsal_tpGRN) | labellum | 37 | 36 |
+| leg GRNs (SA_VTV_pro_meso_meta, LgAG1–9) | legs (cervical connective) | 37 | 37 |
+| pharyngeal groups 1–3 (PhG7–9) | pharynx (PhN) | 6 | 6 (one side each per group) |
+| accessory pharyngeal (PhG1–16) | pharynx (aPhN) | 18 | 20 |
+
+**2. Diversity and mapping scheme.** Enough, if classes are split by
+cell type and the large ones in half (by root_id): 24 groups with ≥ 2
+GRNs per side, each letter keeping its valence from `smell.LETTERS`.
+
+| Key | GRN group | GRNs | | Key | GRN group | GRNs |
+|---|---|---|---|---|---|---|
+| ! | bitter LB1a | 16 | | ת | bitter LB1c (½) | 6 |
+| ? | high-salt LB3d | 29 | | נ | bitter LB1c (½) | 5 |
+| ד | sugar/low-salt LB3b | 25 | | א | putative aversive LB2a | 4 |
+| ב | sugar LB3c (½) | 16 | | ז | putative aversive LB2b | 4 |
+| ש | sugar LB3c (½) | 16 | | י | taste peg claw_tpGRN | 60 |
+| ו | water LB3a (½) | 16 | | ה | leg LgAG1 | 25 |
+| ל | water LB3a (½) | 14 | | כ | glutamate LB1e | 23 |
+| ט | putative attractive LB4b | 10 | | ח | leg LgAG2 | 12 |
+| ג | putative attractive LB4a | 4 | | ק | taste peg dorsal_tpGRN | 11 |
+| מ | bitter LB1d | 8 | | פ | leg LgAG4 | 8 |
+| ר | bitter LB1b | 7 | | ס | leg LgAG8 | 8 |
+| ע | putative aversive LB2c | 7 | | צ | leg LgAG3 | 6 |
+
+דבש → the sugar groups. Weak points: several aversive groups have only
+2–3 GRNs per side; the pharyngeal GRNs are too unilateral to use.
+
+**3–4. Test** (rates from `smell.glomerulus_rates`, side-balanced; one
+side at ¼ / ½ / 1×, 3 texts × 5 seeds = 90 runs; swap on 10 pairs — the
+5 matched + 5 valence-cross pairs — both orders, 10 seeds = 200 runs).
+
+- **Runaway: yes, sometimes** — 37 / 290 runs (13%) exceeded 4,000
+  active (max 9,110), mostly right-side or both-side drives at ½–1×;
+  median active 762.
+- **Text and valence reach the brain:** with the attractive set on one
+  side, MN9 rises 1.8/2.8 → 27/37 → 47/64 spikes/s over ¼ → ½ → 1×;
+  with the aversive set MN9 stays at 0 at every level — the first
+  valence-dependent output we have seen.
+- **But no lateralised brain readout passes:**
+
+| Readout | direction | side ok | levels (dominant side) | graded | flips | decided | verdict |
+|---|---|---|---|---|---|---|---|
+| gustatory (the input itself) | ipsi | 100% | 1337 → 2657 → 5281 | yes | 80/100 (80%) | 100/100 | reference only |
+| AN (ascending neurons) | ipsi | 100% | 37 → 109 → 243 | yes | 58/97 (60%) | 97/100 | fail |
+| MN9 | contra | 43% | 1.4 → 10.1 → 18.7 | yes | 40/75 (53%) | 75/100 | fail |
+| descending (all DNs) | ipsi | 97% | 20 → 156 → 569 | yes | 40/100 (40%) | 100/100 | fail |
+| central | ipsi | 83% | 178 → 1272 → 7671 | yes | 38/100 (38%) | 100/100 | fail |
+| brain_motor_neuron | contra | 37% | 7.6 → 80 → 199 | yes | 5/89 (6%) | 89/100 | fail |
+| DNa02 | contra | 23% | 0 → 0.8 → 5.9 | no | 0/39 (0%) | 39/100 | fail |
+
+  (Full table: `PYTHONPATH=src uv run python -m validation.proto_report b`.)
+
+### Verdict
+
+| | A: ORN→PN depression | B: taste of words |
+|---|---|---|
+| Runaway | **yes**, every run (A1 and A2) | **sometimes**: 13% of runs |
+| Side signal | none (identical L/R output either side) | yes in ascending/descending totals (ipsi 97–100%); MN9 weak (43%) |
+| Graded | no (8,760 → 8,858 active over 10×) | yes (MN9, AN, DNs grow with input) |
+| Text / valence | none | yes: attractive drives MN9, aversive silences it |
+| Swap flip rate | 0/3 (SI ≈ +1 in both orders) | best brain readout 60% (AN), MN9 53%, DNs 40% — below 75% |
+| Model change | new synapse dynamics in `model.py` + Brian2 port, re-validation | none to the model; new input module replacing `smell.py`; SPEC change |
+
+Neither passes. B is the only path where text and valence measurably
+reach the brain without changing the validated model.
