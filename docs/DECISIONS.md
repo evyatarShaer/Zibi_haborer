@@ -554,3 +554,50 @@ tasting MN9). Implemented in `validation/taste_report.py`
 
 **Alternatives considered:** keep the gap bins (penalises decisive
 verdicts); drop (b) (no check against a floor-bound readout).
+
+---
+
+## 2026-10-21 — Subcircuit support (P1-10) and parallel tastings (SIM_VERSION 0.3.0)
+
+**What changed:** `borer_sim/subcircuit.py` (`keep(sources, targets, N)`:
+neurons with hops(source → v) + hops(v → target) ≤ N) and
+`Model.subcircuit(keep)` (edges among kept neurons; `run()` takes and
+returns full-brain indices). Whole-brain path unchanged. Minor bump
+(new capability; whole-brain output bit-identical).
+
+**Tests:** `test_determinism.py` 3/3 pass; `test_subcircuit.py` 3/3
+pass, including "a subcircuit of every neuron is bit-identical to the
+whole brain". `test_balance.py` (sim-change step 3) does not exist yet;
+it belongs to P1-9 on the new taste input, so balance, swap and outcome
+mix were **not run** for this change.
+
+**Validation (taste input; sources = all 24 mapped GRN groups, targets
+= MN9 + Giant Fiber; hold-out arguments 0–9 × seeds 783–787, 2 s,
+against the full brain with the same seeds):**
+
+| N | neurons | args within ±5% | same winner (45 pairs × 5) | bit-identical |
+|---|---|---|---|---|
+| 3 | 2,194 | 4/10 | 212/225 | 7/50 |
+| 4 | 15,347 | 4/10 | 212/225 | 8/50 |
+| 5 | 67,359 | 6/10 | 220/225 | 12/50 |
+| 6 | 120,645 | 10/10 | 225/225 | 50/50 |
+
+Once one spike differs, the run diverges into an independent noise
+draw, so ±5% in practice requires bit-identical output. Structure alone
+cannot give a small exact circuit: 3 hops downstream of the GRNs
+already reach 121,752 of 138,639 neurons.
+
+**Performance (hearing = 2 tastings × 2 s in parallel, 2 processes × 1
+thread, median of 10, this host on 2026-10-21 evening):** full brain
+16.65 s; N = 3 4.84 s (×3.4); N = 4 6.38 s (×2.6); N = 5 10.24 s
+(×1.6); N = 6 17.91 s (×0.9). The previous serial bench (2 tastings,
+2 threads) was 28.4 s, so parallel tastings alone give ×1.7. Even the
+2k-neuron circuit needs 4.8 s: per-step Python overhead (20,000 steps
+per tasting) dominates at small sizes. Peak RSS ~1.3 GB per worker
+(`ps` RSS during runs).
+
+**Decision:** keep the code; **no subcircuit is adopted** (N = 6 is
+exact but gives no speed-up). Parallel tastings are adopted for
+hearings. **Surprise logged:** per-step overhead, not neuron count,
+limits speed below ~15k neurons; the next lever is fewer Python ops per
+step (or an activity-based circuit), not more pruning.
