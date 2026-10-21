@@ -92,5 +92,23 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — not yet started.** Repo is scaffolded. Awaiting user
-approval before any FlyWire data downloads or heavy compute.
+**Phase 1 (POC) — in progress** (SIM_VERSION 0.3.0, 2026-10-21). Details:
+`docs/POC_REPORT.md`, `docs/TASKS.md`.
+
+- **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
+  reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2.
+- **P1-6 input — redesigned, not closed.** The SPEC "smell of words"
+  (ORNs → DNa02 steering) failed: any odor drive ignites a whole-brain
+  runaway and no lateralised readout passes the swap test. Replacement
+  under evaluation in `sim/validation/` (not yet in `borer_sim`):
+  **"taste of words"**: letters → GRN groups (valence measured on MN9),
+  each argument tasted alone for 2 s, verdict = higher MN9 rate. A SPEC
+  draft is in POC_REPORT; **not applied until the user approves.**
+- **P1-10 subcircuit — in progress** (`borer_sim.subcircuit`, N chosen
+  by validation against the full brain).
+- **Not started:** P1-7 mood, P1-8 readout/outcomes, P1-9 determinism +
+  balance tests on the new input (`test_balance.py` does not exist yet),
+  P1-11 final report, P1-12 phase gate.
+- **Known issue:** the Windows host periodically starves the WSL VM
+  (tastings taking 10–60× longer for minutes at a time); per-run
+  wall-clock is logged in every result record.
