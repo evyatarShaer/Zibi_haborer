@@ -1,6 +1,6 @@
 """Score the taste probe (validation.taste_probe) against the pre-set criteria.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|band [file]|bench]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|band [old|new] [file]|bench]
 Per hearing (pair x seed), A/B = total MN9 rate of each tasting:
 froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 Pass rules (fixed before running): (a) >= 90% of non-trivial pairs (mean
@@ -21,7 +21,8 @@ import torch
 from borer_sim import smell
 from validation.proto_report import RUNAWAY
 from validation.steering_report import load
-from validation.taste_probe import ARGS_FILE, ARGUMENTS, DURATION_MS, PAIRS, tasting
+from validation.taste_probe import DURATION_MS, RESULTS, tasting
+from validation.taste_sets import PAIRS as SET_PAIRS, SETS
 
 FROZE_HZ, TIE_GAP, NONTRIVIAL = 2.0, 0.05, 0.10
 BAND, MAX_IN_BAND = 0.10, 0.50
@@ -52,8 +53,9 @@ def screen():
               f"{statistics.mean(sum(m['MN9']) for m in ms):.1f} |")
 
 
-def args(name=ARGS_FILE):
-    res = load(name)
+def args(arg_set="old", name=None):
+    ARGUMENTS = SETS[arg_set]
+    res = load(name or RESULTS.format(arg_set))
     tot = defaultdict(dict)
     for key, m in res.items():
         i, seed = key.split("|")
@@ -69,7 +71,7 @@ def args(name=ARGS_FILE):
         honey = sum(smell.normalize(a).count(c) for c in "דבש")
         print(f"| {i} | {len(a)} | {honey} | {mean[i]:.1f} ± {np.std([x[0] for x in v]):.1f} | "
               f"{np.mean([x[1][0] for x in v]):.1f} / {np.mean([x[1][1] for x in v]):.1f} | {a} |")
-    pairs(tot, seeds, mean)
+    pairs(tot, seeds, mean, ARGUMENTS, SET_PAIRS[arg_set])
     m = [mean[i] for i in range(len(ARGUMENTS))]
     lens = [len(a) for a in ARGUMENTS]
     honey = [sum(smell.normalize(a).count(c) for c in "דבש") for a in ARGUMENTS]
@@ -79,7 +81,7 @@ def args(name=ARGS_FILE):
           f"ד/ב/ש count {spearman(m, honey):+.2f}, attractive-letter share {spearman(m, att):+.2f}")
 
 
-def pairs(tot, seeds, mean):
+def pairs(tot, seeds, mean, ARGUMENTS, PAIRS):
     outcomes, consistent, gaps = defaultdict(int), [], []
     longer_wins = decided = 0
     for a, b in PAIRS:
@@ -114,11 +116,12 @@ def pairs(tot, seeds, mean):
           ", ".join(f"{k} {v} ({v / n:.0%})" for k, v in sorted(outcomes.items())))
 
 
-def band(name=ARGS_FILE):
+def band(arg_set="old", name=None):
     """Tie-band sweep: a hearing is decided if not froze and gap >= band. Consistent =
     decided hearings that agree with their pair's majority decided winner."""
     tot = defaultdict(dict)
-    for key, m in load(name).items():
+    ARGUMENTS, PAIRS = SETS[arg_set], SET_PAIRS[arg_set]
+    for key, m in load(name or RESULTS.format(arg_set)).items():
         i, seed = key.split("|")
         tot[int(i)][seed] = sum(m["MN9"])
     seeds = sorted(next(iter(tot.values())))
@@ -146,7 +149,8 @@ def bench():
     from validation.steering import _connectome_model
     torch.set_num_threads(2)
     model = _connectome_model()
-    a, b = PAIRS[0]
+    a, b = SET_PAIRS["old"][0]
+    ARGUMENTS = SETS["old"]
     times = []
     for k in range(5):
         t = time.perf_counter()

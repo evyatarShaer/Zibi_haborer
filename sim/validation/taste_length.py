@@ -20,7 +20,8 @@ import numpy as np
 from borer_sim import smell
 from validation.letter_freq import CHAT_FREQ
 from validation.steering_report import load
-from validation.taste_probe import ARGUMENTS, run, tasting
+from validation.taste_probe import run, tasting
+from validation.taste_sets import OLD as ARGUMENTS
 from validation.taste_report import spearman
 
 SHORT = (3, 5, 8, 11, 14, 16)
