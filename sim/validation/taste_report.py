@@ -1,6 +1,6 @@
 """Score the taste probe (validation.taste_probe) against the pre-set criteria.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|bench]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args [file]|bench]
 Per hearing (pair x seed), A/B = total MN9 rate of each tasting:
 froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 Pass rules (fixed before running): (a) >= 90% of non-trivial pairs (mean
@@ -20,7 +20,7 @@ import torch
 from borer_sim import smell
 from validation.proto_report import RUNAWAY
 from validation.steering_report import load
-from validation.taste_probe import ARGUMENTS, PAIRS, tasting
+from validation.taste_probe import ARGS_FILE, ARGUMENTS, DURATION_MS, PAIRS, tasting
 
 FROZE_HZ, TIE_GAP, NONTRIVIAL = 2.0, 0.05, 0.10
 BINS = (0.0, 0.1, 0.3, 0.6, 1.0001)
@@ -42,8 +42,8 @@ def screen():
               f"{statistics.mean(sum(m['MN9']) for m in ms):.1f} |")
 
 
-def args():
-    res = load("taste_args.jsonl")
+def args(name=ARGS_FILE):
+    res = load(name)
     tot = defaultdict(dict)
     for key, m in res.items():
         i, seed = key.split("|")
@@ -111,12 +111,13 @@ def bench():
     times = []
     for k in range(5):
         t = time.perf_counter()
-        model.run(tasting(ARGUMENTS[a]), 1000, 783 + k)
-        model.run(tasting(ARGUMENTS[b]), 1000, 883 + k)
+        model.run(tasting(ARGUMENTS[a]), DURATION_MS, 783 + k)
+        model.run(tasting(ARGUMENTS[b]), DURATION_MS, 883 + k)
         times.append(time.perf_counter() - t)
-    print(f"(f) full hearing (2 tastings x 1 s, 2 threads): median {statistics.median(times):.2f} s, "
+    print(f"(f) full hearing (2 tastings x {DURATION_MS / 1000:g} s, 2 threads): median {statistics.median(times):.2f} s, "
           f"runs {[round(x, 2) for x in times]}")
 
 
 if __name__ == "__main__":
-    {"screen": screen, "args": args, "bench": bench}[sys.argv[1] if len(sys.argv) > 1 else "args"]()
+    {"screen": screen, "args": args, "bench": bench}[sys.argv[1] if len(sys.argv) > 1 else "args"](
+        *sys.argv[2:])

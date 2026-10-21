@@ -47,6 +47,7 @@ ARGUMENTS = [
 PAIRS = random.Random(783).sample(list(combinations(range(len(ARGUMENTS)), 2)), 30)
 SEEDS = tuple(range(783, 793))
 SCREEN_RATE, SCREEN_SEEDS = 150.0, (783, 784, 785)
+DURATION_MS, ARGS_FILE = 2000, "taste_args_2s.jsonl"  # rerun; 1 s results: taste_args.jsonl
 assert all(30 <= len(a) <= 200 for a in ARGUMENTS), [len(a) for a in ARGUMENTS]
 
 
@@ -55,9 +56,10 @@ def tasting(text: str):
     return taste.drives(text, "left") + taste.drives(text, "right")
 
 
-def run(name, jobs):
+def run(name, jobs, duration_ms=1000):
     print(f"{name}: {len(jobs)} jobs", flush=True)
-    return steering.run_jobs(jobs, OUT / name, WORKERS, THREADS, metric=pop_metrics)
+    return steering.run_jobs(jobs, OUT / name, WORKERS, THREADS, metric=pop_metrics,
+                             duration_ms=duration_ms)
 
 
 def screen():
@@ -71,8 +73,8 @@ def screen():
 def tastings():
     for key, (name, ids) in taste.mapping().items():
         print(f"  {key} -> {name} ({len(ids)} GRNs)")
-    run("taste_args.jsonl", {f"{i}|{seed}": (tasting(a), seed)
-                             for i, a in enumerate(ARGUMENTS) for seed in SEEDS})
+    run(ARGS_FILE, {f"{i}|{seed}": (tasting(a), seed)
+                    for i, a in enumerate(ARGUMENTS) for seed in SEEDS}, DURATION_MS)
 
 
 if __name__ == "__main__":

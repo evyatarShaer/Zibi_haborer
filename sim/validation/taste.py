@@ -6,7 +6,8 @@ the v783 annotations: one group per (cell_sub_class, cell_type) with
 smell.LETTERS and gets a GRN group of the same valence; if a valence runs
 short, its largest groups are split in two (by sorted root_id). Rates come
 from smell.glomerulus_rates (same normalization, saturation, length gain,
-caps), side-balanced like smell.drives.
+caps), then the letters' total drive is fixed by length (letter_rates),
+side-balanced like smell.drives.
 """
 from functools import cache
 
@@ -97,14 +98,41 @@ def _side_indices(letter: str) -> dict[str, list[int]]:
     return {s: data.to_index(ids[g.loc[ids, "side"] == s]) for s in anatomy.SIDES}
 
 
-def drives(text: str, side: str, scale: float = 1.0):
-    """GRN Poisson drive for `text` on one side, side-balanced per group."""
+def _n(key: str) -> int:
+    return len(mapping()[key][1])
+
+
+@cache
+def _reference_total() -> float:
+    """Letters' excess drive (Hz x GRNs) at gain 1 when all 22 letters have equal share."""
+    sm = smell.SMELL
+    per = smell._saturate(1 / len(smell.LETTERS), sm["k"], sm["r_max"]) - sm["r_base"]
+    return per * sum(_n(l) for l in smell.LETTERS)
+
+
+def letter_rates(text: str) -> dict[str, float]:
+    """Per-GRN rate per letter, with the letters' total excess drive fixed by length.
+
+    Without this, total drive grows with letter coverage: a long text uses nearly
+    all 22 letters, so nearly every GRN group fires and their summed inhibition
+    silences MN9 (POC_REPORT, taste probe rerun). The total is now
+    _reference_total() x length gain; only its split across letters follows the text.
+    """
+    r_base = smell.SMELL["r_base"]
     rates = smell.glomerulus_rates(text)
     keyed = {l: rates[gl] for l, (gl, _) in smell.LETTERS.items()}
-    keyed |= {smell.EXCLAMATION[0]: rates[smell.EXCLAMATION[1]],
-              smell.QUESTION[0]: rates[smell.QUESTION[1]]}
+    total = sum((r - r_base) * _n(l) for l, r in keyed.items())
+    target = _reference_total() * smell.length_gain(len(smell.normalize(text)))
+    keyed = {l: r_base + (r - r_base) * target / total if total else r_base
+             for l, r in keyed.items()}
+    return keyed | {smell.EXCLAMATION[0]: rates[smell.EXCLAMATION[1]],
+                    smell.QUESTION[0]: rates[smell.QUESTION[1]]}
+
+
+def drives(text: str, side: str, scale: float = 1.0):
+    """GRN Poisson drive for `text` on one side, side-balanced per group."""
     out = []
-    for key, rate in keyed.items():
+    for key, rate in letter_rates(text).items():
         idx = _side_indices(key)
         mean_n = sum(len(v) for v in idx.values()) / 2
         out.append((idx[side], rate * scale * mean_n / len(idx[side])))

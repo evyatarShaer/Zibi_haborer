@@ -2,12 +2,16 @@
 
 Workers are forked after the model is built, so they share its memory.
 Results append to a JSONL file; finished job keys are skipped on rerun.
+Each record also logs its start time ("t0", ISO) and wall-clock ("wall_s").
+Metrics always see rates in Hz (counts / seconds), whatever the duration.
 Steering index SI = (L - R) / (L + R) on DNa02 rates; SI > 0 = turn left
 (DNa02 drives ipsilateral turning).
 """
 import json
 import multiprocessing as mp
 import os
+import time
+from datetime import datetime
 from functools import cache
 from pathlib import Path
 
@@ -48,9 +52,12 @@ def metrics(counts) -> dict:
 
 
 def _work(job):
-    key, drives, seed, threads = job
+    key, drives, seed, threads, duration_ms = job
     torch.set_num_threads(threads)
-    return key, _metric(_model.run(drives, DURATION_MS, seed).counts)
+    t0, start = datetime.now().isoformat(timespec="seconds"), time.perf_counter()
+    counts = _model.run(drives, duration_ms, seed).counts
+    m = _metric(counts / (duration_ms / 1000))
+    return key, m, t0, round(time.perf_counter() - start, 2)
 
 
 @cache
@@ -59,7 +66,7 @@ def _connectome_model() -> Model:
 
 
 def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
-             model: Model | None = None) -> dict:
+             model: Model | None = None, duration_ms: float = DURATION_MS) -> dict:
     """jobs: {key: (drives, seed)}. Returns {key: metric(counts)}, incl. earlier results.
 
     `model` defaults to the whole-brain model. `metric` is warmed (its caches
@@ -69,14 +76,14 @@ def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
     done = {}
     if out.exists():
         done = {r["key"]: r["m"] for r in map(json.loads, out.read_text().splitlines())}
-    todo = [(k, d, s, threads) for k, (d, s) in jobs.items() if k not in done]
+    todo = [(k, d, s, threads, duration_ms) for k, (d, s) in jobs.items() if k not in done]
     if todo:
         _model = model if model is not None else _connectome_model()
         metric(np.zeros(_model.n, dtype=np.int32))  # warm caches pre-fork (no torch op)
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
-            for i, (key, m) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
+            for i, (key, m, t0, wall) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
                 done[key] = m
-                f.write(json.dumps({"key": key, "m": m}) + "\n")
+                f.write(json.dumps({"key": key, "m": m, "t0": t0, "wall_s": wall}) + "\n")
                 f.flush()
                 if i % 50 == 0 or i == len(todo):
                     print(f"  {out.name}: {i}/{len(todo)} new", flush=True)
