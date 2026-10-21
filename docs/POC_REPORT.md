@@ -706,7 +706,7 @@ Run 2026-10-21 (afternoon). Decisions from the review: 2 s per tasting;
 length target neutral (longer argument wins 40–60% of decided
 hearings), fix the mechanism; keep the LgAG3 exclusion; log every
 tasting's wall-clock. Same 20 arguments, 30 pairs, 10 seeds, same pass
-rules. Validation code only. Raw data: `taste_args_2s.jsonl` (each
+rules. Validation code only. Raw data: `taste_args_2s_v1.jsonl` (renamed from `taste_args_2s.jsonl` when the next run reused the name; each
 record has `t0` and `wall_s`), diagnostics `taste_len_*.jsonl`.
 
 ### Cause of the length effect
@@ -796,3 +796,161 @@ the Best performance setting. WSL cannot see the cause; next step is
 Windows-side (Task Manager / Resource Monitor for `vmmem` and CPU
 clock during a run). Total probe wall time: 97 min for ~2.6 h of
 sequential compute.
+
+## Taste probe v2 — mapping by measured MN9 effect
+
+Run 2026-10-21 (evening). Decisions: valence of each GRN group =
+measured effect on MN9 in the model (literature kept as a cross-check);
+criterion (b) replaced (DECISIONS.md 2026-10-21); (f) also reported as
+the per-tasting time of the fastest 50% of tastings. Same 20 arguments,
+30 pairs, 10 seeds, 2 s tastings. Raw data: `taste_valence.jsonl`,
+`taste_len_table*.jsonl`, `taste_args_2s.jsonl`.
+
+### 1. Valence screen (`validation/taste_valence.py`)
+
+Background: sugar LB3c at 75 Hz per GRN, both sides → MN9 69.7 Hz.
+Each other eligible group added at 150 Hz; 3 seeds × 1 s. Class: E if
+delta ≥ +10.5 Hz (15% of background), I if ≤ −10.5, else N.
+
+| GRN group | GRNs | MN9 alone | delta on sugar (sd) | class | literature |
+|---|---|---|---|---|---|
+| sugar LB3c | 32 | 134 | (background) | E | attractive |
+| high-salt LB3d | 29 | 142 | +96 (12) | E | aversive ✗ |
+| pharyngeal PhG1c | 4 | 94 | +51 (5) | E | neutral |
+| pharyngeal PhG4 | 4 | 78 | +42 (5) | E | neutral |
+| putative attractive LB4b | 10 | 60 | +37 (5) | E | attractive |
+| putative attractive LB4a | 4 | 64 | +35 (5) | E | attractive |
+| putative aversive LB2a | 4 | 43 | +34 (9) | E | aversive ✗ |
+| leg LgAG2 | 12 | 0 | +33 (5) | E | neutral |
+| leg LgAG6 | 4 | 0 | +27 (6) | E | neutral |
+| taste peg dorsal | 11 | 9 | +19 (4) | E | neutral |
+| leg LgAG4 | 8 | 0 | +2 (2) | N | neutral |
+| taste peg claw | 60 | 0 | −2 (5) | N | neutral |
+| putative aversive LB2b | 4 | 0 | −8 (17) | N | aversive |
+| leg LgAG8 | 8 | 0 | −9 (2) | N | neutral |
+| bitter LB1d | 8 | 0 | −13 (10) | I | aversive |
+| leg LgAG7 | 6 | 0 | −16 (5) | I | neutral |
+| leg LgAG1 | 25 | 0 | −19 (15) | I | neutral |
+| water LB3a | 30 | 0 | −22 (8) | I | attractive ✗ |
+| bitter LB1a | 16 | 0 | −24 (6) | I | aversive |
+| putative aversive LB2c | 7 | 0 | −47 (11) | I | aversive |
+| bitter LB1b | 7 | 0 | −68 (0.5) | I | aversive |
+| bitter LB1c | 11 | 0 | −69 (1) | I | aversive |
+| leg LgAG5 | 4 | 0 | −70 (0) | I | neutral |
+| glutamate LB1e | 23 | 0 | −70 (0) | I | neutral |
+
+10 E / 4 N / 10 I. Every bitter group inhibits (literature agrees).
+Three groups contradict the literature (✗): high-salt LB3d and LB2a
+excite MN9, water LB3a inhibits.
+
+### 2. New mapping (`taste.TABLE`)
+
+- ד/ב/ש → the three strongest exciters (MN9 alone): LB3c (134), LB3d
+  (142), PhG1c (94). The easter egg is kept.
+- `!` → bitter LB1a (−24) and `?` → LB2c (−47): both inhibit. `?`
+  leaves LB3d, which excites.
+- Other 19 letters by Hebrew frequency, dealt E, I, N, E, I, N, … until
+  N runs out; within a class, stronger groups go to more frequent
+  letters. Frequency share: E 35% (+13% for ד/ב/ש), I 31%, N 22%.
+
+| E | I | N |
+|---|---|---|
+| ד ב ש י מ ת ע ק ס ג | ו ל א כ פ צ ט ז (+ `!` `?`) | ה ר נ ח |
+
+**Average-Hebrew text (1 s, 5 seeds):** 27 / 15 / **11.6** / 7.2 Hz at
+40 / 80 / 140 / 280 chars. Argument median 12.3 Hz (p25 2.6, p75 27):
+the 140-char average text sits at the **45th percentile**, mid-range.
+
+**Tried and reverted:** dropping the SPEC length gain from the total
+drive. The average text still fell 24 → 13 → 10 Hz over 40 → 140 chars,
+and longer-wins moved 34% → 30% (within 5-seed noise). No benefit, so
+SPEC §4.5 stays.
+
+### 3. Results (2 s, 200 tastings, 300 hearings)
+
+| Criterion | Rule | v1 (literature mapping) | **v2 (measured mapping)** | |
+|---|---|---|---|---|
+| (a) seed consistency | ≥ 90% | 25/27 = 93% | **28/28 = 100%** | pass |
+| (b) continuous range | ≤ 50% of tastings in any 10%-of-range band | 60% | **47%** | pass |
+| (c) bias | \|ρ\| < 0.5 | length −0.33, ד/ב/ש −0.20 | length −0.25, ד/ב/ש +0.11 | pass |
+| — longer wins | 40–60% | 25% (70/277) | **37% (108/293)** | **FAIL** (close) |
+| (d) Win share | ≥ 50% | 92% | 98% (froze 1%, tie 1%) | pass |
+| (e) runaway | < 2% | 0/200 | 0/200 (median 847 active) | pass |
+| (f) hearing ≤ 15 s | 2 tastings × 2 s, 2 threads | 26.4 s | **28.4 s** bench | **FAIL** |
+
+- **(f) undisturbed proxy:** the fastest 50% of tastings took 19.1 s
+  each (median 19.3, max 20.9) with 3 workers in parallel. Single
+  process: 14.2 s per tasting (bench). All tastings: median 20.9 s,
+  p90 26.8 s; 11 took > 60 s (max 859 s), from host stalls. So even
+  undisturbed, this machine needs ~28 s per 2 s hearing tonight. At the
+  12:22 speed (2.9 s per 1 s tasting) it would be ~11.6 s.
+- **Tie band:** not needed. Decided verdicts are 97.6% seed-consistent
+  at the 5% band. Sweep in `taste_report_2s.log`.
+- MN9 per argument now spans 0–107 Hz. Top: #19 "בפעם הבאה אני בוחר
+  את המסעדה…" (107), #11 (68), #3 (49). Long arguments: #15 34 Hz, #6
+  2.8, #10 3.0, #12 3.3, #18 2.7.
+
+### 4. Why longer still wins only 37%: newspaper vs conversational Hebrew
+
+The frequency reference is newspaper Hebrew (HaAretz 1991). The test
+arguments are chat-style and over-use ז (×2.6), א (×1.5), כ (×1.3) and
+ל (×1.2). Three of those (א, כ, ל) go to the strongest, MN9-clamping
+inhibitors. They under-use י (×0.79), ס (×0.70) and ג (×0.38), which are
+exciters. A long chat text converges to the conversational mix, which
+is net inhibitory here, so long arguments land at ~3 Hz while the
+newspaper average text sits at ~12 Hz.
+
+**Next step (not done; avoids fitting the 20 test arguments):** use an
+independent conversational letter-frequency reference (e.g. a
+subtitles or chat corpus), then re-deal the table against it.
+Alternatively, add a rule that keeps the letters over-used in speech
+(א, ל, כ, ז) out of the strongest inhibitors.
+
+### Draft SPEC changes (NOT applied; replaces the earlier draft)
+
+- **§1 Product:** "Arguments become *tastes* fed to the fly's gustatory
+  receptors; the fly tastes each argument, and the one it wants to eat
+  more wins."
+- **§2.4 Fair:** drop the antenna coin flip. Each argument is tasted
+  separately, on both sides, with the same seed (case seed + round).
+- **§4 → "Taste of words":**
+  - 4.2: "Each Hebrew letter maps to one fixed gustatory receptor neuron
+    (GRN) group (v783, grouped by sub-class × cell type, ≥ 2 GRNs per
+    side; groups that ignite the runaway alone are excluded: LB3b,
+    LgAG3). A group's valence is **measured in the simulated brain**
+    (its effect on MN9 on a sugar background) **and cross-checked with
+    the literature**. ~Balanced: excite / inhibit / neutral, frequent
+    letters spread across the three; ד/ב/ש go to the strongest exciters;
+    an average Hebrew text must land mid-range on MN9." (replaces
+    "~50 glomeruli … based on known biology").
+  - 4.3: "Intensity comes from each letter's share **relative to its
+    normal Hebrew frequency**; the letters' total drive is fixed (scaled
+    only by the length gain), so the text sets the split, not the
+    amount."
+  - 4.4: `!` → bitter LB1a, `?` → putative-aversive LB2c (both
+    inhibitory, capped).
+  - 4.5, 4.6 unchanged.
+  - 4.7 (side assignment): replaced by "each argument drives left and
+    right GRNs equally".
+  - *Open:* the frequency reference (newspaper vs conversational, §4
+    above).
+- **§5 Mood:** "hunger raises gain of MN9-exciting GRN groups".
+- **§6:** Input = Poisson spikes in GRNs. Each hearing = two runs (one
+  tasting per side), same seed, **2 s each**. Readout = MN9, L + R
+  (replaces DNa02 steering). `A`, `B` = MN9 rate of each side's
+  tasting. `decision_time_ms` / `direction_flips` from the binned A − B.
+  `deciding_neuron` = the more active MN9 of the winning tasting.
+  `giant_fiber_fired` = GF in either tasting. Performance: ≤ 15 s per
+  hearing (both runs). *Open: not met on this machine (28 s).*
+- **§7:** Froze = both tastings' MN9 < 2 Hz.
+- **§9:** "margin + L/R bar" → "margin + A/B bar".
+- **§10:** drop `side_assignment`; `input_rates` holds both tastings.
+- **§12 POC exit:**
+  - Balance: side A wins 45–55% (left-antenna clause dropped).
+  - Swap test → seed consistency: ≥ 90% of non-trivial pairs keep their
+    winner in ≥ 75% of seeds.
+  - Add: MN9 range continuous (≤ 50% of tastings in any 10%-of-range
+    band); |ρ| < 0.5 with length and with the ד/ב/ש count; longer
+    argument wins 40–60% of decided hearings; runaway < 2%.
+- **§13:** "Letter → GRN group table (measured valence) and its
+  balance"; add "conversational frequency reference".
