@@ -104,8 +104,11 @@ scripts/       repo checks (file length, clean tree)
   **"taste of words"**: letters → GRN groups (valence measured on MN9),
   each argument tasted alone for 2 s, verdict = higher MN9 rate. A SPEC
   draft is in POC_REPORT; **not applied until the user approves.**
-- **P1-10 subcircuit — in progress** (`borer_sim.subcircuit`, N chosen
-  by validation against the full brain).
+- **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
+  only N = 6 (121k neurons) matches the full brain, with no speed-up.
+  Parallel tastings (2 processes × 1 thread) are the adopted speed-up.
+- **Taste probe v3 (conversational reference + hold-out set): partial**,
+  156/400 tastings; resume `taste_probe tastings old|new`.
 - **Not started:** P1-7 mood, P1-8 readout/outcomes, P1-9 determinism +
   balance tests on the new input (`test_balance.py` does not exist yet),
   P1-11 final report, P1-12 phase gate.
