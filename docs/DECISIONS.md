@@ -530,3 +530,27 @@ Baseline subtraction: the output is fixed, so there is nothing to
 subtract. ORN-only adaptation: ruled out by the data above.
 
 **Impacts:** none yet. P1-6 stays open.
+
+---
+
+## 2026-10-21 — Taste probe criterion (b): continuous MN9 range replaces gap bins
+
+**Context:** taste probe (POC_REPORT, "Taste probe rerun"). The old (b)
+asked that the pairs' mean gaps fill ≥ 3 of 4 bins (0–10 / 10–30 /
+30–60 / 60–100%) with ≥ 10% each. With 2 s tastings, MN9 separates most
+pairs strongly (80% of pairs > 60% gap), so (b) failed even though
+strong separation is what we want from a judge. The real risk (b) was
+meant to catch is a degenerate readout: most tastings piled at one
+value (e.g. the MN9 floor), so verdicts carry no information.
+
+**Decision (user, 2026-10-21):** (b) = "MN9 verdict rates span a
+continuous range: no more than 50% of tastings fall within any band 10%
+of the range wide" (sliding window over all tastings, range = min–max
+tasting MN9). Implemented in `validation/taste_report.py`
+(`densest_band`).
+
+**Effect on earlier runs (for reference):** 1 s morning run 43% (pass);
+2 s rerun 60% (fail: tastings piled near 0 Hz).
+
+**Alternatives considered:** keep the gap bins (penalises decisive
+verdicts); drop (b) (no check against a floor-bound readout).

@@ -4,8 +4,9 @@ Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|
 Per hearing (pair x seed), A/B = total MN9 rate of each tasting:
 froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 Pass rules (fixed before running): (a) >= 90% of non-trivial pairs (mean
-gap >= 10%) have the majority winner in >= 75% of seeds; (b) mean pair
-gaps fill >= 3 of 4 bins with >= 10% each; (c) |Spearman rho| < 0.5 between
+gap >= 10%) have the majority winner in >= 75% of seeds; (b) tasting MN9
+rates span a continuous range: <= 50% of tastings within any band 10% of the
+range wide (replaced the gap-bin rule 2026-10-21, DECISIONS.md); (c) |Spearman rho| < 0.5 between
 per-argument MN9 and length, and the count of ד/ב/ש; (d) Win >= 50% of
 hearings; (e) runaway (> 4,000 active) in < 2% of tastings.
 """
@@ -23,12 +24,21 @@ from validation.steering_report import load
 from validation.taste_probe import ARGS_FILE, ARGUMENTS, DURATION_MS, PAIRS, tasting
 
 FROZE_HZ, TIE_GAP, NONTRIVIAL = 2.0, 0.05, 0.10
-BINS = (0.0, 0.1, 0.3, 0.6, 1.0001)
+BAND, MAX_IN_BAND = 0.10, 0.50
 
 
 def spearman(x, y):
     rx, ry = (np.argsort(np.argsort(v)) for v in (x, y))
     return float(np.corrcoef(rx, ry)[0, 1])
+
+
+def densest_band(rates) -> tuple[float, float]:
+    """Largest share of rates within any window BAND x (max - min) wide, and its start."""
+    r = np.sort(np.asarray(rates, dtype=float))
+    width = BAND * (r[-1] - r[0])
+    counts = np.searchsorted(r, r + width, side="right") - np.arange(len(r))
+    i = int(np.argmax(counts))
+    return counts[i] / len(r), float(r[i])
 
 
 def screen():
@@ -95,8 +105,9 @@ def pairs(tot, seeds, mean):
     print(f"\n(a) non-trivial pairs (mean gap >= {NONTRIVIAL:.0%}): {len(consistent)}/{len(PAIRS)}; "
           f"consistency >= 75%: {ok}/{len(consistent)}; consistency values "
           f"{sorted(round(c, 1) for c in consistent)}")
-    hist = np.histogram(gaps, bins=BINS)[0]
-    print(f"(b) pair mean-gap bins {list(zip(BINS[:-1], hist.tolist()))}; quartiles "
+    share, start = densest_band([v[0] for d in tot.values() for v in d.values()])
+    print(f"(b) densest {BAND:.0%}-of-range band holds {share:.0%} of tastings (from {start:.1f} Hz; "
+          f"pass <= {MAX_IN_BAND:.0%}); pair mean-gap quartiles "
           f"{np.round(np.percentile(gaps, [25, 50, 75]), 2).tolist()}")
     print(f"(c) longer text wins {longer_wins}/{decided} decided hearings")
     print(f"(d) outcomes over {n} hearings: " +
