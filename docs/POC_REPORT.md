@@ -699,3 +699,100 @@ tie band, so close noisy pairs become ties instead of coin-flip wins.
   Add: |ρ| < 0.5 between score and length, and runaway < 2% of runs.
   Outcome mix, ≤ 15 s and RAM unchanged.
 - **§13:** "Letter → GRN group mapping table and its balance".
+
+## Taste probe rerun — 2 s tastings, length-bias diagnosis
+
+Run 2026-10-21 (afternoon). Decisions from the review: 2 s per tasting;
+length target neutral (longer argument wins 40–60% of decided
+hearings), fix the mechanism; keep the LgAG3 exclusion; log every
+tasting's wall-clock. Same 20 arguments, 30 pairs, 10 seeds, same pass
+rules. Validation code only. Raw data: `taste_args_2s.jsonl` (each
+record has `t0` and `wall_s`), diagnostics `taste_len_*.jsonl`.
+
+### Cause of the length effect
+
+Diagnostic `validation/taste_length.py` (1 s, 5 seeds):
+
+| Test | What changes | Result |
+|---|---|---|
+| E1: short texts repeated ×1–×4 | only length gain (0.71 → 0.99); letter mix fixed | MN9 falls 0–35% (e.g. #14: 76 → 62 Hz) |
+| E2: all 20, length gain fixed at 1 | no gain, no verbose `!` | long texts still ~0 Hz (#6 1, #10 0, #18 2); ρ(length) −0.44 → −0.29 |
+| Average-Hebrew text (letters at corpus frequency), 40–280 chars | only length | 15 → 6.4 → 6.4 → 2.0 Hz; median short argument: 13.6 Hz |
+
+1. **Not the "too long → aversive" rule.** The verbose `!` only acts
+   above 140 chars (`len_ref`), so of the 20 arguments only #12 (170
+   chars) gets it. It does matter at the 280-char maximum (average
+   text 6.4 → 2.0 Hz from 140 to 280 chars).
+2. **The length gain is a minor factor** (E1).
+3. **Main cause: long texts converge to the average Hebrew letter mix,
+   and that mix sits at MN9's floor.** A short text samples few
+   letters, so its mix varies widely and often escapes the floor. A long
+   text uses nearly all 22 letters, so nearly every GRN group fires.
+   Pairwise, a text at the floor can only lose or tie, never win.
+4. **Why the average sits at the floor:** in the model, MN9 is a sugar
+   detector with broad inhibition. Per-group drive correlates
+   positively with MN9 only for sugar LB3c (ד, ט) and leg LgAG4 (פ).
+   Nearly all others correlate negatively. That includes the
+   "attractive" water LB3a (ב, ש) and LB4b (ו), and the "neutral" taste
+   pegs (י, 60 GRNs), glutamate LB1e (כ) and leg groups. The letter
+   valence labels (labellar literature, SPEC §4.2 "based on known
+   biology") do not match each group's effect on this readout.
+
+**Fixes applied to the taste input (`taste.letter_rates`):**
+- The letters' total excess drive is fixed at a text-independent
+  reference × the SPEC length gain, so covering more letters adds no
+  drive.
+- Each letter's input is its share relative to its Hebrew corpus
+  frequency (Rabinovich & Wintner 2016), so an average mix drives every
+  letter alike (~80 Hz at 140 chars).
+
+| Input (1 s, 5 seeds) | longer wins | ρ(MN9, length) |
+|---|---|---|
+| raw shares (original) | 19% | −0.44 |
+| + fixed total | 22% (31/144) | −0.38 |
+| + frequency-relative | 26% (38/144) | −0.29 |
+
+Not enough: even a uniform drive across all groups lands at ~3 Hz,
+because most groups inhibit MN9. **Remaining fix (needs your decision,
+since it changes SPEC §4.2):** assign each GRN group's valence by its
+measured effect on MN9 (an inhibition screen: sugar background + each
+group), then balance the table so the average Hebrew mix sits mid-range
+on MN9, not at the floor.
+
+### Results (2 s, 200 tastings, 300 hearings)
+
+| Criterion | Rule | 1 s (morning) | 2 s (now) | |
+|---|---|---|---|---|
+| (a) seed consistency | ≥ 90% | 24/29 = 83% | **25/27 = 93%** | **pass** |
+| (b) gap spread | ≥ 3 of 4 bins ≥ 10% | 3% / 13% / 10% / 73% | 10% / 3% / 7% / 80% | **FAIL** (2 bins) |
+| (c) bias | \|ρ\| < 0.5 | length −0.44, ד/ב/ש −0.33 | length −0.33, ד/ב/ש −0.20 | pass |
+| — longer wins | 40–60% (new target) | 19% (53/286) | **25% (70/277)** | **FAIL** |
+| (d) Win share | ≥ 50% | 95% | 92% (froze 3%, tie 4%) | pass |
+| (e) runaway | < 2% | 0/200 | 0/200 (median 734 active) | pass |
+| (f) hearing time | ≤ 15 s, 2 threads | 5.8 s (1 s tastings) | **26.4 s** (median of 5, idle machine) | **FAIL** |
+
+- **(a)** passes with 2 s, so no tie band is needed. Sweep for
+  reference (`taste_report band`): at the current 5% band, 97.5% of
+  decided hearings agree with their pair's majority. 10% → 97.4%,
+  25% → 98.5%, 30% → 99.2% (Win share 92 → 85%).
+- **(b)** fails because MN9 now separates most pairs strongly: 80% of
+  pairs differ by more than 60%. Few close calls.
+- **(f)**: a 2 s tasting takes ~13 s on 2 threads. At 12:22 the same
+  machine ran a 1 s tasting in 2.9 s, so the host is now ~2.3× slower
+  even when idle. Even at the morning speed, a 2 s hearing would be
+  ~11.6 s, within the limit but with little margin.
+
+### Throughput: what the timing log shows
+
+Normal wall-clock is ~25 s per 2 s tasting with 3 workers (min 9,
+median 25, p90 37 s). 14 of 200 tastings took 3–23 min (max 1,373 s).
+The slow ones cluster in episodes: 15:43–15:50, 15:57–16:05,
+16:09–16:30, ~16:40–17:00. Tastings started per 10 min: 54, 27, 23,
+32, **2, 1**, 28, 12, 21. During the episodes, Linux inside WSL showed
+only the 6 sim threads runnable at ~99% CPU, no swap, no IO wait. Even
+`ps` took > 60 s, and a fixed Python loop ran ~3× slower than normal.
+So the whole VM was starved of real CPU by the Windows host, despite
+the Best performance setting. WSL cannot see the cause; next step is
+Windows-side (Task Manager / Resource Monitor for `vmmem` and CPU
+clock during a run). Total probe wall time: 97 min for ~2.6 h of
+sequential compute.

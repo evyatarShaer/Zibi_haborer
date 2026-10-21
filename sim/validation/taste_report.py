@@ -1,6 +1,6 @@
 """Score the taste probe (validation.taste_probe) against the pre-set criteria.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args [file]|bench]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|band [file]|bench]
 Per hearing (pair x seed), A/B = total MN9 rate of each tasting:
 froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 Pass rules (fixed before running): (a) >= 90% of non-trivial pairs (mean
@@ -103,6 +103,34 @@ def pairs(tot, seeds, mean):
           ", ".join(f"{k} {v} ({v / n:.0%})" for k, v in sorted(outcomes.items())))
 
 
+def band(name=ARGS_FILE):
+    """Tie-band sweep: a hearing is decided if not froze and gap >= band. Consistent =
+    decided hearings that agree with their pair's majority decided winner."""
+    tot = defaultdict(dict)
+    for key, m in load(name).items():
+        i, seed = key.split("|")
+        tot[int(i)][seed] = sum(m["MN9"])
+    seeds = sorted(next(iter(tot.values())))
+    print("| tie band | Win share | decided consistent | pairs >= 75% | longer wins |\n|---|---|---|---|---|")
+    for b in (0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50):
+        win = agree = longer = 0
+        good = npairs = 0
+        for a, c in PAIRS:
+            w = defaultdict(int)
+            for s in seeds:
+                x, y = tot[a][s], tot[c][s]
+                if not (x < FROZE_HZ and y < FROZE_HZ) and abs(x - y) / (x + y) >= b:
+                    w[a if x > y else c] += 1
+            n = sum(w.values())
+            if n:
+                top = max(w, key=w.get)
+                win, agree, npairs = win + n, agree + w[top], npairs + 1
+                good += w[top] / n >= 0.75
+                longer += w[a if len(ARGUMENTS[a]) > len(ARGUMENTS[c]) else c]
+        print(f"| {b:.0%} | {win / (len(PAIRS) * len(seeds)):.0%} | {agree / win:.1%} | "
+              f"{good}/{npairs} | {longer / win:.0%} |")
+
+
 def bench():
     from validation.steering import _connectome_model
     torch.set_num_threads(2)
@@ -119,5 +147,5 @@ def bench():
 
 
 if __name__ == "__main__":
-    {"screen": screen, "args": args, "bench": bench}[sys.argv[1] if len(sys.argv) > 1 else "args"](
+    {"screen": screen, "args": args, "band": band, "bench": bench}[sys.argv[1] if len(sys.argv) > 1 else "args"](
         *sys.argv[2:])
