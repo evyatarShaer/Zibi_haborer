@@ -22,7 +22,9 @@ VALENCE = {  # GRN sub-class -> valence used for the mapping (labellar taste lit
     "putative_aversive": smell.AVERSIVE,
 }
 PUNCT = {"!": "bitter:LB1a", "?": "high_salt/heavy_metal:LB3d"}  # one aversive type each
-EXCLUDED: set[str] = set()  # groups that ignite the runaway (taste_probe screen)
+# Groups that ignite the runaway alone at 150 Hz (taste_probe screen, > 4,000 active):
+# LB3b 3/3 seeds (~8.5k active), LgAG3 2/3 seeds (~8.4k). All other groups <= 565.
+EXCLUDED = {"sugar/low_salt:LB3b", "SA_VTV_pro_meso_meta:LgAG3"}
 
 
 def grns() -> pd.DataFrame:
