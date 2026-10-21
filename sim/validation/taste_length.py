@@ -4,9 +4,12 @@ Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_length [run|bal
 E1 "repeat": short arguments without ! or ?, repeated x1..x4; letter shares
 and distinct letters stay fixed, only the length gain grows.
 E2 "flat": all 20 arguments with the length gain fixed at 1 (no verbose "!").
-E1/E2 data were made before taste.letter_rates fixed the total drive; rerunning
-them now would measure the fixed input. "balanced": the fixed input, 1 s x 5
-seeds, scored with `taste_report args taste_len_balanced.jsonl`.
+"balanced": the 20 arguments, 1 s x 5 seeds, scored with `taste_report args <file>`.
+"average": synthetic "average Hebrew" texts (letters at corpus frequency) of
+growing length: where a long text's letter mix lands on MN9.
+Input versions (rerunning measures the current taste.letter_rates): E1/E2 and
+taste_len_average.jsonl used raw shares; taste_len_balanced.jsonl raw shares +
+fixed total (commit 0792bb9); default files: frequency-relative + fixed total.
 """
 import sys
 from collections import defaultdict
@@ -15,6 +18,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from borer_sim import smell
+from tests.test_smell import HEBREW_FREQ
 from validation.steering_report import load
 from validation.taste_probe import ARGUMENTS, run, tasting
 from validation.taste_report import spearman
@@ -43,9 +47,21 @@ def experiments():
     run("taste_len_flat.jsonl", jobs)
 
 
-def balanced():
-    run("taste_len_balanced.jsonl", {f"{i}|{s}": (tasting(a), s)
+def balanced(name="taste_len_relative.jsonl"):
+    run(name, {f"{i}|{s}": (tasting(a), s)
                                      for i, a in enumerate(ARGUMENTS) for s in SEEDS})
+
+
+def average_text(n_chars: int) -> str:
+    """Letters at Hebrew corpus frequency, a space after every 5th letter."""
+    n = round(n_chars * 5 / 6)
+    letters = "".join(l * round(f * n) for l, f in HEBREW_FREQ.items())
+    return " ".join(letters[i:i + 5] for i in range(0, len(letters), 5))
+
+
+def average(name="taste_len_avg_relative.jsonl"):
+    run(name, {f"avg{n}|{s}": (tasting(average_text(n)), s)
+                                    for n in (40, 80, 140, 280) for s in SEEDS})
 
 
 def mn9(name) -> dict:
@@ -71,4 +87,5 @@ def report():
 
 
 if __name__ == "__main__":
-    {"run": experiments, "balanced": balanced, "report": report}[sys.argv[1]]()
+    {"run": experiments, "balanced": balanced, "average": average,
+     "report": report}[sys.argv[1]](*sys.argv[2:])

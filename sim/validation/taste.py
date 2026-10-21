@@ -5,15 +5,17 @@ the v783 annotations: one group per (cell_sub_class, cell_type) with
 >= MIN_PER_SIDE GRNs on each side. A letter keeps its valence from
 smell.LETTERS and gets a GRN group of the same valence; if a valence runs
 short, its largest groups are split in two (by sorted root_id). Rates come
-from smell.glomerulus_rates (same normalization, saturation, length gain,
-caps), then the letters' total drive is fixed by length (letter_rates),
+from letter_rates: the smell.py formula on frequency-relative letter shares,
+with the letters' total drive fixed by length (same caps for ! and ?),
 side-balanced like smell.drives.
 """
+from collections import Counter
 from functools import cache
 
 import pandas as pd
 
 from borer_sim import anatomy, data, smell
+from tests.test_smell import HEBREW_FREQ  # Rabinovich & Wintner 2016 corpus frequencies
 
 MIN_PER_SIDE = 2
 VALENCE = {  # GRN sub-class -> valence used for the mapping (labellar taste literature)
@@ -111,20 +113,28 @@ def _reference_total() -> float:
 
 
 def letter_rates(text: str) -> dict[str, float]:
-    """Per-GRN rate per letter, with the letters' total excess drive fixed by length.
+    """Per-GRN rate per letter (plus "!" and "?"), from the text's letter mix.
 
-    Without this, total drive grows with letter coverage: a long text uses nearly
-    all 22 letters, so nearly every GRN group fires and their summed inhibition
-    silences MN9 (POC_REPORT, taste probe rerun). The total is now
-    _reference_total() x length gain; only its split across letters follows the text.
+    Two fixes for the length bias (POC_REPORT, taste probe rerun):
+    1. A letter's input is its share relative to its Hebrew corpus frequency, so
+       an average Hebrew mix drives every letter alike. With raw shares a long
+       text converges to the average mix, which sits near MN9's floor, so long
+       texts could only lose.
+    2. The letters' total excess drive is fixed at _reference_total() x length
+       gain, so covering more letters adds no drive; the text sets only the split.
     """
-    r_base = smell.SMELL["r_base"]
-    rates = smell.glomerulus_rates(text)
-    keyed = {l: rates[gl] for l, (gl, _) in smell.LETTERS.items()}
-    total = sum((r - r_base) * _n(l) for l, r in keyed.items())
-    target = _reference_total() * smell.length_gain(len(smell.normalize(text)))
-    keyed = {l: r_base + (r - r_base) * target / total if total else r_base
+    sm = smell.SMELL
+    norm = smell.normalize(text)
+    counts = Counter(norm)
+    n = sum(counts[l] for l in smell.LETTERS)
+    gain = smell.length_gain(len(norm))
+    keyed = {l: smell._saturate(counts[l] / n / (HEBREW_FREQ[l] * len(smell.LETTERS)) if n else 0.0,
+                                sm["k"], gain * sm["r_max"]) for l in smell.LETTERS}
+    total = sum((r - sm["r_base"]) * _n(l) for l, r in keyed.items())
+    target = _reference_total() * gain
+    keyed = {l: sm["r_base"] + (r - sm["r_base"]) * target / total if total else sm["r_base"]
              for l, r in keyed.items()}
+    rates = smell.glomerulus_rates(text)
     return keyed | {smell.EXCLAMATION[0]: rates[smell.EXCLAMATION[1]],
                     smell.QUESTION[0]: rates[smell.QUESTION[1]]}
 
