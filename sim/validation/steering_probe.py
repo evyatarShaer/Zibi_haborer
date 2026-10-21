@@ -6,6 +6,8 @@ Run from sim/:  PYTHONPATH=src uv run python -m validation.steering_probe
 3. the 5 matched pairs again at x0.1 input.
 Results: data/processed/validation/steering_*.jsonl (resumable).
 """
+import os
+
 from borer_sim import anatomy, smell
 from validation import steering
 from validation.sugar_mn9 import OUT
@@ -15,7 +17,10 @@ RATES = {"low": 20.0, "mid": 60.0, "high": 150.0}  # per-ORN Hz, from smell.py's
 GLOM_SEEDS = (783, 784, 785)
 PAIR_SEEDS = tuple(range(783, 793))
 LOW_SCALE = 0.1
-WORKERS, THREADS = 3, 2  # workers x threads <= 6 cores AND workers x 2.5 GB <= free RAM
+# workers x threads <= 6 cores AND workers x 2.5 GB <= free RAM; env override for lighter
+# loads (the Windows host stalls the VM under sustained 6-core load, POC_REPORT)
+WORKERS = int(os.environ.get("BORER_WORKERS", 3))
+THREADS = int(os.environ.get("BORER_THREADS", 2))
 
 X_TEXTS = {  # letter-sets by valence group (smell.LETTERS) + natural arguments
     "x_att": "דבש טוב לגדול",

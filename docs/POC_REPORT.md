@@ -954,3 +954,85 @@ Alternatively, add a rule that keeps the letters over-used in speech
     argument wins 40–60% of decided hearings; runaway < 2%.
 - **§13:** "Letter → GRN group table (measured valence) and its
   balance"; add "conversational frequency reference".
+
+## Taste probe v3 — conversational reference, hold-out set, subcircuit
+
+Run 2026-10-21 evening → 2026-10-22 00:40. SIM_VERSION 0.3.0.
+**Status: partial.** The Windows host throttled the VM to ~1/25 speed
+from ~23:15 on (tastings ~1,000–2,000 s instead of ~20 s, at both 3 × 2
+and 2 × 1 workers). The probes were stopped at 156 of 400 tastings and
+resume exactly from `taste_v3_{old,new}.jsonl`.
+
+### 1. Conversational frequency reference
+
+OPUS OpenSubtitles v2018 Hebrew word-frequency list (6.7 MB; source,
+checksum and license in DATA_SOURCES.md) → `validation/letter_freq.py`
+`CHAT_FREQ`. Conversational vs newspaper: א 8.3 vs 4.8%, ז 1.8 vs 0.9%,
+כ 3.7 vs 2.6%, ר 4.9 vs 5.8%. This independently confirms the skew seen
+in the test arguments. `letter_rates` and the average-text generator now
+use `CHAT_FREQ`. `TABLE` re-dealt with the same rule (letters ordered by
+`CHAT_FREQ`, E/I/N deal, stronger |delta| to more frequent letters);
+nothing tuned on test arguments. Class share of conversational letter
+mass: E 34% (+12% for ד/ב/ש), I 31%, N 24%.
+
+Average conversational text (1 s, 5 seeds): 27 / 16 / **10.8** / 6.8 Hz
+at 40 / 80 / 140 / 280 chars (the previous argument median was ~12 Hz).
+
+### 2. Hold-out check (partial)
+
+`validation/taste_sets.py`: `NEW` = 20 new arguments (43–167 chars,
+4 of them > 130), written before any run with the new table; 30 new
+pairs (`Random(784)`). Full brain, 2 s.
+
+| | old set (args 0–9 × 10 seeds) | new set (args 0–9 × 5 seeds) |
+|---|---|---|
+| probe pairs usable | 6 / 30 | 7 / 30 |
+| (a) seed consistency | 5/5 | 7/7 |
+| (b) densest 10% band | 28% | 50% (limit) |
+| (c) ρ(MN9, length) | −0.32 | +0.08 |
+| (c) ρ(MN9, ד/ב/ש) | +0.14 | **+0.70** (fails if it holds) |
+| longer wins, probe pairs | 33/56 = 59% | 15/35 = 43% |
+| longer wins, all pairs among complete args | 177/414 = **43%** | 113/209 = **54%** |
+| (d) Win share | 93% (tie 7%) | 100% |
+| (e) runaway | 0/106 | 0/50 |
+
+Long hold-out argument #9 (131 chars) scores 33 Hz, mid-to-high. With
+the conversational reference, length is in the 40–60% range on both
+sets (all-pairs counts). **Caveats:** only 10 of 20 arguments per set;
+the new set has 5 of 10 seeds. The ד/ב/ש correlation on the new set
+(+0.70) suggests the easter egg (ד/ב/ש on the three strongest exciters)
+may now be too strong; this needs the full set to confirm.
+
+### 3. Subcircuit (P1-10) and parallel tastings
+
+Rule (`borer_sim.subcircuit`): keep v if hops(GRN → v) + hops(v → MN9
+or Giant Fiber) ≤ N. Validated on hold-out args 0–9 × seeds 783–787
+against the full brain (same seeds → same Poisson input):
+
+| N | neurons | args within ±5% | same winner | bit-identical | hearing time | speed-up |
+|---|---|---|---|---|---|---|
+| full | 138,639 | — | — | — | **16.65 s** | — |
+| 3 | 2,194 | 4/10 | 212/225 | 7/50 | 4.84 s | ×3.4 |
+| 4 | 15,347 | 4/10 | 212/225 | 8/50 | 6.38 s | ×2.6 |
+| 5 | 67,359 | 6/10 | 220/225 | 12/50 | 10.24 s | ×1.6 |
+| **6** | 120,645 | **10/10** | **225/225** | **50/50** | 17.91 s | ×0.9 |
+
+Hearing time = two 2 s tastings in parallel (2 processes × 1 thread),
+median of 10, evening host speed. **Only N = 6 validates, and it gives
+no speed-up.** One differing spike turns a run into an independent
+noise draw, so ±5% effectively requires exactness. The connectome is
+small-world: 3 hops downstream of the GRNs reach 121,752 neurons.
+**Parallel tastings alone: 28.4 s → 16.65 s (×1.7)**, still above
+15 s on this host tonight (≈ 8 s at the morning's speed). At small N the
+per-step Python overhead (20,000 steps per tasting) dominates, so the
+next lever is fewer ops per step or an activity-based circuit, not
+more pruning. Details: DECISIONS.md 2026-10-21 (0.3.0).
+
+### Remaining
+
+- Finish the probes (244 tastings). Resume with
+  `PYTHONPATH=src uv run python -m validation.taste_probe tastings old`
+  then `new`; score with `taste_report args old|new`.
+- Decide on the ד/ב/ש placement if +0.70 holds on the full new set.
+- Performance: parallel tastings adopted; subcircuit not adopted.
+- Not run: `test_balance.py` (does not exist yet; P1-9).
