@@ -2,9 +2,8 @@
 
 Validation only; smell.py is unchanged. Groups are built at runtime from
 the v783 annotations: one group per (cell_sub_class, cell_type) with
->= MIN_PER_SIDE GRNs on each side. A letter keeps its valence from
-smell.LETTERS and gets a GRN group of the same valence; if a valence runs
-short, its largest groups are split in two (by sorted root_id). Rates come
+>= MIN_PER_SIDE GRNs on each side. Each letter / mark gets one group by its
+measured effect on MN9 (TABLE; literature valence only cross-checked). Rates come
 from letter_rates: the smell.py formula on frequency-relative letter shares,
 with the letters' total drive fixed by length (same caps for ! and ?),
 side-balanced like smell.drives.
@@ -18,13 +17,44 @@ from borer_sim import anatomy, data, smell
 from tests.test_smell import HEBREW_FREQ  # Rabinovich & Wintner 2016 corpus frequencies
 
 MIN_PER_SIDE = 2
-VALENCE = {  # GRN sub-class -> valence used for the mapping (labellar taste literature)
+VALENCE = {  # GRN sub-class -> literature valence (labellar taste), cross-check only
     "sugar": smell.ATTRACTIVE, "sugar/low_salt": smell.ATTRACTIVE,
     "water": smell.ATTRACTIVE, "putative_attractive": smell.ATTRACTIVE,
     "bitter": smell.AVERSIVE, "high_salt/heavy_metal": smell.AVERSIVE,
     "putative_aversive": smell.AVERSIVE,
 }
-PUNCT = {"!": "bitter:LB1a", "?": "high_salt/heavy_metal:LB3d"}  # one aversive type each
+# Letter / mark -> GRN group, by MEASURED effect on MN9 (validation/taste_valence.py:
+# sugar LB3c at 75 Hz -> MN9 69.7 Hz, + group at 150 Hz, 3 seeds, 1 s). Class E/I/N =
+# delta >= +10.5 / <= -10.5 Hz (15% of background) / between; literature (VALENCE) is a
+# cross-check only. Rule: ד ב ש -> the 3 strongest exciters (MN9 alone 134/142/94 Hz);
+# ! ? -> inhibitors; the other 19 letters by Hebrew frequency dealt E,I,N,E,I,N,... until
+# N runs out, stronger groups to more frequent letters within a class.
+TABLE = {  # key: (group, "class delta Hz | literature")
+    "ד": ("sugar:LB3c", "E alone 134 | attractive"),
+    "ב": ("high_salt/heavy_metal:LB3d", "E +96 | aversive"),
+    "ש": ("accessory_pharyngeal_nerve_sensory_group1:PhG1c", "E +51 | neutral"),
+    "!": ("bitter:LB1a", "I -24 | aversive"),
+    "?": ("putative_aversive:LB2c", "I -47 | aversive"),
+    "י": ("accessory_pharyngeal_nerve_sensory_group1:PhG4", "E +42 | neutral"),
+    "ו": ("SA_VTV_pro_meso_meta:LgAG5", "I -70 | neutral"),
+    "ה": ("SA_VTV_pro_meso_meta:LgAG4", "N +2 | neutral"),
+    "מ": ("putative_attractive:LB4b", "E +37 | attractive"),
+    "ל": ("glutamate:LB1e", "I -70 | neutral"),
+    "ר": ("taste peg:claw_tpGRN", "N -2 | neutral"),
+    "ת": ("putative_attractive:LB4a", "E +35 | attractive"),
+    "א": ("bitter:LB1c", "I -69 | aversive"),
+    "נ": ("putative_aversive:LB2b", "N -8 | aversive"),
+    "ע": ("putative_aversive:LB2a", "E +34 | aversive"),
+    "כ": ("bitter:LB1b", "I -68 | aversive"),
+    "ח": ("SA_VTV_pro_meso_meta:LgAG8", "N -9 | neutral"),
+    "ק": ("SA_VTV_pro_meso_meta:LgAG2", "E +33 | neutral"),
+    "פ": ("water:LB3a", "I -22 | attractive"),
+    "ס": ("SA_VTV_pro_meso_meta:LgAG6", "E +27 | neutral"),
+    "צ": ("SA_VTV_pro_meso_meta:LgAG1", "I -19 | neutral"),
+    "ג": ("taste peg:dorsal_tpGRN", "E +19 | neutral"),
+    "ט": ("SA_VTV_pro_meso_meta:LgAG7", "I -16 | neutral"),
+    "ז": ("bitter:LB1d", "I -13 | aversive"),
+}
 # Groups that ignite the runaway alone at 150 Hz (taste_probe screen, > 4,000 active):
 # LB3b 3/3 seeds (~8.5k active), LgAG3 2/3 seeds (~8.4k). All other groups <= 565.
 EXCLUDED = {"sugar/low_salt:LB3b", "SA_VTV_pro_meso_meta:LgAG3"}
@@ -55,42 +85,11 @@ def _groups(g: pd.DataFrame) -> list[tuple[str, str, pd.Index]]:
     return out
 
 
-def _splittable(group, g) -> bool:
-    sides = g.loc[group[2], "side"].value_counts().reindex(anatomy.SIDES, fill_value=0)
-    return sides.min() >= 2 * MIN_PER_SIDE
-
-
-def _split(group, g):
-    name, val, ids = group
-    halves = []
-    for k in (0, 1):
-        sub = pd.Index([i for side in anatomy.SIDES
-                        for i in sorted(g.loc[ids][g.loc[ids, "side"] == side].index)[k::2]])
-        halves.append((f"{name}/{k + 1}", val, sub))
-    return halves
-
-
 @cache
 def mapping() -> dict[str, tuple[str, pd.Index]]:
-    """letter or mark -> (GRN group name, root_ids). Deterministic."""
-    g = grns()
-    pool = {p[0]: p for p in _groups(g)}
-    out = {mark: (name, pool.pop(name)[2]) for mark, name in PUNCT.items()}
-    pool = list(pool.values())
-    for val in (smell.ATTRACTIVE, smell.AVERSIVE, smell.NEUTRAL):
-        letters = [l for l, (_, v) in smell.LETTERS.items() if v == val]
-        groups = sorted((p for p in pool if p[1] == val), key=lambda p: -len(p[2]))
-        while len(groups) < len(letters):
-            big = next((p for p in groups if _splittable(p, g)), None)
-            if big is None:
-                break
-            groups = sorted([p for p in groups if p is not big] + _split(big, g),
-                            key=lambda p: -len(p[2]))
-        if len(groups) < len(letters):
-            raise ValueError(f"{val}: {len(groups)} GRN groups for {len(letters)} letters")
-        for letter, (name, _, ids) in zip(letters, groups):
-            out[letter] = (name, ids)
-    return out
+    """letter or mark -> (GRN group name, root_ids), from TABLE."""
+    pool = {name: ids for name, _, ids in _groups(grns())}
+    return {key: (name, pool[name]) for key, (name, _) in TABLE.items()}
 
 
 @cache
