@@ -14,7 +14,7 @@ from functools import cache
 import pandas as pd
 
 from borer_sim import anatomy, data, smell
-from tests.test_smell import HEBREW_FREQ  # Rabinovich & Wintner 2016 corpus frequencies
+from validation.letter_freq import CHAT_FREQ  # conversational Hebrew (OpenSubtitles)
 
 MIN_PER_SIDE = 2
 VALENCE = {  # GRN sub-class -> literature valence (labellar taste), cross-check only
@@ -27,8 +27,8 @@ VALENCE = {  # GRN sub-class -> literature valence (labellar taste), cross-check
 # sugar LB3c at 75 Hz -> MN9 69.7 Hz, + group at 150 Hz, 3 seeds, 1 s). Class E/I/N =
 # delta >= +10.5 / <= -10.5 Hz (15% of background) / between; literature (VALENCE) is a
 # cross-check only. Rule: ד ב ש -> the 3 strongest exciters (MN9 alone 134/142/94 Hz);
-# ! ? -> inhibitors; the other 19 letters by Hebrew frequency dealt E,I,N,E,I,N,... until
-# N runs out, stronger groups to more frequent letters within a class.
+# ! ? -> inhibitors; the other 19 letters by conversational frequency (CHAT_FREQ) dealt
+# E,I,N,E,I,N,... until N runs out, stronger |delta| to more frequent letters in a class.
 TABLE = {  # key: (group, "class delta Hz | literature")
     "ד": ("sugar:LB3c", "E alone 134 | attractive"),
     "ב": ("high_salt/heavy_metal:LB3d", "E +96 | aversive"),
@@ -37,23 +37,23 @@ TABLE = {  # key: (group, "class delta Hz | literature")
     "?": ("putative_aversive:LB2c", "I -47 | aversive"),
     "י": ("accessory_pharyngeal_nerve_sensory_group1:PhG4", "E +42 | neutral"),
     "ו": ("SA_VTV_pro_meso_meta:LgAG5", "I -70 | neutral"),
-    "ה": ("SA_VTV_pro_meso_meta:LgAG4", "N +2 | neutral"),
-    "מ": ("putative_attractive:LB4b", "E +37 | attractive"),
+    "ה": ("SA_VTV_pro_meso_meta:LgAG8", "N -9 | neutral"),
+    "א": ("putative_attractive:LB4b", "E +37 | attractive"),
     "ל": ("glutamate:LB1e", "I -70 | neutral"),
-    "ר": ("taste peg:claw_tpGRN", "N -2 | neutral"),
+    "מ": ("putative_aversive:LB2b", "N -8 | aversive"),
     "ת": ("putative_attractive:LB4a", "E +35 | attractive"),
-    "א": ("bitter:LB1c", "I -69 | aversive"),
-    "נ": ("putative_aversive:LB2b", "N -8 | aversive"),
-    "ע": ("putative_aversive:LB2a", "E +34 | aversive"),
-    "כ": ("bitter:LB1b", "I -68 | aversive"),
-    "ח": ("SA_VTV_pro_meso_meta:LgAG8", "N -9 | neutral"),
+    "נ": ("bitter:LB1c", "I -69 | aversive"),
+    "ר": ("taste peg:claw_tpGRN", "N -2 | neutral"),
+    "כ": ("putative_aversive:LB2a", "E +34 | aversive"),
+    "ע": ("bitter:LB1b", "I -68 | aversive"),
+    "ח": ("SA_VTV_pro_meso_meta:LgAG4", "N +2 | neutral"),
     "ק": ("SA_VTV_pro_meso_meta:LgAG2", "E +33 | neutral"),
-    "פ": ("water:LB3a", "I -22 | attractive"),
-    "ס": ("SA_VTV_pro_meso_meta:LgAG6", "E +27 | neutral"),
-    "צ": ("SA_VTV_pro_meso_meta:LgAG1", "I -19 | neutral"),
-    "ג": ("taste peg:dorsal_tpGRN", "E +19 | neutral"),
-    "ט": ("SA_VTV_pro_meso_meta:LgAG7", "I -16 | neutral"),
-    "ז": ("bitter:LB1d", "I -13 | aversive"),
+    "ז": ("water:LB3a", "I -22 | attractive"),
+    "פ": ("SA_VTV_pro_meso_meta:LgAG6", "E +27 | neutral"),
+    "ס": ("SA_VTV_pro_meso_meta:LgAG1", "I -19 | neutral"),
+    "צ": ("taste peg:dorsal_tpGRN", "E +19 | neutral"),
+    "ג": ("SA_VTV_pro_meso_meta:LgAG7", "I -16 | neutral"),
+    "ט": ("bitter:LB1d", "I -13 | aversive"),
 }
 # Groups that ignite the runaway alone at 150 Hz (taste_probe screen, > 4,000 active):
 # LB3b 3/3 seeds (~8.5k active), LgAG3 2/3 seeds (~8.4k). All other groups <= 565.
@@ -115,8 +115,8 @@ def letter_rates(text: str) -> dict[str, float]:
     """Per-GRN rate per letter (plus "!" and "?"), from the text's letter mix.
 
     Two fixes for the length bias (POC_REPORT, taste probe rerun):
-    1. A letter's input is its share relative to its Hebrew corpus frequency, so
-       an average Hebrew mix drives every letter alike. With raw shares a long
+    1. A letter's input is its share relative to its conversational Hebrew
+       frequency (CHAT_FREQ), so an average chat mix drives every letter alike. With raw shares a long
        text converges to the average mix, which sits near MN9's floor, so long
        texts could only lose.
     2. The letters' total excess drive is fixed at _reference_total() x length
@@ -127,7 +127,7 @@ def letter_rates(text: str) -> dict[str, float]:
     counts = Counter(norm)
     n = sum(counts[l] for l in smell.LETTERS)
     gain = smell.length_gain(len(norm))
-    keyed = {l: smell._saturate(counts[l] / n / (HEBREW_FREQ[l] * len(smell.LETTERS)) if n else 0.0,
+    keyed = {l: smell._saturate(counts[l] / n / (CHAT_FREQ[l] * len(smell.LETTERS)) if n else 0.0,
                                 sm["k"], gain * sm["r_max"]) for l in smell.LETTERS}
     total = sum((r - sm["r_base"]) * _n(l) for l, r in keyed.items())
     target = _reference_total() * gain

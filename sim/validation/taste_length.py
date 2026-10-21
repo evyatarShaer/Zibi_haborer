@@ -5,7 +5,7 @@ E1 "repeat": short arguments without ! or ?, repeated x1..x4; letter shares
 and distinct letters stay fixed, only the length gain grows.
 E2 "flat": all 20 arguments with the length gain fixed at 1 (no verbose "!").
 "balanced": the 20 arguments, 1 s x 5 seeds, scored with `taste_report args <file>`.
-"average": synthetic "average Hebrew" texts (letters at corpus frequency) of
+"average": synthetic "average Hebrew" texts (letters at CHAT_FREQ) of
 growing length: where a long text's letter mix lands on MN9.
 Input versions (rerunning measures the current taste.letter_rates): E1/E2 and
 taste_len_average.jsonl used raw shares; taste_len_balanced.jsonl raw shares +
@@ -18,7 +18,7 @@ from contextlib import contextmanager
 import numpy as np
 
 from borer_sim import smell
-from tests.test_smell import HEBREW_FREQ
+from validation.letter_freq import CHAT_FREQ
 from validation.steering_report import load
 from validation.taste_probe import ARGUMENTS, run, tasting
 from validation.taste_report import spearman
@@ -53,9 +53,9 @@ def balanced(name="taste_len_relative.jsonl"):
 
 
 def average_text(n_chars: int) -> str:
-    """Letters at Hebrew corpus frequency, a space after every 5th letter."""
+    """Letters at conversational Hebrew frequency, a space after every 5th letter."""
     n = round(n_chars * 5 / 6)
-    letters = "".join(l * round(f * n) for l, f in HEBREW_FREQ.items())
+    letters = "".join(l * round(f * n) for l, f in CHAT_FREQ.items())
     return " ".join(letters[i:i + 5] for i in range(0, len(letters), 5))
 
 

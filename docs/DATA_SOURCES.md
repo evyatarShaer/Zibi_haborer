@@ -170,3 +170,25 @@ approved exactly these three files on 2026-10-19.
   30 × 1 s trials, **FlyWire v630** IDs.
 - **Purpose:** the quantitative target for the P1-3 baseline (MN9
   rates, active-neuron count). License: CC BY-NC 4.0 (derived data).
+
+## Conversational Hebrew letter frequencies (taste input reference)
+
+Downloaded 2026-10-21 after user approval (cap 200 MB).
+
+- **Source:** OPUS OpenSubtitles v2018, Hebrew word-frequency list
+  (Lison & Tiedemann 2016, "OpenSubtitles2016: Extracting Large
+  Parallel Corpora from Movie and TV Subtitles", LREC; OPUS: Tiedemann
+  2012).
+- **URL:** https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/freq/he.freq.gz
+- **Size:** 6,658,224 bytes; 1,432,625 lines (`count token`).
+- **SHA-256:** `44722d2a7a8a654fb7550a6a8c4ed1e77c243da4ddcae5b0760df113a16d0258`
+- **Destination:** `sim/data/raw/opus_he_freq/he.freq.gz` (gitignored).
+- **License:** OPUS redistributes OpenSubtitles data for research;
+  attribution to opensubtitles.org and the papers above. Only derived
+  aggregate letter frequencies (22 numbers) are kept in code.
+- **Use:** `validation/letter_freq.py` weights each token's letters
+  (`smell.normalize`: niqqud stripped, finals merged) by its count and
+  stores the result as `CHAT_FREQ`. Not used: the raw 956 MB mono text.
+- **Why:** the newspaper reference (Rabinovich & Wintner 2016, HaAretz)
+  under-represents chat letters. Conversational vs newspaper: א 8.3% vs
+  4.8%, ז 1.8% vs 0.9%, כ 3.7% vs 2.6%, י 11.2% vs 11.9%.
