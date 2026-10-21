@@ -35,6 +35,7 @@ class Model:
 
     def __init__(self, n: int, pre: np.ndarray, post: np.ndarray, signed_count: np.ndarray):
         self.n = n
+        self.keep = None  # full-brain indices of a subcircuit's neurons (None = whole brain)
         order = np.argsort(pre, kind="stable")
         indptr = np.concatenate([[0], np.cumsum(np.bincount(pre, minlength=n))])
         self.indptr = torch.from_numpy(indptr)
@@ -46,6 +47,20 @@ class Model:
     def from_connectome(cls) -> "Model":
         """The whole-brain FlyWire v783 model."""
         return cls(*data.edges())
+
+    @classmethod
+    def subcircuit(cls, keep) -> "Model":
+        """Model of the neurons `keep` (sorted full-brain indices), edges among them only.
+
+        run() takes and returns full-brain indices, so readouts are unchanged."""
+        n, pre, post, w = data.edges()
+        keep = np.asarray(keep, dtype=np.int64)
+        local = np.full(n, -1, dtype=np.int64)
+        local[keep] = np.arange(len(keep))
+        m = (local[pre] >= 0) & (local[post] >= 0)
+        model = cls(len(keep), local[pre[m]], local[post[m]], w[m])
+        model.keep, model._local, model.full_n = keep, local, n
+        return model
 
     def _deliver(self, g: torch.Tensor, pre: torch.Tensor) -> None:
         """g[post] += w for every synapse of the presynaptic neurons `pre`."""
@@ -60,6 +75,19 @@ class Model:
     def run(self, drives: list[tuple[list[int], float]], duration_ms: float,
             seed: int) -> Result:
         """Simulate `duration_ms` with Poisson drive [(model indices, rate Hz)]."""
+        if self.keep is not None:
+            drives = [(self._local[np.asarray(idx, dtype=np.int64)], r) for idx, r in drives]
+            if any((idx < 0).any() for idx, _ in drives):
+                raise ValueError("drive targets a neuron outside the subcircuit")
+            return self._expand(self._simulate(drives, duration_ms, seed))
+        return self._simulate(drives, duration_ms, seed)
+
+    def _expand(self, r: Result) -> Result:
+        counts = np.zeros(self.full_n, dtype=np.int32)
+        counts[self.keep] = r.counts
+        return Result(counts, self.keep[r.active], r.binned)
+
+    def _simulate(self, drives, duration_ms: float, seed: int) -> Result:
         p = LIF
         steps = round(duration_ms / DT_MS)
         ev, eg = math.exp(-DT_MS / p["t_mbr"]), math.exp(-DT_MS / p["tau"])
@@ -67,7 +95,7 @@ class Model:
         th, u_rst = p["v_th"] - p["v_0"], p["v_rst"] - p["v_0"]
         w_poi = p["f_poi"] * p["w_syn"]
 
-        targets = torch.tensor([i for idx, _ in drives for i in idx], dtype=torch.long)
+        targets = torch.tensor([int(i) for idx, _ in drives for i in idx], dtype=torch.long)
         prob = torch.tensor([r * DT_MS / 1000 for idx, r in drives for _ in idx])
         gen = torch.Generator().manual_seed(seed)
         hits = torch.rand((steps, len(targets)), generator=gen) < prob
