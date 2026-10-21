@@ -34,6 +34,10 @@ fly's choice is the verdict — the humor is the point.
   (233 s vs 9 s for the smoke tests; see DECISIONS.md 2026-10-19). The
   `/mnt/c/Users/evyatar 2/Desktop/Zibi_haborer` copy is a stale backup
   only; do not edit it. Python 3.12 with `uv` (fallback: `venv`).
+- **Parallel sim runs:** workers × torch threads ≤ 6 (physical cores)
+  **and** workers × 2.5 GB ≤ available RAM (`free -g`, "available").
+  WSL currently has 10 GB / 12 logical CPUs → 3 workers × 2 threads.
+  Set in `sim/validation/steering_probe.py` (`WORKERS`, `THREADS`).
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting

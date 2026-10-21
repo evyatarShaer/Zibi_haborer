@@ -15,7 +15,7 @@ RATES = {"low": 20.0, "mid": 60.0, "high": 150.0}  # per-ORN Hz, from smell.py's
 GLOM_SEEDS = (783, 784, 785)
 PAIR_SEEDS = tuple(range(783, 793))
 LOW_SCALE = 0.1
-WORKERS, THREADS = 3, 2  # workers x threads <= 6 physical cores (WSL view)
+WORKERS, THREADS = 3, 2  # workers x threads <= 6 cores AND workers x 2.5 GB <= free RAM
 
 X_TEXTS = {  # letter-sets by valence group (smell.LETTERS) + natural arguments
     "x_att": "דבש טוב לגדול",
