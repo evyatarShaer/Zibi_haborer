@@ -556,3 +556,146 @@ side at ¼ / ½ / 1×, 3 texts × 5 seeds = 90 runs; swap on 10 pairs — the
 
 Neither passes. B is the only path where text and valence measurably
 reach the brain without changing the validated model.
+
+## Taste probe — 20 realistic arguments, 30 pairs, 10 seeds
+
+Run 2026-10-21, validation code only (`validation/taste.py`,
+`taste_probe.py`, `taste_report.py`); no change to SPEC, `model.py` or
+`smell.py`. Design: each argument is **tasted alone**, on both sides of
+the labellum at once (Prototype B mapping, `smell.glomerulus_rates`
+rates); the verdict quantity is total MN9 rate (L + R) of that tasting.
+A hearing = argument X tasted vs argument Y tasted with the same seed.
+20 hand-written Hebrew test arguments (32–170 chars, typical WhatsApp
+disputes; test data, not product text) × 10 seeds = 200 tastings; 30
+pairs drawn with `Random(783)` → 300 hearings. Raw data:
+`sim/data/processed/validation/taste_screen.jsonl`, `taste_args.jsonl`;
+scoring: `PYTHONPATH=src uv run python -m validation.taste_report args`.
+
+**Pass rules (fixed before running):** froze if both tastings < 2 Hz;
+tie if gap < 5%; else win. (a) ≥ 90% of non-trivial pairs (mean gap
+≥ 10%) have the majority winner in ≥ 75% of seeds; (b) mean pair gaps
+fill ≥ 3 of 4 bins (0–10 / 10–30 / 30–60 / 60–100%) with ≥ 10% each;
+(c) |Spearman ρ| < 0.5 between per-argument MN9 and length, and the
+count of ד/ב/ש; (d) Win ≥ 50% of hearings; (e) runaway (> 4,000 active)
+in < 2% of tastings; (f) a full hearing (2 tastings × 1 s) ≤ 15 s on 2
+threads.
+
+### 1. Runaway screen (every GRN group alone, both sides, 150 Hz/GRN, 3 seeds)
+
+26 groups. Two ignite the runaway: **sugar/low_salt LB3b** 3/3 seeds
+(8,476–8,516 active) and **leg LgAG3** 2/3 (761 / 8,386 / 8,498). Every
+other group stays ≤ 565 active (LB3a ~96, claw_tpGRN ~168,
+dorsal_tpGRN 112–181). Both are excluded (`taste.EXCLUDED`); the mapping
+still fills all 24 keys by valence: ד → sugar LB3c/2, ב/ש → water
+LB3a halves, ל/ט → sugar LB3c quarters, צ → leg LgAG7.
+
+### 2. Per-argument MN9 (mean ± sd over 10 seeds)
+
+| # | chars | ד/ב/ש | MN9 Hz | | # | chars | ד/ב/ש | MN9 Hz |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 32 | 2 | 1.9 ± 1.3 | | 10 | 100 | 10 | 0.1 ± 0.3 |
+| 1 | 40 | 6 | 22.6 ± 4.3 | | 11 | 37 | 4 | 16.9 ± 6.3 |
+| 2 | 32 | 7 | 10.3 ± 3.3 | | 12 | 170 | 17 | 3.2 ± 2.0 |
+| 3 | 33 | 2 | 77.4 ± 7.2 | | 13 | 41 | 4 | 13.0 ± 3.8 |
+| 4 | 44 | 3 | 6.0 ± 3.1 | | 14 | 38 | 3 | 72.9 ± 7.3 |
+| 5 | 44 | 7 | 15.8 ± 2.7 | | 15 | 88 | 19 | 16.3 ± 3.3 |
+| 6 | 124 | 12 | 0.4 ± 0.7 | | 16 | 41 | 7 | 13.2 ± 4.4 |
+| 7 | 41 | 6 | 40.1 ± 6.2 | | 17 | 38 | 3 | 7.8 ± 1.9 |
+| 8 | 42 | 1 | 53.5 ± 4.0 | | 18 | 89 | 6 | 5.1 ± 3.0 |
+| 9 | 48 | 5 | 0.2 ± 0.4 | | 19 | 51 | 6 | 34.3 ± 5.0 |
+
+Texts: `taste_probe.ARGUMENTS`. Top: #3 "פיצה עם אננס זה פשוט טעים
+ונקודה." (77 Hz); bottom: #10, #9, #6 (≤ 0.4 Hz).
+
+### 3. Results
+
+| Criterion | Rule | Result | |
+|---|---|---|---|
+| (a) seed consistency | ≥ 90% of non-trivial pairs ≥ 75% | 29/30 non-trivial; **24/29 = 83%** consistent | **FAIL** |
+| (b) gap spread | ≥ 3 of 4 bins ≥ 10% | bins 1 / 4 / 3 / 22 pairs (3% / 13% / 10% / 73%) | pass (borderline) |
+| (c) bias | \|ρ\| < 0.5 | length −0.44, ד/ב/ש −0.33 (attractive-letter share +0.28) | pass (length near limit) |
+| (d) Win share | ≥ 50% | Win 286 (95%), tie 10 (3%), froze 4 (1%) | pass |
+| (e) runaway | < 2% of tastings | 0/200; active median 726, max 829 | pass |
+| (f) speed | hearing ≤ 15 s, 2 threads | median 5.81 s (5 runs, 5.5–7.1 s, idle host) | pass |
+
+**(a) failures** are all close pairs at low MN9: 2 vs 16 (10 vs 13 Hz,
+0.6), 11 vs 16 (17 vs 13, 0.6), 2 vs 17 (10 vs 8, 0.7), 1 vs 16 (23 vs
+13, 0.7), 4 vs 12 (6 vs 3, 0.7); plus 7 vs 19 (40 vs 34, gap 8%,
+trivial). Per-seed sd is 3–7 Hz, which is the Poisson noise of a
+two-neuron readout over 1 s. This is readout noise, not an order or side
+effect.
+
+**Length effect (passes (c) but is strong):** longer text wins only
+53/286 decided hearings (19%); arguments ≥ 80 chars average 5.0 Hz vs
+25.7 Hz for shorter ones. The length gain in `smell.glomerulus_rates`
+(SPEC §4.5 "too much can turn aversive") dominates, so "write short"
+is close to a winning strategy.
+
+**Swap test:** each argument is tasted alone with the hearing seed, so
+swapping X and Y mirrors A and B exactly. The flip rate is 100% by
+construction and the SPEC swap test no longer measures anything (see
+draft below).
+
+**Runtime note:** the single-hearing bench is 5.8 s, but the batch
+(3 workers × 2 threads, load ~6.7) took 130.8 min: the first 150
+tastings ran at ~150 s per tasting per worker and the last 50 at
+~10 s. Not explained yet; no runaway in any tasting, all workers were
+at ~200% CPU throughout, and RAM was not short (8 GB available). The
+screen showed the same pattern (82 min for 78 jobs). Batch throughput,
+not single-hearing speed, is the open issue for the 1,000-pair balance
+test.
+
+### Verdict
+
+5 of 6 criteria pass; **(a) fails** (83% vs 90%), because a 2-neuron
+MN9 readout is too noisy over 1 s for close pairs. First text-driven
+readout with no runaway, a mostly decisive outcome mix, and a
+side-symmetric design.
+
+**Options for (a)** (not applied; your call): (1) **2 s per tasting**
+(SPEC originally allowed 1–2 s): about √2 less noise, hearing ~11.6 s,
+still ≤ 15 s. Recommended first, because it is cheap and changes no
+model. (2) A wider proboscis readout (MN9 plus the other
+proboscis-extension motor neurons) to average more neurons. (3) A wider
+tie band, so close noisy pairs become ties instead of coin-flip wins.
+
+### Draft SPEC changes (NOT applied)
+
+- **§1 Product:** "Arguments become *tastes* fed to the fly's gustatory
+  receptors; the fly tastes each argument, and the one it wants to eat
+  more wins." (replaces smells / olfactory / turns toward a side).
+- **§2.4 Fair:** drop the antenna coin flip. Both arguments are tasted
+  separately, on both sides of the labellum, with the same seed
+  (case seed + round), so order and side cannot matter.
+- **§4 → "Taste of words":** step 2: each letter maps to one fixed
+  gustatory receptor neuron (GRN) group: v783 GRNs grouped by
+  (sub-class, cell type) with ≥ 2 GRNs per side; large groups split in
+  half by root_id. A letter keeps its valence. Groups that ignite the
+  runaway alone at 150 Hz are excluded (v783: LB3b, LgAG3). Step 4:
+  `!` → bitter LB1a, `?` → high-salt LB3d (replacing V / DA2). Steps 3,
+  5, 6 unchanged (same rate formula). Step 7 (side assignment) is
+  replaced by "each argument drives left and right GRNs equally".
+  *Open: length gain strength (see length effect above).*
+- **§5 Mood:** "hunger raises gain of attractive GRN groups" (wording
+  only).
+- **§6 Simulation & readout:** Input = Poisson spikes in GRNs. Each
+  hearing = **two runs** (one tasting per side), same seed, 1 s each
+  (or 2 s, see option 1). Readout = **MN9** (proboscis motor neuron),
+  L + R, replacing DNa02 steering. `A`, `B` = MN9 rate of each side's
+  tasting; `margin` / `gap` unchanged. `decision_time_ms` = when the
+  cumulative A − B (50 ms bins) crosses threshold and stays.
+  `direction_flips` = sign flips of the binned A − B. `deciding_neuron`
+  = the more active MN9 of the winning tasting + id.
+  `giant_fiber_fired` = GF in either tasting. Performance: ≤ 15 s per
+  hearing (both runs).
+- **§7 Outcomes:** Froze = both tastings' MN9 < 2 Hz (calibrated here).
+  Other rows unchanged.
+- **§9 Card:** "margin + L/R bar" → "margin + A/B bar".
+- **§10 Run:** drop `side_assignment`; `input_rates` holds both
+  tastings.
+- **§12 POC exit:** Balance → "side A wins 45–55%" (left-antenna
+  clause dropped). Swap test → replaced by **seed consistency**: ≥ 90%
+  of non-trivial pairs (gap ≥ 10%) keep their winner in ≥ 75% of seeds.
+  Add: |ρ| < 0.5 between score and length, and runaway < 2% of runs.
+  Outcome mix, ≤ 15 s and RAM unchanged.
+- **§13:** "Letter → GRN group mapping table and its balance".
