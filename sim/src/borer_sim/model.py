@@ -36,6 +36,7 @@ class Model:
     def __init__(self, n: int, pre: np.ndarray, post: np.ndarray, signed_count: np.ndarray):
         self.n = n
         self.keep = None  # full-brain indices of a subcircuit's neurons (None = whole brain)
+        self.full_n = n  # size of results: run() returns full-brain arrays
         order = np.argsort(pre, kind="stable")
         indptr = np.concatenate([[0], np.cumsum(np.bincount(pre, minlength=n))])
         self.indptr = torch.from_numpy(indptr)

@@ -79,7 +79,7 @@ def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
     todo = [(k, d, s, threads, duration_ms) for k, (d, s) in jobs.items() if k not in done]
     if todo:
         _model = model if model is not None else _connectome_model()
-        metric(np.zeros(_model.n, dtype=np.int32))  # warm caches pre-fork (no torch op)
+        metric(np.zeros(_model.full_n, dtype=np.int32))  # warm caches pre-fork (no torch op)
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
             for i, (key, m, t0, wall) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
                 done[key] = m

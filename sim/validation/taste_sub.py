@@ -1,6 +1,6 @@
 """Taste subcircuit (P1-10): choose N, validate against the full brain, time hearings.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_sub [sizes|run N|check N|time N]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_sub [sizes|ref|run N|check N|time N...]
 Sources = every GRN in taste.mapping(); targets = MN9 + Giant Fiber, both sides.
 Validation: NEW set arguments 0-9 x seeds 783-787 at 2 s, against the full-brain
 results in taste_v3_new.jsonl (same seeds -> same Poisson input). Pass: per-argument
@@ -44,10 +44,19 @@ def sizes():
         print(f"N = {n}: {len(_keep(n)):,} neurons", flush=True)
 
 
+def _jobs() -> dict:
+    return {f"{i}|{s}": (tasting(SETS["new"][i]), s) for i in ARGS for s in SEEDS}
+
+
+def ref():
+    """Full-brain reference: these keys are part of the NEW-set probe results."""
+    run_jobs(_jobs(), OUT / RESULTS.format("new"), WORKERS, THREADS, metric=pop_metrics,
+             duration_ms=DURATION_MS)
+
+
 def run(n_hops):
     n_hops = int(n_hops)
-    jobs = {f"{i}|{s}": (tasting(SETS['new'][i]), s) for i in ARGS for s in SEEDS}
-    run_jobs(jobs, OUT / f"taste_sub_N{n_hops}.jsonl", WORKERS, THREADS, metric=pop_metrics,
+    run_jobs(_jobs(), OUT / f"taste_sub_N{n_hops}.jsonl", WORKERS, THREADS, metric=pop_metrics,
              model=Model.subcircuit(_keep(n_hops)), duration_ms=DURATION_MS)
 
 
@@ -90,14 +99,17 @@ def _hearing_times(model, n=10) -> list[float]:
     return times
 
 
-def timing(n_hops):
-    sub = _hearing_times(Model.subcircuit(_keep(int(n_hops))))
+def timing(*n_hops):
     full = _hearing_times(_connectome_model())
-    ms, mf = statistics.median(sub), statistics.median(full)
+    mf = statistics.median(full)
     print(f"hearing (2 x {DURATION_MS / 1000:g} s tastings in parallel, 2 proc x 1 thread), "
-          f"median of 10: subcircuit N={n_hops} {ms:.2f} s {[round(t, 1) for t in sub]}; "
-          f"full brain {mf:.2f} s {[round(t, 1) for t in full]}; speed-up x{mf / ms:.1f}")
+          f"median of 10: full brain {mf:.2f} s {[round(t, 1) for t in full]}", flush=True)
+    for n in map(int, n_hops):
+        sub = _hearing_times(Model.subcircuit(_keep(n)))
+        ms = statistics.median(sub)
+        print(f"  subcircuit N={n}: {ms:.2f} s {[round(t, 1) for t in sub]}; "
+              f"speed-up x{mf / ms:.1f}", flush=True)
 
 
 if __name__ == "__main__":
-    {"sizes": sizes, "run": run, "check": check, "time": timing}[sys.argv[1]](*sys.argv[2:])
+    {"sizes": sizes, "ref": ref, "run": run, "check": check, "time": timing}[sys.argv[1]](*sys.argv[2:])
