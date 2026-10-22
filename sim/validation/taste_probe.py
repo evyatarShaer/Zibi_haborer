@@ -2,7 +2,9 @@
 
 Run from sim/:
     PYTHONPATH=src uv run python -m validation.taste_probe screen
-    PYTHONPATH=src uv run python -m validation.taste_probe tastings [old|new]
+    PYTHONPATH=src uv run python -m validation.taste_probe tastings [old|new] [N]
+N = run on the taste subcircuit of N hops (validation.taste_sub); results are
+bit-identical to the full brain for N = 6, so they go to the same file.
 Validation only: no change to SPEC, model.py or smell.py. Argument sets: taste_sets.
 """
 import sys
@@ -25,10 +27,10 @@ def tasting(text: str):
     return taste.drives(text, "left") + taste.drives(text, "right")
 
 
-def run(name, jobs, duration_ms=1000):
+def run(name, jobs, duration_ms=1000, model=None):
     print(f"{name}: {len(jobs)} jobs", flush=True)
     return steering.run_jobs(jobs, OUT / name, WORKERS, THREADS, metric=pop_metrics,
-                             duration_ms=duration_ms)
+                             model=model, duration_ms=duration_ms)
 
 
 def screen():
@@ -39,12 +41,17 @@ def screen():
         for name, _, ids in groups for seed in SCREEN_SEEDS})
 
 
-def tastings(arg_set="old"):
+def tastings(arg_set="old", n_hops=None):
+    model = None
+    if n_hops is not None:
+        from borer_sim.model import Model
+        from validation.taste_sub import _keep  # taste_sub imports this module
+        model = Model.subcircuit(_keep(int(n_hops)))
     for key, (name, ids) in taste.mapping().items():
         print(f"  {key} -> {name} ({len(ids)} GRNs)")
     run(RESULTS.format(arg_set), {f"{i}|{seed}": (tasting(a), seed)
                                   for i, a in enumerate(SETS[arg_set]) for seed in SEEDS},
-        DURATION_MS)
+        DURATION_MS, model)
 
 
 if __name__ == "__main__":
