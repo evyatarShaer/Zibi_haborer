@@ -1,6 +1,6 @@
 ---
 name: flywire-data
-description: Use whenever code loads, queries, or references the FlyWire connectome — neuron tables, synapse edges, neurotransmitter predictions, soma positions, or any specific neuron/glomerulus IDs. Keeps dataset version, file layout, and canonical IDs consistent across the simulator.
+description: Use whenever code loads, queries, or references the FlyWire connectome — neuron tables, synapse edges, neurotransmitter predictions, soma positions, or any specific neuron/GRN group IDs. Keeps dataset version, file layout, and canonical IDs consistent across the simulator.
 ---
 
 # flywire-data
@@ -38,12 +38,13 @@ fact below was verified against the loaded v783 data (P1-4,
   by root_id), `to_index(root_ids)` (→ model indices; KeyError if any
   id is not in the model).
 - `borer_sim.anatomy` — named sets, filtered at runtime, returned as
-  **sorted model indices**: `cell_type(name, side)`,
-  `orns(glomerulus, side)`, `turning_dns(side)`, `giant_fiber(side)`,
-  `orn_glomeruli()` (counts per glomerulus × side + entry nerve).
-  Root_id for an index: `data.neuron_ids()[idx]`.
+  **sorted model indices**: `cell_type(name, side)`, `mn9(side)`,
+  `giant_fiber(side)`. Root_id for an index: `data.neuron_ids()[idx]`.
+- `borer_sim.taste` — GRN groups and the letter table: `grns()` (GRN
+  annotation rows), `groups()` (name → root_ids), `mapping()` (letter /
+  mark → group), `drives()` / `tasting()` (Poisson input).
 
-## Side convention (critical for the turning readout)
+## Side convention (critical for any left/right selection)
 
 **Annotation `side` is the fly's own side** (soma hemisphere, fly's
 perspective). Use it as the source of truth; never mix in side labels
@@ -68,15 +69,25 @@ from older papers/code. Evidence:
 
 ## Canonical lookups (filters; IDs for reference only)
 
-- **ORNs:** `cell_type == "ORN_<glomerulus>"` and `side`. All are
-  `super_class == "sensory"`, `cell_class == "olfactory"`. 53 glomeruli,
-  1,114 L / 1,132 R in-model ORNs (+ 29 with `side == "na"`, excluded).
-  Entry nerve: `AN` (antenna) except palp glomeruli **VA4, VA7l, VC1,
-  VC2, VM7d, VM7v** (`MxLbN`, maxillary palp; VA4 has 1 AN ORN).
-- **CO₂ (V):** `orns("V", side)` → 34 L / 33 R.
-- **Geosmin (DA2):** `orns("DA2", side)` → 16 L / 22 R (+1 `na`).
-- **Turning DN (DNa02):** `cell_type == "DNa02"` → 1 per side.
-  Left `720575940629327659`, right `720575940604737708`.
+- **GRNs (taste input):** `cell_class == "gustatory"` → 410, all in
+  the model, 206 L / 204 R (none `center`/`na`). Sub-classes (GRNs):
+  SA_VTV_pro_meso_meta (legs, LgAG1–9) 74, taste peg 73, bitter (LB1a–d)
+  42, accessory_pharyngeal_nerve_sensory_group1 (PhG*) 36, sugar (LB3c)
+  32, water (LB3a) 30, high_salt/heavy_metal (LB3d) 29, sugar/low_salt
+  (LB3b) 25, glutamate (LB1e) 23, putative_aversive (LB2a–c) 15,
+  putative_attractive (LB4a–b) 14, pharyngeal groups 1–3 + accessory
+  group2 14. Nerve: `MxLbN` 286 (labellum), `CV` 74 (legs), `aPhN` 38,
+  `PhN` 12.
+- **GRN groups** (`taste.groups()`): one per `cell_sub_class` ×
+  `cell_type` with ≥ 2 GRNs on each side → 24 groups, plus halves
+  `/a` `/b` of `sugar:LB3c` and `high_salt/heavy_metal:LB3d` (per side,
+  sorted by root_id, dealt alternately) = 28. **Excluded** (ignite the
+  runaway alone at 150 Hz, > 4,000 active): `sugar/low_salt:LB3b` (3/3
+  seeds, ~8.5k active) and `SA_VTV_pro_meso_meta:LgAG3` (2/3, ~8.4k).
+  Pharyngeal groups are too one-sided to qualify.
+- **MN9 (verdict readout):** `cell_type == "CB0701"` → 1 per side,
+  `brain_motor_neuron`, acetylcholine. Left `720575940618238523`, right
+  `720575940660219265` (Shiu's v630 "left" `id_mn9` = side right here).
 - **Giant Fiber (DNp01):** `cell_type == "DNp01"` (`hemibrain_type ==
   "Giant Fiber"` confirms) → 1 per side. Left `720575940622838154`,
   right `720575940632499757`. Note: predicted NT differs between them
@@ -100,5 +111,5 @@ from older papers/code. Evidence:
 - `sim/src/borer_sim/data.py` — the single loader.
 - `sim/src/borer_sim/anatomy.py` — named neuron sets.
 - `sim/src/borer_sim/model.py` — builds the sparse weight matrix (P1-5).
-- `sim/src/borer_sim/readout.py` — turning DNs, Giant Fiber (P1-8).
-- `sim/src/borer_sim/smell.py` — letters → glomerulus ORN sets (P1-6).
+- `sim/src/borer_sim/taste.py` — letters → GRN groups (P1-6).
+- `sim/src/borer_sim/readout.py` — MN9, Giant Fiber (P1-8, not yet).

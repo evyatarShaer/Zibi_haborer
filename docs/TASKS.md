@@ -10,12 +10,13 @@ deterministic, roughly-balanced verdicts from text inputs within the
 performance budget.
 
 **Exit criteria** (from `SPEC.md §12`):
-- balance: 1,000 random pairs → side A wins 45–55% and left antenna
-  wins 45–55%
-- swap test: 200 pairs, (X,Y) vs (Y,X) → winner flips in ≥ 75% of
-  decided cases
+- balance: 1,000 random pairs → side A wins 45–55%
+- seed consistency: ≥ 90% of non-trivial pairs (mean gap ≥ 10%) keep
+  their winner in ≥ 75% of seeds
 - outcome mix: Win ≥ 50%; each special outcome ≤ 15%
-- run ≤ 15 s per hearing
+- input quality: MN9 range continuous; |ρ| < 0.5 with length and ד/ב/ש
+  count; longer argument wins 40–60%; runaway < 2% of tastings
+- hearing ≤ 15 s (two 1.5 s tastings)
 - RAM fits in 12 GB (ideally much less)
 
 ### Tasks
@@ -43,16 +44,31 @@ performance budget.
   same input within tolerance.
   *Done 2026-10-20: 13/13 checks vs Brian2; 2 s run 13.05 s at 2
   threads — see `docs/POC_REPORT.md`.*
-- [ ] **P1-6 — Implement smell.py.** Normalization, letter→glomerulus
-  mapping, saturation, `!`/`?` handling. Unit tests.
+- [x] **P1-6 — Implement taste.py.** Normalization, letter→GRN group
+  table (v4), saturation, `!`/`?` handling, side balancing. Unit tests.
+  *Done 2026-10-22: "smell of words" failed (whole-brain cascade, no
+  side signal) and was replaced by "taste of words" (SPEC §4); v4 passes
+  every taste-probe criterion on the THIRD set; `borer_sim.taste`
+  bit-identical to the validated runs, SIM_VERSION 0.5.0 — see
+  DECISIONS.md 2026-10-22. Open: spamming one letter defeats saturation
+  (strict-xfail test; fix needs user approval).*
 - [ ] **P1-7 — Implement mood.py.** Hunger and arousal with their
   effects.
-- [ ] **P1-8 — Implement readout.py.** All metrics and outcome
-  classification.
+- [ ] **P1-8 — Implement readout.py.** A hearing = two tastings (one
+  per argument, same seed, 1.5 s each, run in parallel). Readout = MN9
+  (L + R) per tasting → `A`, `B`, `margin`, `gap`; `decision_time_ms`
+  and `direction_flips` from the binned A − B; `active_neurons`;
+  `deciding_neuron` (more active MN9 of the winning tasting);
+  `giant_fiber_fired` (either tasting). Outcomes per SPEC §7: Fled (GF)
+  → Froze (both MN9 < 2 Hz) → Went for food (hunger > 0.8, gap < 5%) →
+  Dithered (≥ 3 flips, gap < 5%) → Win (gap ≥ 5%) → Plain tie.
 - [ ] **P1-9 — Determinism + balance tests.** Determinism: same input
-  twice → identical metrics. Balance, swap test and outcome mix
-  exactly as in the exit criteria above. Measure runtime and peak RAM.
-  Record `platform` with every run.
+  twice → identical metrics. `test_balance.py`: balance (1,000 seeded
+  random pairs, side A wins 45–55%), seed consistency (≥ 90% of
+  non-trivial pairs keep their winner in ≥ 75% of seeds) and outcome
+  mix (Win ≥ 50%, each special outcome ≤ 15%), exactly as in the exit
+  criteria above. Measure hearing time and peak RAM. Record `platform`
+  with every run.
 - [ ] **P1-10 — Subcircuit (if needed).** Only if full-brain runs blow
   the budget. Compare against full-brain results.
 - [ ] **P1-11 — docs/POC_REPORT.md.** All numbers + decisions made during

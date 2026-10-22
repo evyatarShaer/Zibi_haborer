@@ -775,4 +775,4 @@ runaway; דבש × 93 → runaway (9,163 active); ר × 280 → runaway (8,996);
 ק × 280 → MN9 0. Kept as a strict-xfail test
 (`test_spamming_one_letter_saturates`). A fix (e.g. a per-GRN cap after
 the total is fixed) changes results, so it needs a re-run of the THIRD
-probe and your approval.
+probe and user approval.
