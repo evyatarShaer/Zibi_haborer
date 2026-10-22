@@ -1,1 +1,1 @@
-SIM_VERSION = "0.6.0"
+SIM_VERSION = "0.7.0"

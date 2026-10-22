@@ -170,18 +170,21 @@ def letter_rates(text: str) -> dict[str, float]:
         QUESTION: _saturate(counts[QUESTION] + 0.0, t["punct_k"], t["punct_max"])}
 
 
-def drives(text: str, side: str) -> list[tuple[list[int], float]]:
-    """Poisson drive [(model indices, per-GRN rate Hz)] for `text` on one side."""
+def drives(text: str, side: str, gains: dict | None = None) -> list[tuple[list[int], float]]:
+    """Poisson drive [(model indices, per-GRN rate Hz)] for `text` on one side;
+    `gains` {key: factor} scales a key's rate above r_base (mood, SPEC §5)."""
     if side not in anatomy.SIDES:
         raise ValueError(f"side must be one of {anatomy.SIDES}, got {side!r}")
-    out = []
+    out, r_base = [], TASTE["r_base"]
     for key, rate in letter_rates(text).items():
+        if gains and gains.get(key, 1.0) != 1.0:  # untouched keys keep their exact rate
+            rate = r_base + (rate - r_base) * gains[key]
         idx = _side_indices(key)
         mean_n = sum(len(v) for v in idx.values()) / 2
         out.append((idx[side], rate * mean_n / len(idx[side])))
     return out
 
 
-def tasting(text: str) -> list[tuple[list[int], float]]:
+def tasting(text: str, gains: dict | None = None) -> list[tuple[list[int], float]]:
     """One tasting: the argument on both sides of the mouth at once."""
-    return drives(text, "left") + drives(text, "right")
+    return drives(text, "left", gains) + drives(text, "right", gains)

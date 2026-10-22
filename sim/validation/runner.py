@@ -29,6 +29,7 @@ RUNAWAY = 4000  # a run with more active neurons is a runaway (whole-brain casca
 
 _model = None
 _metric = None
+_extra = None
 
 
 @cache
@@ -57,11 +58,11 @@ def load(name) -> dict:
 
 
 def _work(job):
-    key, drives, seed, threads, duration_ms = job
+    key, drives, seed, noise_hz, threads, duration_ms = job
     torch.set_num_threads(threads)
     t0, start = datetime.now().isoformat(timespec="seconds"), time.perf_counter()
-    counts = _model.run(drives, duration_ms, seed).counts
-    m = _metric(counts / (duration_ms / 1000))
+    res = _model.run(drives, duration_ms, seed, noise_hz)
+    m = _metric(res.counts / (duration_ms / 1000)) | (_extra(res) if _extra else {})
     return key, m, t0, round(time.perf_counter() - start, 2)
 
 
@@ -71,17 +72,19 @@ def connectome_model() -> Model:
 
 
 def run_jobs(jobs: dict, out: Path, duration_ms: float, model: Model | None = None,
-             workers: int = WORKERS, threads: int = THREADS, metric=metrics) -> dict:
-    """jobs: {key: (drives, seed)}. Returns {key: metric(counts)}, incl. earlier results.
+             workers: int = WORKERS, threads: int = THREADS, metric=metrics, extra=None) -> dict:
+    """jobs: {key: (drives, seed[, noise_hz])}. Returns {key: metric(rates) | extra(Result)},
+    incl. earlier results.
 
     `model` defaults to the whole-brain model. `metric` is warmed (its caches
     filled) here, before the fork."""
-    global _model, _metric
-    _metric = metric
+    global _model, _metric, _extra
+    _metric, _extra = metric, extra
     done = {}
     if out.exists():
         done = {r["key"]: r["m"] for r in map(json.loads, out.read_text().splitlines())}
-    todo = [(k, d, s, threads, duration_ms) for k, (d, s) in jobs.items() if k not in done]
+    todo = [(k, j[0], j[1], j[2] if len(j) > 2 else 0.0, threads, duration_ms)
+            for k, j in jobs.items() if k not in done]
     if todo:
         _model = model if model is not None else connectome_model()
         metric(np.zeros(_model.full_n, dtype=np.int32))  # warm caches pre-fork (no torch op)

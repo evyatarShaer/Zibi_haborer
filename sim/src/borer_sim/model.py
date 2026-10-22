@@ -4,13 +4,15 @@ Matches sim/validation/shiu_brian2.py step for step. Each DT_MS step:
 1. exact (linear) integration of  dv/dt = (v_0 - v + g) / t_mbr,
    dg/dt = -g / tau;
 2. threshold v > v_th;
-3. delivery of spikes emitted t_dly ago (g += w) and Poisson input
-   (v += f_poi * w_syn);
+3. delivery of spikes emitted t_dly ago (g += w), Poisson input
+   (v += f_poi * w_syn) and, if noise_hz > 0, background noise: Poisson
+   kicks of ±MOOD["noise_mv"] (random sign) to every neuron at noise_hz;
 4. reset v = v_rst, g = 0 for neurons that spiked.
 Refractory neurons keep v and g unchanged through steps 1–3: Brian2's
 "(unless refractory)" is a conditional write, so synaptic input that
 arrives during refractoriness is discarded, not deferred.
-State is kept as u = v - v_0. One seed drives every random draw.
+State is kept as u = v - v_0. One seed drives every random draw; noise
+is drawn after the input spikes, so noise_hz = 0 leaves results unchanged.
 """
 import math
 from collections import deque
@@ -20,7 +22,7 @@ import numpy as np
 import torch
 
 from borer_sim import data
-from borer_sim.params import BIN_MS, DT_MS, LIF
+from borer_sim.params import BIN_MS, DT_MS, LIF, MOOD
 
 
 @dataclass(frozen=True)
@@ -74,21 +76,21 @@ class Model:
         g.index_add_(0, self.post[syn], self.w[syn])
 
     def run(self, drives: list[tuple[list[int], float]], duration_ms: float,
-            seed: int) -> Result:
+            seed: int, noise_hz: float = 0.0) -> Result:
         """Simulate `duration_ms` with Poisson drive [(model indices, rate Hz)]."""
         if self.keep is not None:
             drives = [(self._local[np.asarray(idx, dtype=np.int64)], r) for idx, r in drives]
             if any((idx < 0).any() for idx, _ in drives):
                 raise ValueError("drive targets a neuron outside the subcircuit")
-            return self._expand(self._simulate(drives, duration_ms, seed))
-        return self._simulate(drives, duration_ms, seed)
+            return self._expand(self._simulate(drives, duration_ms, seed, noise_hz))
+        return self._simulate(drives, duration_ms, seed, noise_hz)
 
     def _expand(self, r: Result) -> Result:
         counts = np.zeros(self.full_n, dtype=np.int32)
         counts[self.keep] = r.counts
         return Result(counts, self.keep[r.active], r.binned)
 
-    def _simulate(self, drives, duration_ms: float, seed: int) -> Result:
+    def _simulate(self, drives, duration_ms: float, seed: int, noise_hz: float) -> Result:
         p = LIF
         steps = round(duration_ms / DT_MS)
         ev, eg = math.exp(-DT_MS / p["t_mbr"]), math.exp(-DT_MS / p["tau"])
@@ -100,6 +102,7 @@ class Model:
         prob = torch.tensor([r * DT_MS / 1000 for idx, r in drives for _ in idx])
         gen = torch.Generator().manual_seed(seed)
         hits = torch.rand((steps, len(targets)), generator=gen) < prob
+        noise_lam = torch.tensor(float(self.n * noise_hz * DT_MS / 1000))
 
         has_rfc = torch.ones(self.n, dtype=torch.bool)
         has_rfc[targets] = False  # Shiu: no refractory period for driven neurons
@@ -120,6 +123,10 @@ class Model:
             delayed.append(spk)
             if len(targets):
                 u.index_add_(0, targets[hits[t]], torch.full((int(hits[t].sum()),), w_poi))
+            if noise_hz:
+                k = int(torch.poisson(noise_lam, generator=gen))
+                kick = (torch.randint(2, (k,), generator=gen) * 2 - 1) * MOOD["noise_mv"]
+                u.index_add_(0, torch.randint(self.n, (k,), generator=gen), kick.float())
             u[frozen], g[frozen] = u_old, g_old  # discard this step's writes
             u[spk], g[spk] = u_rst, 0.0
 
