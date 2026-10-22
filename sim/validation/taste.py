@@ -58,6 +58,9 @@ TABLE = {  # key: (group, "class delta Hz | literature")
 # Groups that ignite the runaway alone at 150 Hz (taste_probe screen, > 4,000 active):
 # LB3b 3/3 seeds (~8.5k active), LgAG3 2/3 seeds (~8.4k). All other groups <= 565.
 EXCLUDED = {"sugar/low_salt:LB3b", "SA_VTV_pro_meso_meta:LgAG3"}
+# The two groups that drive MN9 alone (134 / 142 Hz) are also offered as halves "<group>/a",
+# "/b": per side, GRNs sorted by root_id and dealt alternately (no data-driven choice).
+SPLIT = {"sugar:LB3c", "high_salt/heavy_metal:LB3d"}
 
 
 def grns() -> pd.DataFrame:
@@ -82,6 +85,11 @@ def _groups(g: pd.DataFrame) -> list[tuple[str, str, pd.Index]]:
         if (name not in EXCLUDED and
                 d["side"].value_counts().reindex(anatomy.SIDES, fill_value=0).min() >= MIN_PER_SIDE):
             out.append((name, d["valence"].iloc[0], d.index))
+            if name in SPLIT:
+                ids = [sorted(d.index[d["side"] == side]) for side in anatomy.SIDES]
+                for h, half in enumerate("ab"):
+                    out.append((f"{name}/{half}", d["valence"].iloc[0],
+                                pd.Index([i for side in ids for i in side[h::2]])))
     return out
 
 
