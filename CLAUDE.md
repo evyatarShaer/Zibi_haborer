@@ -39,10 +39,16 @@ fly's choice is the verdict — the humor is the point.
   WSL currently has 10 GB / 12 logical CPUs → 3 workers × 2 threads.
   Set in `sim/validation/steering_probe.py` (`WORKERS`, `THREADS`).
 - **Long runs (> ~10 min) run detached; never poll them.** Launch with
-  `setsid nohup ... > <log> 2>&1 &`, logging a progress counter to a file.
-  Give the user the exact command that checks progress, then end the
-  turn. Reason: the Claude Code UI used ~24% CPU on Windows during long
-  polls, and the PC throttled to 1.79 GHz.
+  `scripts/detach.sh <unit> <log> <cmd...>` (a `systemd-run --user`
+  service), logging a progress counter to the log. Check with
+  `systemctl --user status <unit>` and `tail <log>`; stop with
+  `systemctl --user stop <unit>`. **Never** use `setsid nohup ... &` or
+  tmux for this: under WSL they stay in the terminal's `/init` session
+  (cgroup `/non-systemd`) and die when Claude Code exits (taste_chain5,
+  2026-10-22). Resumable jobs (`steering.run_jobs` skips saved keys) are
+  relaunched with the same command. Give the user the check command, then
+  end the turn. Reason: the Claude Code UI used ~24% CPU on Windows
+  during long polls, and the PC throttled to 1.79 GHz.
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting
