@@ -107,13 +107,14 @@ scripts/       repo checks (file length, clean tree)
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
-  reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2,
-  **P1-6 input: "taste of words"** (SPEC §4, approved 2026-10-22; smell
-  of words dropped: whole-brain cascade, no side signal). Letters → GRN
+  reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2.
+- **P1-6 — reopened (spam fix pending).** Input: "taste of words"
+  (SPEC §4, approved 2026-10-22; smell of words dropped: whole-brain
+  cascade, no side signal). Letters → GRN
   groups (table v4) in `borer_sim.taste`; each argument tasted alone on
   both sides for **1.5 s** (2 s = fallback); verdict = higher MN9 rate.
   v4 passed every taste-probe criterion on the THIRD set; hearing 8.87 s.
-- **Open issue (needs user decision):** the fixed letters' total undoes
+- **Spam exploit (blocks P1-6):** the fixed letters' total undoes
   saturation: spamming one letter wins (ד × 280 → MN9 118 Hz) or ignites
   the runaway (דבש × 93, ר × 280). Strict-xfail test
   `test_spamming_one_letter_saturates`; a fix changes results and needs a

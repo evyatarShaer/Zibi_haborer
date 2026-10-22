@@ -44,14 +44,15 @@ performance budget.
   same input within tolerance.
   *Done 2026-10-20: 13/13 checks vs Brian2; 2 s run 13.05 s at 2
   threads — see `docs/POC_REPORT.md`.*
-- [x] **P1-6 — Implement taste.py.** Normalization, letter→GRN group
+- [ ] **P1-6 — Implement taste.py.** Normalization, letter→GRN group
   table (v4), saturation, `!`/`?` handling, side balancing. Unit tests.
-  *Done 2026-10-22: "smell of words" failed (whole-brain cascade, no
+  *Reopened 2026-10-22 until the spam exploit is fixed (spam suite =
+  acceptance). Ported 2026-10-22: "smell of words" failed (whole-brain cascade, no
   side signal) and was replaced by "taste of words" (SPEC §4); v4 passes
   every taste-probe criterion on the THIRD set; `borer_sim.taste`
   bit-identical to the validated runs, SIM_VERSION 0.5.0 — see
   DECISIONS.md 2026-10-22. Open: spamming one letter defeats saturation
-  (strict-xfail test; fix needs user approval).*
+  (strict-xfail test).*
 - [ ] **P1-7 — Implement mood.py.** Hunger and arousal with their
   effects.
 - [ ] **P1-8 — Implement readout.py.** A hearing = two tastings (one
