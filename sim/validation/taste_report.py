@@ -1,6 +1,6 @@
 """Score the taste probe (validation.taste_probe) against the pre-set criteria.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|band [old|new] [file]|bench]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_report [screen|args|band [old|new|third] [ms] [file]|bench]
 Per hearing (pair x seed), A/B = total MN9 rate of each tasting:
 froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 Pass rules (fixed before running): (a) >= 90% of non-trivial pairs (mean
@@ -14,6 +14,7 @@ import statistics
 import sys
 import time
 from collections import defaultdict
+from itertools import combinations
 
 import numpy as np
 import torch
@@ -54,9 +55,9 @@ def screen():
               f"{statistics.mean(sum(m['MN9']) for m in ms):.1f} |")
 
 
-def args(arg_set="old", name=None):
+def args(arg_set="third", ms="2000", name=None):
     ARGUMENTS = SETS[arg_set]
-    res = load(name or RESULTS.format(arg_set))
+    res = load(name or RESULTS.format(arg_set, int(ms)))
     tot = defaultdict(dict)
     for key, m in res.items():
         i, seed = key.split("|")
@@ -83,23 +84,38 @@ def args(arg_set="old", name=None):
           f"{spearman(m, exc):+.2f}")
 
 
+def _outcome(x, y) -> str:
+    """Hearing outcome from the two tastings' MN9: froze, tie, or the winner "a" / "b"."""
+    if x < FROZE_HZ and y < FROZE_HZ:
+        return "froze"
+    if abs(x - y) / (x + y) < TIE_GAP:
+        return "tie"
+    return "a" if x > y else "b"
+
+
+def longer_wins(tot, seeds, ARGUMENTS, pair_list) -> tuple[int, int]:
+    """(decided hearings won by the longer text, decided hearings), equal lengths skipped."""
+    won = decided = 0
+    for a, b in pair_list:
+        if len(ARGUMENTS[a]) == len(ARGUMENTS[b]):
+            continue
+        for s in seeds:
+            o = _outcome(tot[a][s][0], tot[b][s][0])
+            if o in "ab":
+                w, other = (a, b) if o == "a" else (b, a)
+                won, decided = won + (len(ARGUMENTS[w]) > len(ARGUMENTS[other])), decided + 1
+    return won, decided
+
+
 def pairs(tot, seeds, mean, ARGUMENTS, PAIRS):
     outcomes, consistent, gaps = defaultdict(int), [], []
-    longer_wins = decided = 0
     for a, b in PAIRS:
         wins = defaultdict(int)
         for s in seeds:
-            x, y = tot[a][s][0], tot[b][s][0]
-            if x < FROZE_HZ and y < FROZE_HZ:
-                outcomes["froze"] += 1
-            elif abs(x - y) / (x + y) < TIE_GAP:
-                outcomes["tie"] += 1
-            else:
-                outcomes["win"] += 1
-                w = a if x > y else b
-                wins[w] += 1
-                decided += 1
-                longer_wins += len(ARGUMENTS[w]) > len(ARGUMENTS[b if w == a else a])
+            o = _outcome(tot[a][s][0], tot[b][s][0])
+            outcomes["win" if o in "ab" else o] += 1
+            if o in "ab":
+                wins[a if o == "a" else b] += 1
         gap = abs(mean[a] - mean[b]) / (mean[a] + mean[b]) if mean[a] + mean[b] else 0.0
         gaps.append(gap)
         if gap >= NONTRIVIAL:
@@ -113,17 +129,19 @@ def pairs(tot, seeds, mean, ARGUMENTS, PAIRS):
     print(f"(b) densest {BAND:.0%}-of-range band holds {share:.0%} of tastings (from {start:.1f} Hz; "
           f"pass <= {MAX_IN_BAND:.0%}); pair mean-gap quartiles "
           f"{np.round(np.percentile(gaps, [25, 50, 75]), 2).tolist()}")
-    print(f"(c) longer text wins {longer_wins}/{decided} decided hearings")
+    for label, pl in (("probe pairs", PAIRS), ("all pairs", list(combinations(range(len(ARGUMENTS)), 2)))):
+        won, dec = longer_wins(tot, seeds, ARGUMENTS, pl)
+        print(f"(c) longer text wins {won}/{dec} = {won / dec:.0%} of decided hearings ({label}; target 40-60%)")
     print(f"(d) outcomes over {n} hearings: " +
           ", ".join(f"{k} {v} ({v / n:.0%})" for k, v in sorted(outcomes.items())))
 
 
-def band(arg_set="old", name=None):
+def band(arg_set="third", ms="2000", name=None):
     """Tie-band sweep: a hearing is decided if not froze and gap >= band. Consistent =
     decided hearings that agree with their pair's majority decided winner."""
     tot = defaultdict(dict)
     ARGUMENTS, PAIRS = SETS[arg_set], SET_PAIRS[arg_set]
-    for key, m in load(name or RESULTS.format(arg_set)).items():
+    for key, m in load(name or RESULTS.format(arg_set, int(ms))).items():
         i, seed = key.split("|")
         tot[int(i)][seed] = sum(m["MN9"])
     seeds = sorted(next(iter(tot.values())))

@@ -2,7 +2,7 @@
 
 Run from sim/:
     PYTHONPATH=src uv run python -m validation.taste_probe screen
-    PYTHONPATH=src uv run python -m validation.taste_probe tastings [old|new] [N]
+    PYTHONPATH=src uv run python -m validation.taste_probe tastings [old|new|third] [ms] [N]
 N = run on the taste subcircuit of N hops (validation.taste_sub); results are
 bit-identical to the full brain for N = 6, so they go to the same file.
 Validation only: no change to SPEC, model.py or smell.py. Argument sets: taste_sets.
@@ -19,7 +19,7 @@ from validation.taste_sets import SETS
 SEEDS = tuple(range(783, 793))
 SCREEN_RATE, SCREEN_SEEDS = 150.0, (783, 784, 785)
 DURATION_MS = 2000
-RESULTS = "taste_v3_{}.jsonl"  # per set; earlier runs: taste_args.jsonl (1 s), taste_args_2s*.jsonl
+RESULTS = "taste_v4_{}_{}ms.jsonl"  # (set, ms); v3 table (0.3.0): taste_v3_{old,new}.jsonl (2 s)
 
 
 def tasting(text: str):
@@ -41,7 +41,7 @@ def screen():
         for name, _, ids in groups for seed in SCREEN_SEEDS})
 
 
-def tastings(arg_set="old", n_hops=None):
+def tastings(arg_set="third", ms=DURATION_MS, n_hops=None):
     model = None
     if n_hops is not None:
         from borer_sim.model import Model
@@ -49,9 +49,9 @@ def tastings(arg_set="old", n_hops=None):
         model = Model.subcircuit(_keep(int(n_hops)))
     for key, (name, ids) in taste.mapping().items():
         print(f"  {key} -> {name} ({len(ids)} GRNs)")
-    run(RESULTS.format(arg_set), {f"{i}|{seed}": (tasting(a), seed)
-                                  for i, a in enumerate(SETS[arg_set]) for seed in SEEDS},
-        DURATION_MS, model)
+    run(RESULTS.format(arg_set, int(ms)), {f"{i}|{seed}": (tasting(a), seed)
+                                           for i, a in enumerate(SETS[arg_set]) for seed in SEEDS},
+        int(ms), model)
 
 
 if __name__ == "__main__":

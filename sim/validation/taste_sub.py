@@ -1,11 +1,12 @@
 """Taste subcircuit (P1-10): choose N, validate against the full brain, time hearings.
 
-Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_sub [sizes|ref|run N|check N|time N...]
+Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_sub [sizes|ref|run N|check N|time ms set N...]
 Sources = every GRN in taste.mapping(); targets = MN9 + Giant Fiber, both sides.
 Validation: NEW set arguments 0-9 x seeds 783-787 at 2 s, against the full-brain
 results in taste_v3_new.jsonl (same seeds -> same Poisson input). Pass: per-argument
 mean MN9 within +-5% (or +-0.5 Hz below 10 Hz) and the same winner on every pair.
-Timing: a hearing = its two tastings in parallel, 2 processes x 1 thread.
+Validated with the v3 table (0.3.0): the reference is REF; a later TABLE needs a new ref.
+Timing (time [ms] [set] [N...]): a hearing = its two tastings in parallel, 2 processes x 1 thread.
 """
 import multiprocessing as mp
 import statistics
@@ -24,11 +25,12 @@ from validation.steering import _connectome_model, run_jobs
 from validation.steering_probe import THREADS, WORKERS
 from validation.steering_report import load
 from validation.sugar_mn9 import OUT
-from validation.taste_probe import DURATION_MS, RESULTS, tasting
+from validation.taste_probe import DURATION_MS, tasting
 from validation.taste_sets import PAIRS, SETS
 
 ARGS, SEEDS = range(10), tuple(range(783, 788))
 REL_TOL, ABS_TOL = 0.05, 0.5
+REF = "taste_v3_new.jsonl"  # full-brain results, v3 table
 _model = None
 
 
@@ -50,7 +52,7 @@ def _jobs() -> dict:
 
 def ref():
     """Full-brain reference: these keys are part of the NEW-set probe results."""
-    run_jobs(_jobs(), OUT / RESULTS.format("new"), WORKERS, THREADS, metric=pop_metrics,
+    run_jobs(_jobs(), OUT / REF, WORKERS, THREADS, metric=pop_metrics,
              duration_ms=DURATION_MS)
 
 
@@ -61,7 +63,7 @@ def run(n_hops):
 
 
 def check(n_hops):
-    sub, full = load(f"taste_sub_N{n_hops}.jsonl"), load(RESULTS.format("new"))
+    sub, full = load(f"taste_sub_N{n_hops}.jsonl"), load(REF)
     mn9 = {k: sum(m["MN9"]) for k, m in sub.items()}
     ref = {k: sum(full[k]["MN9"]) for k in sub}
     ok_rate = True
@@ -81,34 +83,36 @@ def check(n_hops):
 
 
 def _taste(job):
-    drives, seed = job
+    drives, seed, ms = job
     torch.set_num_threads(1)
-    _model.run(drives, DURATION_MS, seed)
+    _model.run(drives, ms, seed)
 
 
-def _hearing_times(model, n=10) -> list[float]:
+def _hearing_times(model, ms, arg_set, n=10) -> list[float]:
     global _model
     _model = model
-    hearings = [(tasting(SETS["new"][a]), tasting(SETS["new"][b])) for a, b in PAIRS["new"][:n]]
+    args = SETS[arg_set]
+    hearings = [(tasting(args[a]), tasting(args[b])) for a, b in PAIRS[arg_set][:n]]
     times = []
     with mp.get_context("fork").Pool(2) as pool:
         for k, (x, y) in enumerate(hearings):
             t = time.perf_counter()
-            pool.map(_taste, [(x, 783 + k), (y, 783 + k)], chunksize=1)
+            pool.map(_taste, [(x, 783 + k, ms), (y, 783 + k, ms)], chunksize=1)
             times.append(time.perf_counter() - t)
     return times
 
 
-def timing(*n_hops):
-    full = _hearing_times(_connectome_model())
+def timing(ms=DURATION_MS, arg_set="new", *n_hops):
+    ms = int(ms)
+    full = _hearing_times(_connectome_model(), ms, arg_set)
     mf = statistics.median(full)
-    print(f"hearing (2 x {DURATION_MS / 1000:g} s tastings in parallel, 2 proc x 1 thread), "
+    print(f"hearing ({arg_set} set, 2 x {ms / 1000:g} s tastings in parallel, 2 proc x 1 thread), "
           f"median of 10: full brain {mf:.2f} s {[round(t, 1) for t in full]}", flush=True)
     for n in map(int, n_hops):
-        sub = _hearing_times(Model.subcircuit(_keep(n)))
-        ms = statistics.median(sub)
-        print(f"  subcircuit N={n}: {ms:.2f} s {[round(t, 1) for t in sub]}; "
-              f"speed-up x{mf / ms:.1f}", flush=True)
+        sub = _hearing_times(Model.subcircuit(_keep(n)), ms, arg_set)
+        m = statistics.median(sub)
+        print(f"  subcircuit N={n}: {m:.2f} s {[round(t, 1) for t in sub]}; "
+              f"speed-up x{mf / m:.1f}", flush=True)
 
 
 if __name__ == "__main__":
