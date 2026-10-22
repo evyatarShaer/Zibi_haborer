@@ -19,6 +19,7 @@ import numpy as np
 import torch
 
 from borer_sim import smell
+from validation import taste
 from validation.proto_report import RUNAWAY
 from validation.steering_report import load
 from validation.taste_probe import DURATION_MS, RESULTS, tasting
@@ -75,10 +76,11 @@ def args(arg_set="old", name=None):
     m = [mean[i] for i in range(len(ARGUMENTS))]
     lens = [len(a) for a in ARGUMENTS]
     honey = [sum(smell.normalize(a).count(c) for c in "דבש") for a in ARGUMENTS]
-    att = [np.mean([smell.LETTERS[c][1] == smell.ATTRACTIVE for c in smell.normalize(a)
+    exc = [np.mean([taste.TABLE[c][1][0] == "E" for c in smell.normalize(a)
                     if c in smell.LETTERS]) for a in ARGUMENTS]
     print(f"\n(c) Spearman rho of per-argument MN9 with: length {spearman(m, lens):+.2f}, "
-          f"ד/ב/ש count {spearman(m, honey):+.2f}, attractive-letter share {spearman(m, att):+.2f}")
+          f"ד/ב/ש count {spearman(m, honey):+.2f}, exciting-letter share (TABLE class E) "
+          f"{spearman(m, exc):+.2f}")
 
 
 def pairs(tot, seeds, mean, ARGUMENTS, PAIRS):
