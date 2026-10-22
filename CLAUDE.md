@@ -45,7 +45,7 @@ fly's choice is the verdict — the humor is the point.
   `systemctl --user stop <unit>`. **Never** use `setsid nohup ... &` or
   tmux for this: under WSL they stay in the terminal's `/init` session
   (cgroup `/non-systemd`) and die when Claude Code exits (taste_chain5,
-  2026-10-22). Resumable jobs (`steering.run_jobs` skips saved keys) are
+  2026-10-22). Resumable jobs (`runner.run_jobs` skips saved keys) are
   relaunched with the same command. Give the user the check command, then
   end the turn. Reason: the Claude Code UI used ~24% CPU on Windows
   during long polls, and the PC throttled to 1.79 GHz.
