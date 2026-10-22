@@ -1,9 +1,10 @@
 """Taste of words (SPEC §4): Hebrew argument text → GRN Poisson drive.
 
 normalize → each letter's share relative to its conversational frequency →
-saturating rate × log length gain, letters' total drive fixed → one rate per
-GRN group (TABLE), "!" and "?" capped → per-GRN rates, side-balanced so a
-group delivers the same total drive (rate × GRNs) on either side. A tasting
+saturating rate × log length gain, letters' total drive fixed → per-group cap →
+× coverage (low-diversity text loses drive) → one rate per GRN group (TABLE),
+"!" and "?" capped → per-GRN rates, side-balanced so a group delivers the same
+total drive (rate × GRNs) on either side. A tasting
 drives both sides at once. Sources and measurements: DECISIONS.md 2026-10-22.
 """
 import math
@@ -133,13 +134,22 @@ def _reference_total() -> float:
     return per * sum(_n(l) for l in LETTERS)
 
 
+def coverage(counts: Counter) -> float:
+    """Overlap of a letter count with CHAT_FREQ: sum of min(share, frequency), in [0, 1]."""
+    n = sum(counts[l] for l in LETTERS)
+    return sum(min(counts[l] / n, CHAT_FREQ[l]) for l in LETTERS) if n else 0.0
+
+
 def letter_rates(text: str) -> dict[str, float]:
     """Per-GRN rate (Hz) per letter, plus "!" and "?", for one argument.
 
     A letter's input is its share relative to CHAT_FREQ, so an average chat mix
     drives every letter alike; the letters' total excess drive is fixed at
-    _reference_total() x length gain, so the text sets only the split. Marks are
-    counted and capped; a text longer than len_ref adds up to verbose_marks "!".
+    _reference_total() x length gain, so the text sets only the split. Each
+    letter's rate is then capped, and its excess scaled by coverage relative to
+    coverage_ref (to the power coverage_power), so repeating one letter or word
+    adds no drive. Marks are counted and capped; a text with Hebrew letters
+    longer than len_ref adds up to verbose_marks "!" (no Hebrew: baseline only).
     """
     t, r_base = TASTE, TASTE["r_base"]
     norm = normalize(text)
@@ -150,9 +160,10 @@ def letter_rates(text: str) -> dict[str, float]:
                           t["k"], gain * t["r_max"]) for l in LETTERS}
     total = sum((r - r_base) * _n(l) for l, r in keyed.items())
     target = _reference_total() * gain
-    keyed = {l: r_base + (r - r_base) * target / total if total else r_base
-             for l, r in keyed.items()}
-    excess = max(0.0, gain - 1) / (length_gain(t["max_chars"]) - 1)
+    f = min(1.0, coverage(counts) / t["coverage_ref"]) ** t["coverage_power"]
+    keyed = {l: r_base + min((r - r_base) * target / total, t["cap"] - r_base) * f
+             if total else r_base for l, r in keyed.items()}
+    excess = max(0.0, gain - 1) / (length_gain(t["max_chars"]) - 1) if n else 0.0
     return keyed | {
         EXCLAMATION: _saturate(counts[EXCLAMATION] + t["verbose_marks"] * excess,
                                t["punct_k"], t["punct_max"]),

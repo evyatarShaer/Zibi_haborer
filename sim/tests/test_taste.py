@@ -1,8 +1,11 @@
 """borer_sim.taste: SPEC §4 text → GRN drive."""
+from collections import Counter
+
 import pytest
 
 from borer_sim import taste
 from borer_sim.params import TASTE
+from validation.taste_spam import SILENCE, SPAM
 
 SENTENCE = "אתה תמיד שוכח לסגור את הדלת, וזה ממש מעצבן אותי"
 R_BASE = TASTE["r_base"]
@@ -23,24 +26,38 @@ def test_normalize_caps_length():
     assert len(taste.normalize("א" * 500)) == TASTE["max_chars"]
 
 
-def test_no_letters_is_plain_water():
-    rates = taste.letter_rates("abc 123")
-    assert all(rates[l] == R_BASE for l in taste.LETTERS)
+@pytest.mark.parametrize("text", SILENCE.values())
+def test_no_hebrew_is_baseline_only(text):
+    assert set(taste.letter_rates(text).values()) == {R_BASE}
 
 
 @pytest.mark.needs_data
-def test_letters_total_drive_fixed_by_length():
-    for text in (SENTENCE, "ד" * 47, "דב" * 23 + "ק"):
-        target = taste._reference_total() * taste.length_gain(len(taste.normalize(text)))
-        assert _letters_excess(taste.letter_rates(text)) == pytest.approx(target, rel=1e-12)
+def test_natural_letters_total_drive_fixed_by_length():
+    """A natural text (coverage >= coverage_ref, no rate at the cap) keeps the fixed total."""
+    rates = taste.letter_rates(SENTENCE)
+    assert taste.coverage(Counter(taste.normalize(SENTENCE))) >= TASTE["coverage_ref"]
+    assert max(rates[l] for l in taste.LETTERS) < TASTE["cap"]
+    target = taste._reference_total() * taste.length_gain(len(taste.normalize(SENTENCE)))
+    assert _letters_excess(rates) == pytest.approx(target, rel=1e-12)
 
 
 @pytest.mark.needs_data
-@pytest.mark.xfail(strict=True, reason="v4 fixed total undoes saturation: 280 x ד drives "
-                   "PhG1c at ~6 kHz/GRN (SPEC §4.6 violated; open, DECISIONS.md 2026-10-22)")
 def test_spamming_one_letter_saturates():
-    cap = R_BASE + taste.length_gain(280) * TASTE["r_max"]
-    assert taste.letter_rates("ד" * 280)["ד"] <= cap
+    """Repeating a letter adds no drive: its rate stays at the coverage-scaled cap."""
+    cap_excess = TASTE["cap"] - R_BASE
+    for l in taste.LETTERS:
+        f = (taste.CHAT_FREQ[l] / TASTE["coverage_ref"]) ** TASTE["coverage_power"]
+        rates = [taste.letter_rates(l * n)[l] for n in (10, 50, 140, 280)]
+        assert rates == pytest.approx([R_BASE + cap_excess * f] * 4, rel=1e-12)
+
+
+@pytest.mark.needs_data
+@pytest.mark.parametrize("name", SPAM)
+def test_spam_drive_below_natural(name):
+    """Every spam text: no rate above the cap, letters' drive well below a natural text's."""
+    rates = taste.letter_rates(SPAM[name])
+    assert max(rates[l] for l in taste.LETTERS) <= TASTE["cap"]
+    assert _letters_excess(rates) < 0.15 * _letters_excess(taste.letter_rates(SENTENCE))
 
 
 @pytest.mark.parametrize("mark", MARKS)

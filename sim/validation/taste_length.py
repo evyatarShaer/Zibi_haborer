@@ -22,7 +22,7 @@ from borer_sim.taste import CHAT_FREQ, tasting
 from validation.runner import load
 from validation.taste_probe import run
 from validation.taste_sets import OLD as ARGUMENTS
-from validation.taste_report import spearman
+from validation.taste_criteria import spearman
 
 SHORT = (3, 5, 8, 11, 14, 16)
 REPS = (1, 2, 3, 4)

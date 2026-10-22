@@ -44,6 +44,10 @@ It's a fly, not a judge — the humor is part of the product.
 4. **Tie → sudden death (optional).** Each side adds ONE word, rerun with
    the same fly mood. Max 2 rounds. Then the tie is final.
 
+**Argument rule:** an argument needs **at least 10 Hebrew letters** (after
+§4.1 normalization) to be submitted — a deterministic check in the UI,
+no AI. The simulation still handles any text safely (§4.6).
+
 ## 4. "Taste of words" (argument → receptor input)
 
 Replaced "smell of words" on 2026-10-22 (DECISIONS.md): olfactory input
@@ -74,9 +78,18 @@ ignites a whole-brain runaway with a fixed, side-blind output.
    - `?` → putative-aversive GRNs (**LB2c**, inhibitory).
    - Both capped.
 5. **Length.** Logarithmic gain on overall intensity. Too much can turn
-   aversive (a long text adds `!` drive).
+   aversive (a long text with Hebrew letters adds `!` drive). A text with
+   no Hebrew letters gets the baseline rate only.
 6. **Adaptation / saturation (per receptor):**
-   `r = r_base + r_max * f / (f + K)` — spamming one letter doesn't work.
+   `r = r_base + r_max * f / (f + K)` on each letter's relative share, then
+   the fixed total is split, then:
+   - **cap:** no group's rate exceeds **120 Hz** per GRN (natural-text
+     p90; within the 10–200 Hz range Shiu et al. drive GRNs at);
+   - **coverage:** each letter's excess drive × `min(1, C / 0.6)²`, where
+     `C = Σ min(letter share, conversational frequency)` (how much of
+     normal Hebrew letter use the text covers; natural texts ≥ 0.6).
+   Spamming one letter, one word or two alternating letters therefore
+   loses drive instead of gaining it. Values and evidence: DECISIONS.md.
 7. **Sides.** Each argument drives the left and right GRNs of every
    group equally (same total drive per side).
 

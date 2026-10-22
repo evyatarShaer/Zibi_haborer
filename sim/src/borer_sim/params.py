@@ -26,6 +26,9 @@ TASTE = {
     "max_chars": 280,     # normalized text is truncated to this length
     "r_base": 8.0,        # baseline receptor rate (Hz)
     "r_max": 150.0,       # added rate at saturation (Hz)
+    "cap": 120.0,         # max per-GRN rate of a letter's group (Hz), DECISIONS.md 2026-10-22
+    "coverage_ref": 0.6,  # coverage at or above which a text keeps full drive (OLD+NEW minimum)
+    "coverage_power": 2.0,  # drive x (coverage / coverage_ref) ** power below the ref
     "k": 0.05,            # half-saturation, in share of letters (~1/22 per letter)
     "len_ref": 140,       # length (chars) at which the length gain is 1
     "punct_max": 75.0,    # cap on the rate added by "!" or "?" (Hz)
