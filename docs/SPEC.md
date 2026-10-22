@@ -7,8 +7,9 @@
 
 A WhatsApp-shared web game. Two people argue; a simulation of a real fruit-fly
 brain (FlyWire connectome, ~140k neurons) decides who wins. Each side writes
-their argument from their own phone. Arguments become "smells" fed to the
-fly's olfactory receptors; the fly turns toward one side.
+their argument from their own phone. Arguments become *tastes* fed to the
+fly's gustatory receptors; the fly tastes each argument, and the one it
+wants to eat more wins.
 
 It's a fly, not a judge — the humor is part of the product.
 
@@ -24,8 +25,9 @@ It's a fly, not a judge — the humor is part of the product.
    and stored; the verdict card always reads the stored result.
 3. **Transparent.** The verdict card shows what the brain did. There's a
    public "how it works" page.
-4. **Fair.** Arguments hidden until both are submitted. Which side goes to
-   the left vs. right antenna is a seeded coin flip per case.
+4. **Fair.** Arguments hidden until both are submitted. Each argument is
+   tasted separately, on both sides of the mouth, with the same seed
+   (case seed + round), so swapping the sides swaps the result exactly.
 5. **Humor without humiliation.** Mock the dispute, not the loser.
 6. **WhatsApp-first.** Mobile, link-based, no sign-up, good link preview.
 
@@ -42,26 +44,41 @@ It's a fly, not a judge — the humor is part of the product.
 4. **Tie → sudden death (optional).** Each side adds ONE word, rerun with
    the same fly mood. Max 2 rounds. Then the tie is final.
 
-## 4. "Smell of words" (argument → receptor input)
+## 4. "Taste of words" (argument → receptor input)
+
+Replaced "smell of words" on 2026-10-22 (DECISIONS.md): olfactory input
+ignites a whole-brain runaway with a fixed, side-blind output.
 
 1. **Normalize.** Strip niqqud and duplicate spaces; final letters → regular
    (ך→כ, ם→מ, ן→נ, ף→פ, ץ→צ). Count only the 22 Hebrew letters plus `!` and
    `?`. Everything else counts only toward length. **Max 280 chars.**
-2. **Map.** Each Hebrew letter maps to one fixed olfactory glomerulus
-   (receptor type) out of ~50. Pool roughly balanced: ~1/3 attractive, ~1/3
-   aversive, ~1/3 neutral — based on known biology. The mapping table is
-   decided in the POC and fixed in code.
-3. **Intensity.** Firing rate per glomerulus comes from letter frequency.
+2. **Map.** Each Hebrew letter maps to one fixed gustatory receptor neuron
+   (GRN) group: v783, one group per sub-class × cell type with ≥ 2 GRNs
+   per side. Groups that ignite the runaway alone are excluded (LB3b,
+   LgAG3). A group's class (excite / inhibit / neutral) is **measured in
+   the simulated brain** (its effect on MN9 on a sugar background); the
+   literature valence is a cross-check only. Rule (table v4): the two
+   groups that drive MN9 alone (LB3c, LB3d) are split in halves and go
+   to the four most frequent letters (י ו ה א), so the main drive is
+   nearly constant and the other letters decide; ד/ב/ש go to the next
+   exciters (PhG1c, PhG4, LB4a — the honey easter egg, moderate); the
+   other 15 letters are dealt excite / inhibit / neutral by
+   conversational frequency, stronger effect to more frequent letters.
+   The table is fixed in code (`borer_sim/taste.py`).
+3. **Intensity.** Each letter's input is its share **relative to its
+   conversational Hebrew frequency** (OpenSubtitles 2018). The letters'
+   total drive is fixed (scaled only by the length gain), so the text
+   sets the split, not the amount.
 4. **Punctuation.**
-   - `!` → CO₂ glomerulus (**V**, aversive).
-   - `?` → geosmin glomerulus (**DA2**, aversive).
+   - `!` → bitter GRNs (**LB1a**, inhibitory).
+   - `?` → putative-aversive GRNs (**LB2c**, inhibitory).
    - Both capped.
 5. **Length.** Logarithmic gain on overall intensity. Too much can turn
-   aversive.
+   aversive (a long text adds `!` drive).
 6. **Adaptation / saturation (per receptor):**
    `r = r_base + r_max * f / (f + K)` — spamming one letter doesn't work.
-7. **Side assignment.** Side A → left or right antenna ORNs by seeded coin
-   flip; side B → the other.
+7. **Sides.** Each argument drives the left and right GRNs of every
+   group equally (same total drive per side).
 
 ## 5. Fly mood (modeled layer on top of the connectome)
 
@@ -76,7 +93,7 @@ It's a fly, not a judge — the humor is part of the product.
   more flee / dither.
 
 **Effects:**
-- Hunger raises gain of attractive receptors.
+- Hunger raises gain of the MN9-exciting GRN groups.
 - Arousal increases background spike noise.
 
 ## 6. Simulation & readout
@@ -85,26 +102,29 @@ It's a fly, not a judge — the humor is part of the product.
   Shiu et al. 2024 (*Nature*). Weights from FlyWire synapse counts, sign
   from predicted neurotransmitter.
 - **Data version.** FlyWire **v783**.
-- **Input.** Seeded Poisson spikes in ORNs at computed rates.
-- **Duration.** **1 s** simulated per hearing (decided 2026-10-20; SPEC
-  originally allowed 1–2 s — see DECISIONS.md).
-- **Readout.** Left vs. right turning descending neurons (e.g. DNa02
-  family — *verify in POC*). 50 ms bins. Steering signal:
-  `(L − R) / (L + R)`.
-- **Metrics (per run):**
-  - `A`, `B` — total turning-DN activity toward each side over the
-    whole run (L/R mapped to sides via the antenna assignment)
+- **Input.** Seeded Poisson spikes in GRNs at computed rates.
+- **Hearing = two tastings.** Each argument is tasted alone (one run
+  each), with the same seed. **1.5 s** simulated per tasting (decided
+  2026-10-22; 2 s is the documented fallback — see DECISIONS.md). The
+  two tastings run in parallel.
+- **Readout.** MN9 (cell type CB0701, proboscis motor neuron), left +
+  right, per tasting. 50 ms bins.
+- **Metrics (per hearing):**
+  - `A`, `B` — total MN9 rate (Hz, L + R) of each side's tasting
   - `margin = max(A, B) / (A + B)` — winner's share, in [0.5, 1]
   - `gap = |A − B| / (A + B) = 2·margin − 1` (gap ≥ 5% ⇔ ≥ 52.5/47.5)
-  - `decision_time_ms` — when cumulative steering crosses threshold and
-    stays
-  - `direction_flips` — number of sign flips in steering
-  - `active_neurons` — count of neurons that spiked
-  - `deciding_neuron` — most-spiking winning-side DN + its FlyWire id
-  - `giant_fiber_fired` — bool (escape circuit)
+  - `decision_time_ms` — when the cumulative binned A − B crosses
+    threshold and stays
+  - `direction_flips` — number of sign flips in the binned A − B
+  - `active_neurons` — count of neurons that spiked (per tasting)
+  - `deciding_neuron` — the more active MN9 of the winning tasting + its
+    FlyWire id
+  - `giant_fiber_fired` — bool, GF spiked in either tasting (escape
+    circuit)
 - **Replay.** Per-region activity in 20 ms frames, saved for animation.
-- **Performance target.** ≤ **15 s per run**. If too slow: subcircuit
-  (neurons within N hops on paths from ORNs to turning DNs).
+- **Performance target.** ≤ **15 s per hearing** (both tastings).
+  Measured 8.87 s on the workstation (2 processes × 1 thread). The
+  subcircuit (P1-10) gives no speed-up and is not used.
 
 ## 7. Outcomes
 
@@ -113,8 +133,8 @@ in POC.
 
 | Outcome        | Condition                                   | Card headline (HE)                  |
 |---              |---                                           |---                                   |
-| Fled           | Giant Fiber fired                            | הזבוב עזב את האולם                   |
-| Froze          | total turning-DN activity below threshold   | שתי הטענות לא עניינו את הזבוב       |
+| Fled           | Giant Fiber fired in either tasting          | הזבוב עזב את האולם                   |
+| Froze          | both tastings' MN9 (`A`, `B`) < 2 Hz         | שתי הטענות לא עניינו את הזבוב       |
 | Went for food  | `hunger > 0.8` and `gap < 5%`                | יש דברים חשובים מהוויכוח שלכם        |
 | Dithered       | `direction_flips ≥ 3` and `gap < 5%`         | הזבוב קרוע                          |
 | Win            | `gap ≥ 5%`                                   | הזבוב פסק לטובת {name}              |
@@ -125,7 +145,7 @@ Track outcome frequencies globally; show rarity on the card.
 ## 8. Side B doesn't answer
 
 - **Reminder button.** `wa.me` link with prefilled message.
-- **Deadline passes.** Side B gets "clean air" (baseline receptor rates
+- **Deadline passes.** Side B gets "plain water" (baseline GRN rates
   only); simulation runs normally. Outcome described as "lost to silence".
 - **Public defender** — Phase 3, not MVP. Anyone with the link can write
   for B after half the window elapses.
@@ -134,7 +154,7 @@ Track outcome frequencies globally; show rarity on the card.
 
 Page + 1200×630 OG image.
 
-**Shows:** topic, names, winner or tie type, margin + L/R bar, decision
+**Shows:** topic, names, winner or tie type, margin + A/B bar, decision
 time, direction flips, fly mood, mini brain map, deciding neuron id, one
 template sentence, rarity, buttons (share / new case / sudden death).
 
@@ -151,8 +171,8 @@ by case.
 - **Argument:** `id`, `case_id`, `side`, `round` (0 main, 1–2 sudden
   death), `text`, `author_token_hash`, `is_public_defender`,
   `defender_name`, `created_at`.
-- **Run:** `id`, `case_id`, `round`, `side_assignment`, `input_rates`
-  (jsonb), `metrics` (jsonb), `outcome`, `replay_url`, `sim_version`,
+- **Run:** `id`, `case_id`, `round`, `input_rates` (jsonb, both
+  tastings), `metrics` (jsonb), `outcome`, `replay_url`, `sim_version`,
   `platform`, `duration_ms`.
 - **Template:** `id`, `outcome_type`, `text`, `weight`.
 - **Report:** `id`, `case_id`, `reason`, `created_at`.
@@ -185,13 +205,18 @@ Supersedes any earlier version of the spec.
 1. **POC (now)** — Python only.
    **Exit:**
    - **Balance:** over 1,000 seeded random argument pairs, side A wins
-     45–55% **and** the left antenna wins 45–55%.
-   - **Swap test:** 200 pairs run as (X vs Y) and (Y vs X) with the same
-     seed, mood and antenna assignment → the winner flips in ≥ 75% of
-     decided cases.
-   - **Outcome mix:** ≥ 50% of runs end in Win; each special outcome
-     (Fled / Froze / Went for food / Dithered) ≤ 15%.
-   - run ≤ 15 s
+     45–55%.
+   - **Seed consistency** (replaces the swap test: swapping sides swaps
+     the tastings exactly): ≥ 90% of non-trivial pairs (mean gap ≥ 10%)
+     keep their winner in ≥ 75% of seeds.
+   - **Outcome mix:** ≥ 50% of hearings end in Win; each special
+     outcome (Fled / Froze / Went for food / Dithered) ≤ 15%.
+   - **Input quality:** MN9 range continuous (≤ 50% of tastings in any
+     band 10% of the range wide); |Spearman ρ| < 0.5 between
+     per-argument MN9 and length, and the ד/ב/ש count; the longer
+     argument wins 40–60% of decided hearings; runaway (> 4,000 active
+     neurons) in < 2% of tastings.
+   - hearing ≤ 15 s
    - RAM fits in 12 GB (ideally much less).
 2. **MVP** — full flow, card, OG preview, animation, all tie types, sudden
    death, how-it-works page.
@@ -201,7 +226,9 @@ Supersedes any earlier version of the spec.
 
 ## 13. Open questions (resolve in POC → `DECISIONS.md`)
 
-- Letter → glomerulus mapping table and its balance.
-- Thresholds (5% gap, 3 flips, hunger 0.8).
+- Letter → GRN group table (measured valence) and its balance.
+- Thresholds (5% gap, 3 flips, hunger 0.8, froze 2 Hz).
+- Rename the "Went for food" outcome — every argument is food now
+  (MVP copywriting).
 - FlyWire data license terms for possible commercial use.
 - Publish the mapping table openly or let players discover it?

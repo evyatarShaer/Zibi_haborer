@@ -676,3 +676,60 @@ a hold-out, because it motivated this change. Runs: THIRD at 2 s and 1.5 s,
 (P1-9), so the balance, swap and outcome-mix checks were **not run**.
 Performance: see the entry above (12.05 s per 2 s hearing). THIRD-run
 hearing times: 12.38 s (2 s) and 8.87 s (1.5 s); results in POC_REPORT ("Taste probe v4").
+
+---
+
+## 2026-10-22 — "Taste of words" replaces "smell of words"; 1.5 s tastings
+
+**Context:** P1-6 tried the SPEC input (letters → ORNs/glomeruli, read
+out as DNa02 steering) and it failed. Taste table v4 then passed every
+taste-probe criterion on the THIRD judging set (POC_REPORT "Taste probe v4").
+
+**Decision (user, 2026-10-22):**
+1. SPEC §1, §2.4, §4–§10, §12, §13 rewritten per the taste draft
+   (POC_REPORT, taste probe v2 "Draft SPEC changes"), updated for v4:
+   letters → GRN groups (table v4), MN9 readout, each argument tasted
+   alone on both sides with the same seed; the swap test is replaced by
+   seed consistency; input-quality criteria added to §12.
+2. **Tasting length 1.5 s** (hearing 8.87 s vs 12.38 s at 2 s), for
+   margin on the slower production host. **2 s stays the documented
+   fallback** if 1.5 s ever fails seed consistency.
+3. §13: rename the "Went for food" outcome (MVP copywriting).
+
+**Why smell was dropped:**
+- **Cascade** (steering probe, 846 runs): every run is either quiet
+  (≤ 107 active neurons, all DNs silent) or a whole-brain cascade
+  (~8,400–9,600 active) with one fixed DN pattern whichever antenna is
+  driven (DNa02 48.7 / 0.5 Hz). 7 ORNs at 20 Hz can ignite it. Swap
+  flip rate 0/250 (exit criterion ≥ 75%). 0 of 24 glomeruli turn the
+  fly consistently.
+- **Sub-cascade readout probe:** below the ignition threshold there is
+  nothing to read; above it the output is fixed. Even a 500× input cut
+  still cascades 0.8% of the time.
+- **Prototype A** (short-term depression on ORN→PN, U = 0.22 and 0.79,
+  τ 893 ms): runaway in every run, identical L/R output, 0/3 flips.
+- **Prototype B** (taste of words): text and valence reach the brain
+  (attractive letters drive MN9, aversive ones silence it) with no
+  model change. Its lateralised readouts failed (best 60%), which led
+  to the per-argument tasting design used since.
+
+**Evidence (table v4, THIRD set, 20 arguments, 30 pairs, 10 seeds, full brain):**
+
+| Criterion | Rule | 2 s | 1.5 s |
+|---|---|---|---|
+| (a) seed consistency | ≥ 90% of non-trivial pairs ≥ 75% | 27/27 (min 0.9) | 26/26 (min 0.8) |
+| (b) densest 10% band | ≤ 50% | 22% | 20% |
+| (c) ρ(MN9, length) / ρ(MN9, ד/ב/ש) | \|ρ\| < 0.5 | +0.01 / +0.03 | −0.03 / −0.02 |
+| (d) Win share | ≥ 50% | 94% | 94% |
+| (e) runaway | < 2% | 0/200 | 0/200 |
+| longer wins, probe / all pairs | 40–60% | 42% / 47% | 42% / 47% |
+| hearing time | ≤ 15 s | 12.38 s | 8.87 s |
+
+**Alternatives considered:** central synaptic dynamics (option 2 plan,
+needs model changes and re-validation); 2 s tastings (more seed
+consistency, less time margin).
+
+**Impacts:** `borer_sim.smell` → `borer_sim.taste` (P1-6); P1-8 readout
+= MN9 per tasting; P1-9 balance + seed consistency + outcome mix; ORN
+code removed. Not yet run: balance / outcome-mix tests (P1-9),
+production-host timing.
