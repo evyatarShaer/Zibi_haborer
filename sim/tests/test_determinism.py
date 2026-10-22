@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from borer_sim import anatomy
+from borer_sim import taste
 from borer_sim.model import Model
 
 pytestmark = pytest.mark.needs_data
@@ -13,7 +13,7 @@ DURATION_MS = 300
 @pytest.fixture(scope="module")
 def runs():
     model = Model.from_connectome()
-    drives = [(anatomy.orns("V", "left"), 100), (anatomy.orns("DA2", "right"), 100)]
+    drives = taste.tasting("אתה תמיד שוכח לסגור את הדלת, וזה ממש מעצבן אותי!")
     return [model.run(drives, DURATION_MS, seed) for seed in (7, 7, 8)]
 
 

@@ -17,10 +17,10 @@ from contextlib import contextmanager
 
 import numpy as np
 
-from borer_sim import smell
-from validation.letter_freq import CHAT_FREQ
-from validation.steering_report import load
-from validation.taste_probe import run, tasting
+from borer_sim import taste
+from borer_sim.taste import CHAT_FREQ, tasting
+from validation.runner import load
+from validation.taste_probe import run
 from validation.taste_sets import OLD as ARGUMENTS
 from validation.taste_report import spearman
 
@@ -31,13 +31,13 @@ SEEDS = tuple(range(783, 788))
 
 @contextmanager
 def flat_gain():
-    real = smell.length_gain
+    real = taste.length_gain
     # 1 everywhere; max_chars keeps a different value so the "excess" term is 0, not 0/0
-    smell.length_gain = lambda n: 1.0 if n != smell.SMELL["max_chars"] else 2.0
+    taste.length_gain = lambda n: 1.0 if n != taste.TASTE["max_chars"] else 2.0
     try:
         yield
     finally:
-        smell.length_gain = real
+        taste.length_gain = real
 
 
 def experiments():
@@ -75,7 +75,7 @@ def mn9(name) -> dict:
 def report():
     rep = mn9("taste_len_repeat.jsonl")
     print("E1 MN9 Hz by repeat (gain " + " / ".join(
-        f"x{r} {smell.length_gain(len(smell.normalize(' '.join([ARGUMENTS[3]] * r)))):.2f}"
+        f"x{r} {taste.length_gain(len(taste.normalize(' '.join([ARGUMENTS[3]] * r)))):.2f}"
         for r in REPS) + ")")
     for i in SHORT:
         print(f"  #{i}: " + " / ".join(f"{rep[f'{i}x{r}']:.1f}" for r in REPS))

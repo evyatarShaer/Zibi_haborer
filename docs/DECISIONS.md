@@ -733,3 +733,46 @@ consistency, less time margin).
 = MN9 per tasting; P1-9 balance + seed consistency + outcome mix; ORN
 code removed. Not yet run: balance / outcome-mix tests (P1-9),
 production-host timing.
+
+---
+
+## 2026-10-22 — `borer_sim.taste` replaces `borer_sim.smell` (SIM_VERSION 0.5.0)
+
+**Context:** P1-6 port of the approved taste input (entry above) from
+`validation/taste.py` into the product package.
+
+**Decision / what changed:**
+- `borer_sim/taste.py`: normalization, the v4 `TABLE`, `CHAT_FREQ`,
+  `EXCLUDED`, `SPLIT`, saturation, `!`/`?` handling, side balancing and
+  `tasting()` (both sides) in one module. `params.SMELL` → `params.TASTE`
+  (same values); `params.TASTING_MS = 1500`.
+- `anatomy`: `mn9()` added; `orns()`, `orn_glomeruli()`, `turning_dns()`
+  removed. Deleted: `smell.py`, `test_smell.py`, `validation/taste.py`
+  and the smell-only probes (steering, readout, proto A/B, cascade
+  diagnostics, smell sanity, STD model; git history keeps them).
+  `validation/runner.py` holds the shared job runner, `WORKERS`/`THREADS`,
+  `load`, `RUNAWAY` and the MN9/GF/population readout.
+- Minor bump (0.4.0 → 0.5.0): the product input changes from ORNs to
+  GRNs; tastings are bit-identical to the 0.4.0 validation runs.
+
+**Checks:**
+- Drives from the port equal the 0.4.0 validation drives exactly on 67
+  texts (all three argument sets + edge cases).
+- THIRD args 0, 8, 19 re-run at 1.5 s: MN9, active count and every
+  population sum identical to `taste_v4_third_1500ms.jsonl`.
+- `pytest`: 30 passed, 1 xfailed (below). Determinism and subcircuit tests
+  now drive GRNs via `taste.tasting`.
+- Balance test: **not run** (`test_balance.py` does not exist yet, P1-9).
+  Performance: hearing 8.87 s at 1.5 s (taste-chain6); peak RSS not
+  re-measured (model unchanged).
+
+**Surprise (open, not fixed):** the fixed letters' total (v4 rule)
+undoes the per-letter saturation (SPEC §4.6). Spamming one letter puts
+the whole letter budget into one group: 280 × ד → PhG1c at ~6 kHz per
+GRN (a natural sentence peaks at ~117 Hz). One 1.5 s tasting each, seed
+783: ד × 280 → MN9 118 Hz (above every THIRD argument, max 65 Hz), no
+runaway; דבש × 93 → runaway (9,163 active); ר × 280 → runaway (8,996);
+ק × 280 → MN9 0. Kept as a strict-xfail test
+(`test_spamming_one_letter_saturates`). A fix (e.g. a per-GRN cap after
+the total is fixed) changes results, so it needs a re-run of the THIRD
+probe and your approval.

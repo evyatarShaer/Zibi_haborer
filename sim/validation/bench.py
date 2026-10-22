@@ -12,7 +12,7 @@ import time
 
 import torch
 
-from borer_sim import anatomy, data
+from borer_sim import data
 from borer_sim.model import Model
 from validation.sugar_mn9 import OUT, conditions
 
@@ -30,11 +30,7 @@ def main(threads):
     torch.set_num_threads(threads)
     _, load_s = timed(data.edges)
     model, build_s = timed(Model.from_connectome)
-    drives = {
-        "sugar200": conditions()["sugar200"],
-        "orn_V_L+DA2_R_100": [(anatomy.orns("V", "left"), 100),
-                              (anatomy.orns("DA2", "right"), 100)],
-    }
+    drives = {"sugar200": conditions()["sugar200"]}
     model.run(drives["sugar200"], 100, seed=0)  # warm-up
     runs = {}
     for name, d in drives.items():

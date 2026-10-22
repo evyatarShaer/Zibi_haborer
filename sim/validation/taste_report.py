@@ -19,11 +19,10 @@ from itertools import combinations
 import numpy as np
 import torch
 
-from borer_sim import smell
-from validation import taste
-from validation.proto_report import RUNAWAY
-from validation.steering_report import load
-from validation.taste_probe import DURATION_MS, RESULTS, tasting
+from borer_sim import taste
+from borer_sim.params import TASTING_MS
+from validation.runner import RUNAWAY, connectome_model, load
+from validation.taste_probe import RESULTS
 from validation.taste_sets import PAIRS as SET_PAIRS, SETS
 
 FROZE_HZ, TIE_GAP, NONTRIVIAL = 2.0, 0.05, 0.10
@@ -55,7 +54,7 @@ def screen():
               f"{statistics.mean(sum(m['MN9']) for m in ms):.1f} |")
 
 
-def args(arg_set="third", ms="2000", name=None):
+def args(arg_set="third", ms=TASTING_MS, name=None):
     ARGUMENTS = SETS[arg_set]
     res = load(name or RESULTS.format(arg_set, int(ms)))
     tot = defaultdict(dict)
@@ -70,15 +69,15 @@ def args(arg_set="third", ms="2000", name=None):
     print("| # | chars | ד/ב/ש | MN9 total Hz (mean ± sd) | MN9 L / R | text |\n|---|---|---|---|---|---|")
     for i, a in enumerate(ARGUMENTS):
         v = [tot[i][s] for s in seeds]
-        honey = sum(smell.normalize(a).count(c) for c in "דבש")
+        honey = sum(taste.normalize(a).count(c) for c in "דבש")
         print(f"| {i} | {len(a)} | {honey} | {mean[i]:.1f} ± {np.std([x[0] for x in v]):.1f} | "
               f"{np.mean([x[1][0] for x in v]):.1f} / {np.mean([x[1][1] for x in v]):.1f} | {a} |")
     pairs(tot, seeds, mean, ARGUMENTS, SET_PAIRS[arg_set])
     m = [mean[i] for i in range(len(ARGUMENTS))]
     lens = [len(a) for a in ARGUMENTS]
-    honey = [sum(smell.normalize(a).count(c) for c in "דבש") for a in ARGUMENTS]
-    exc = [np.mean([taste.TABLE[c][1][0] == "E" for c in smell.normalize(a)
-                    if c in smell.LETTERS]) for a in ARGUMENTS]
+    honey = [sum(taste.normalize(a).count(c) for c in "דבש") for a in ARGUMENTS]
+    exc = [np.mean([taste.TABLE[c][1][0] == "E" for c in taste.normalize(a)
+                    if c in taste.LETTERS]) for a in ARGUMENTS]
     print(f"\n(c) Spearman rho of per-argument MN9 with: length {spearman(m, lens):+.2f}, "
           f"ד/ב/ש count {spearman(m, honey):+.2f}, exciting-letter share (TABLE class E) "
           f"{spearman(m, exc):+.2f}")
@@ -136,7 +135,7 @@ def pairs(tot, seeds, mean, ARGUMENTS, PAIRS):
           ", ".join(f"{k} {v} ({v / n:.0%})" for k, v in sorted(outcomes.items())))
 
 
-def band(arg_set="third", ms="2000", name=None):
+def band(arg_set="third", ms=TASTING_MS, name=None):
     """Tie-band sweep: a hearing is decided if not froze and gap >= band. Consistent =
     decided hearings that agree with their pair's majority decided winner."""
     tot = defaultdict(dict)
@@ -166,18 +165,17 @@ def band(arg_set="third", ms="2000", name=None):
 
 
 def bench():
-    from validation.steering import _connectome_model
     torch.set_num_threads(2)
-    model = _connectome_model()
+    model = connectome_model()
     a, b = SET_PAIRS["old"][0]
     ARGUMENTS = SETS["old"]
     times = []
     for k in range(5):
         t = time.perf_counter()
-        model.run(tasting(ARGUMENTS[a]), DURATION_MS, 783 + k)
-        model.run(tasting(ARGUMENTS[b]), DURATION_MS, 883 + k)
+        model.run(taste.tasting(ARGUMENTS[a]), TASTING_MS, 783 + k)
+        model.run(taste.tasting(ARGUMENTS[b]), TASTING_MS, 883 + k)
         times.append(time.perf_counter() - t)
-    print(f"(f) full hearing (2 tastings x {DURATION_MS / 1000:g} s, 2 threads): median {statistics.median(times):.2f} s, "
+    print(f"(f) full hearing (2 tastings x {TASTING_MS / 1000:g} s, 2 threads): median {statistics.median(times):.2f} s, "
           f"runs {[round(x, 2) for x in times]}")
 
 

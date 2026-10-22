@@ -4,25 +4,30 @@ Run from sim/:  PYTHONPATH=src uv run python -m validation.taste_valence [screen
 Background = sugar LB3c at BG_RATE Hz per GRN, both sides. Each other eligible
 group is added at taste_probe.SCREEN_RATE; delta = MN9(bg + group) - MN9(bg).
 Excitation alone comes from the runaway screen (taste_screen.jsonl), so LB3c
-(the background itself) is scored by that. Literature valence (taste.VALENCE)
-is shown only as a cross-check.
+(the background itself) is scored by that. Literature valence (VALENCE, by GRN
+sub-class) is shown only as a cross-check.
 """
 import sys
 from collections import defaultdict
 
 import numpy as np
 
-from borer_sim import data
-from validation import taste
-from validation.steering_report import load
+from borer_sim import data, taste
+from validation.runner import load
 from validation.taste_probe import SCREEN_RATE, SCREEN_SEEDS, run
 
 SUGAR, BG_RATE = "sugar:LB3c", 75.0
 FILE = "taste_valence.jsonl"
+VALENCE = {  # labellar taste literature; any other sub-class: neutral
+    "sugar": "attractive", "sugar/low_salt": "attractive", "water": "attractive",
+    "putative_attractive": "attractive", "bitter": "aversive",
+    "high_salt/heavy_metal": "aversive", "putative_aversive": "aversive",
+}
 
 
 def _groups() -> dict:
-    return {name: (val, ids) for name, val, ids in taste._groups(taste.grns())}
+    return {name: (VALENCE.get(name.split(":")[0], "neutral"), ids)
+            for name, ids in taste.groups().items()}
 
 
 def screen():

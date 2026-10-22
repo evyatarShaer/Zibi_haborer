@@ -18,26 +18,24 @@ import numpy as np
 import torch
 
 from borer_sim import anatomy, data, subcircuit
+from borer_sim.params import TASTING_MS
 from borer_sim.model import Model
-from validation import taste
-from validation.readout_probe import MN9_TYPE, pop_metrics
-from validation.steering import _connectome_model, run_jobs
-from validation.steering_probe import THREADS, WORKERS
-from validation.steering_report import load
+from borer_sim.taste import mapping, tasting
+from validation.runner import connectome_model, load, run_jobs
 from validation.sugar_mn9 import OUT
-from validation.taste_probe import DURATION_MS, tasting
 from validation.taste_sets import PAIRS, SETS
 
 ARGS, SEEDS = range(10), tuple(range(783, 788))
 REL_TOL, ABS_TOL = 0.05, 0.5
 REF = "taste_v3_new.jsonl"  # full-brain results, v3 table
+REF_MS = 2000  # the N = 6 validation ran at 2 s tastings
 _model = None
 
 
 def _keep(n_hops: int) -> np.ndarray:
-    sources = [i for _, ids in taste.mapping().values() for i in data.to_index(ids)]
+    sources = [i for _, ids in mapping().values() for i in data.to_index(ids)]
     targets = [i for s in anatomy.SIDES
-               for i in anatomy.cell_type(MN9_TYPE, s) + anatomy.giant_fiber(s)]
+               for i in anatomy.mn9(s) + anatomy.giant_fiber(s)]
     return subcircuit.keep(sources, targets, n_hops)
 
 
@@ -52,14 +50,12 @@ def _jobs() -> dict:
 
 def ref():
     """Full-brain reference: these keys are part of the NEW-set probe results."""
-    run_jobs(_jobs(), OUT / REF, WORKERS, THREADS, metric=pop_metrics,
-             duration_ms=DURATION_MS)
+    run_jobs(_jobs(), OUT / REF, REF_MS)
 
 
 def run(n_hops):
     n_hops = int(n_hops)
-    run_jobs(_jobs(), OUT / f"taste_sub_N{n_hops}.jsonl", WORKERS, THREADS, metric=pop_metrics,
-             model=Model.subcircuit(_keep(n_hops)), duration_ms=DURATION_MS)
+    run_jobs(_jobs(), OUT / f"taste_sub_N{n_hops}.jsonl", REF_MS, Model.subcircuit(_keep(n_hops)))
 
 
 def check(n_hops):
@@ -102,9 +98,9 @@ def _hearing_times(model, ms, arg_set, n=10) -> list[float]:
     return times
 
 
-def timing(ms=DURATION_MS, arg_set="new", *n_hops):
+def timing(ms=TASTING_MS, arg_set="new", *n_hops):
     ms = int(ms)
-    full = _hearing_times(_connectome_model(), ms, arg_set)
+    full = _hearing_times(connectome_model(), ms, arg_set)
     mf = statistics.median(full)
     print(f"hearing ({arg_set} set, 2 x {ms / 1000:g} s tastings in parallel, 2 proc x 1 thread), "
           f"median of 10: full brain {mf:.2f} s {[round(t, 1) for t in full]}", flush=True)

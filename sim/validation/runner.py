@@ -1,11 +1,9 @@
-"""Steering readout + resumable parallel runner for the P1-6 steering probe.
+"""Resumable parallel runner + taste readout for the validation probes.
 
 Workers are forked after the model is built, so they share its memory.
 Results append to a JSONL file; finished job keys are skipped on rerun.
 Each record also logs its start time ("t0", ISO) and wall-clock ("wall_s").
 Metrics always see rates in Hz (counts / seconds), whatever the duration.
-Steering index SI = (L - R) / (L + R) on DNa02 rates; SI > 0 = turn left
-(DNa02 drives ipsilateral turning).
 """
 import json
 import multiprocessing as mp
@@ -16,39 +14,46 @@ from functools import cache
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import torch
 
-from borer_sim import anatomy
+from borer_sim import anatomy, data
 from borer_sim.model import Model
+from validation.sugar_mn9 import OUT
 
-CANDIDATE_DNS = ["DNa01", "DNa03", "DNa04", "DNa11", "DNb05", "DNb06", "DNg13", "DNp09", "DNb02"]
-DURATION_MS = 1000
+# workers x threads <= 6 cores AND workers x 2.5 GB <= free RAM; env override for lighter
+# loads (the Windows host stalls the VM under sustained 6-core load, POC_REPORT)
+WORKERS = int(os.environ.get("BORER_WORKERS", 3))
+THREADS = int(os.environ.get("BORER_THREADS", 2))
+RUNAWAY = 4000  # a run with more active neurons is a runaway (whole-brain cascade)
 
 _model = None
 _metric = None
 
 
 @cache
-def _dn_sets():
-    sets = {"DNa02": {s: anatomy.turning_dns(s) for s in anatomy.SIDES},
-            "GF": {s: anatomy.giant_fiber(s) for s in anatomy.SIDES}}
-    for name in CANDIDATE_DNS:
-        sets[name] = {s: anatomy.cell_type(name, s) for s in anatomy.SIDES}
-    return sets
-
-
-def steering_index(left: float, right: float) -> float:
-    return (left - right) / (left + right) if left + right else 0.0
+def _groups():
+    """Per-neuron population code (cell_class | side), the population names, MN9 and GF."""
+    a = data.annotations().reindex(data.neuron_ids())
+    cls = a["cell_class"].where(a["cell_class"] != "ALPN",
+                                "ALPN_" + a["cell_sub_class"].fillna("na").str[:5])
+    key = cls.fillna(a["super_class"]).fillna("na") + "|" + a["side"].fillna("na")
+    codes, uniq = pd.factorize(key.to_numpy())
+    return codes, list(uniq), {s: (anatomy.mn9(s), anatomy.giant_fiber(s)) for s in anatomy.SIDES}
 
 
 def metrics(counts) -> dict:
-    """Readout from per-neuron spike counts of a 1 s run (counts = Hz)."""
-    out = {"active": int((counts > 0).sum())}
-    for name, sides in _dn_sets().items():
-        left, right = (float(counts[sides[s]].mean()) for s in anatomy.SIDES)
-        out[name] = [left, right]
-    out["si"] = steering_index(*out["DNa02"])
-    return out
+    """Active neurons, MN9 and GF (Hz, [left, right]) and spike sums per population."""
+    codes, uniq, sides = _groups()
+    sums = np.bincount(codes, weights=counts, minlength=len(uniq))
+    return {"active": int((counts > 0).sum()),
+            "MN9": [float(counts[sides[s][0]].sum()) for s in anatomy.SIDES],
+            "GF": [float(counts[sides[s][1]].mean()) for s in anatomy.SIDES],
+            "pop": {u: float(x) for u, x in zip(uniq, sums) if x}}
+
+
+def load(name) -> dict:
+    return {r["key"]: r["m"] for r in map(json.loads, (OUT / name).read_text().splitlines())}
 
 
 def _work(job):
@@ -61,12 +66,12 @@ def _work(job):
 
 
 @cache
-def _connectome_model() -> Model:
+def connectome_model() -> Model:
     return Model.from_connectome()
 
 
-def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
-             model: Model | None = None, duration_ms: float = DURATION_MS) -> dict:
+def run_jobs(jobs: dict, out: Path, duration_ms: float, model: Model | None = None,
+             workers: int = WORKERS, threads: int = THREADS, metric=metrics) -> dict:
     """jobs: {key: (drives, seed)}. Returns {key: metric(counts)}, incl. earlier results.
 
     `model` defaults to the whole-brain model. `metric` is warmed (its caches
@@ -78,7 +83,7 @@ def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
         done = {r["key"]: r["m"] for r in map(json.loads, out.read_text().splitlines())}
     todo = [(k, d, s, threads, duration_ms) for k, (d, s) in jobs.items() if k not in done]
     if todo:
-        _model = model if model is not None else _connectome_model()
+        _model = model if model is not None else connectome_model()
         metric(np.zeros(_model.full_n, dtype=np.int32))  # warm caches pre-fork (no torch op)
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
             for i, (key, m, t0, wall) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
@@ -88,7 +93,3 @@ def run_jobs(jobs: dict, out: Path, workers: int, threads: int, metric=metrics,
                 if i % 50 == 0 or i == len(todo):
                     print(f"  {out.name}: {i}/{len(todo)} new", flush=True)
     return {k: done[k] for k in jobs}
-
-
-def cpu_count() -> int:
-    return len(os.sched_getaffinity(0))

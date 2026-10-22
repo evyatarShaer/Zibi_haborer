@@ -12,8 +12,7 @@ import pandas as pd
 from borer_sim import data
 
 SIDES = ("left", "right")
-ORN_PREFIX = "ORN_"
-TURNING_DN = "DNa02"
+MN9 = "CB0701"        # proboscis motor neuron 9: the verdict readout (SPEC §6)
 GIANT_FIBER = "DNp01"
 
 
@@ -34,29 +33,10 @@ def cell_type(name: str, side: str) -> list[int]:
     return sorted(data.to_index(ids))
 
 
-def orns(glomerulus: str, side: str) -> list[int]:
-    """ORNs projecting to `glomerulus` (e.g. "V", "DA2") from `side`."""
-    return cell_type(ORN_PREFIX + glomerulus, side)
-
-
-def turning_dns(side: str) -> list[int]:
-    return cell_type(TURNING_DN, side)
+def mn9(side: str) -> list[int]:
+    return cell_type(MN9, side)
 
 
 def giant_fiber(side: str) -> list[int]:
     return cell_type(GIANT_FIBER, side)
 
-
-def orn_glomeruli() -> pd.DataFrame:
-    """ORN count per glomerulus (rows) and side, plus the entry nerve(s).
-
-    nerve "AN" = antenna, "MxLbN" = maxillary palp. ORNs with side "na"
-    are not counted (they can't be assigned to an antenna).
-    """
-    a = _in_model()
-    o = a[a.cell_type.str.startswith(ORN_PREFIX, na=False) & a.side.isin(SIDES)]
-    glom = o.cell_type.str.removeprefix(ORN_PREFIX).rename("glomerulus")
-    table = o.groupby([glom, "side"]).size().unstack(fill_value=0)[list(SIDES)]
-    table["nerve"] = o.groupby(glom).nerve.agg(
-        lambda s: "+".join(sorted(s.dropna().unique())))
-    return table

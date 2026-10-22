@@ -19,14 +19,16 @@ LIF = {
 DT_MS = 0.1           # integration step (Brian2 default)
 BIN_MS = 20.0         # spike-count bins kept for replay
 
-# "Smell of words" (SPEC §4); sources in DECISIONS.md 2026-10-20 (P1-6).
-SMELL = {
+TASTING_MS = 1500     # simulated per tasting (SPEC §6; fallback 2000, DECISIONS.md 2026-10-22)
+
+# "Taste of words" (SPEC §4); values from smell of words, DECISIONS.md 2026-10-20 / 2026-10-22.
+TASTE = {
     "max_chars": 280,     # normalized text is truncated to this length
-    "r_base": 8.0,        # spontaneous ORN rate (Hz)
+    "r_base": 8.0,        # baseline receptor rate (Hz)
     "r_max": 150.0,       # added rate at saturation (Hz)
     "k": 0.05,            # half-saturation, in share of letters (~1/22 per letter)
     "len_ref": 140,       # length (chars) at which the length gain is 1
-    "punct_max": 75.0,    # cap on the rate added by "!" (V) or "?" (DA2) (Hz)
+    "punct_max": 75.0,    # cap on the rate added by "!" or "?" (Hz)
     "punct_k": 2.0,       # half-saturation, in number of marks
     "verbose_marks": 1.0, # a max-length text adds this many "!" (too much → aversive)
 }
