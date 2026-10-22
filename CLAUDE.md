@@ -38,6 +38,11 @@ fly's choice is the verdict — the humor is the point.
   **and** workers × 2.5 GB ≤ available RAM (`free -g`, "available").
   WSL currently has 10 GB / 12 logical CPUs → 3 workers × 2 threads.
   Set in `sim/validation/steering_probe.py` (`WORKERS`, `THREADS`).
+- **Long runs (> ~10 min) run detached; never poll them.** Launch with
+  `setsid nohup ... > <log> 2>&1 &`, logging a progress counter to a file.
+  Give the user the exact command that checks progress, then end the
+  turn. Reason: the Claude Code UI used ~24% CPU on Windows during long
+  polls, and the PC throttled to 1.79 GHz.
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting
@@ -92,7 +97,7 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — in progress** (SIM_VERSION 0.3.0, 2026-10-21). Details:
+**Phase 1 (POC) — in progress** (SIM_VERSION 0.3.0, 2026-10-22). Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
@@ -107,8 +112,12 @@ scripts/       repo checks (file length, clean tree)
 - **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
   only N = 6 (121k neurons) matches the full brain, with no speed-up.
   Parallel tastings (2 processes × 1 thread) are the adopted speed-up.
-- **Taste probe v3 (conversational reference + hold-out set): partial**,
-  156/400 tastings; resume `taste_probe tastings old|new`.
+- **Taste probe v3 (conversational reference + hold-out set): resuming**
+  after the 2026-10-22 reboot. N = 6 subcircuit validated (50/50
+  tastings bit-identical, 225/225 same winner), so the remaining tastings
+  run on it (`taste_probe tastings old|new 6`, detached chain, log
+  `taste_chain4.log`). Hearing time: full brain 16.7 s, N = 6 17.9 s
+  (×0.9, no speed-up).
 - **Not started:** P1-7 mood, P1-8 readout/outcomes, P1-9 determinism +
   balance tests on the new input (`test_balance.py` does not exist yet),
   P1-11 final report, P1-12 phase gate.
