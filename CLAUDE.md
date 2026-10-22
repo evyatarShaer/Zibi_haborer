@@ -37,7 +37,7 @@ fly's choice is the verdict — the humor is the point.
 - **Parallel sim runs:** workers × torch threads ≤ 6 (physical cores)
   **and** workers × 2.5 GB ≤ available RAM (`free -g`, "available").
   WSL currently has 10 GB / 12 logical CPUs → 3 workers × 2 threads.
-  Set in `sim/validation/steering_probe.py` (`WORKERS`, `THREADS`).
+  Set in `sim/validation/runner.py` (`WORKERS`, `THREADS`).
 - **Long runs (> ~10 min) run detached; never poll them.** Launch with
   `scripts/detach.sh <unit> <log> <cmd...>` (a `systemd-run --user`
   service), logging a progress counter to the log. Check with
@@ -103,30 +103,32 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — in progress** (SIM_VERSION 0.3.0, 2026-10-22). Details:
+**Phase 1 (POC) — in progress** (SIM_VERSION 0.5.0, 2026-10-22). Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
-  reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2.
-- **P1-6 input — redesigned, not closed.** The SPEC "smell of words"
-  (ORNs → DNa02 steering) failed: any odor drive ignites a whole-brain
-  runaway and no lateralised readout passes the swap test. Replacement
-  under evaluation in `sim/validation/` (not yet in `borer_sim`):
-  **"taste of words"**: letters → GRN groups (valence measured on MN9),
-  each argument tasted alone for 2 s, verdict = higher MN9 rate. A SPEC
-  draft is in POC_REPORT; **not applied until the user approves.**
+  reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2,
+  **P1-6 input: "taste of words"** (SPEC §4, approved 2026-10-22; smell
+  of words dropped: whole-brain cascade, no side signal). Letters → GRN
+  groups (table v4) in `borer_sim.taste`; each argument tasted alone on
+  both sides for **1.5 s** (2 s = fallback); verdict = higher MN9 rate.
+  v4 passed every taste-probe criterion on the THIRD set; hearing 8.87 s.
+- **Open issue (needs user decision):** the fixed letters' total undoes
+  saturation: spamming one letter wins (ד × 280 → MN9 118 Hz) or ignites
+  the runaway (דבש × 93, ר × 280). Strict-xfail test
+  `test_spamming_one_letter_saturates`; a fix changes results and needs a
+  THIRD re-run (DECISIONS.md 2026-10-22, SIM_VERSION 0.5.0).
 - **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
-  only N = 6 (121k neurons) matches the full brain, with no speed-up.
-  Parallel tastings (2 processes × 1 thread) are the adopted speed-up.
-- **Taste probe v3 (conversational reference + hold-out set): resuming**
-  after the 2026-10-22 reboot. N = 6 subcircuit validated (50/50
-  tastings bit-identical, 225/225 same winner), so the remaining tastings
-  run on it (`taste_probe tastings old|new 6`, detached chain, log
-  `taste_chain4.log`). Hearing time: full brain 16.7 s, N = 6 17.9 s
-  (×0.9, no speed-up).
-- **Not started:** P1-7 mood, P1-8 readout/outcomes, P1-9 determinism +
-  balance tests on the new input (`test_balance.py` does not exist yet),
-  P1-11 final report, P1-12 phase gate.
+  only N = 6 matches the full brain, with no speed-up. Parallel tastings
+  (2 processes × 1 thread) are the adopted speed-up.
+- **Not started:** P1-7 mood, P1-8 readout/outcomes (MN9 per tasting,
+  SPEC §7), P1-9 balance + seed consistency + outcome mix
+  (`test_balance.py` does not exist yet), P1-11 final report, P1-12
+  phase gate. Production-host timing not measured.
+- **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
+  (probe + scoring), `taste_sub`, `taste_valence`, `taste_length`,
+  `runner` (shared job runner + MN9 readout). Smell probes deleted (git
+  history).
 - **Known issue:** the Windows host periodically starves the WSL VM
   (tastings taking 10–60× longer for minutes at a time); per-run
   wall-clock is logged in every result record.
