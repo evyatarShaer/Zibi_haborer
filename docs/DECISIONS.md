@@ -674,5 +674,5 @@ a hold-out, because it motivated this change. Runs: THIRD at 2 s and 1.5 s,
 **Tests:** `test_determinism.py` 3/3 pass; a v4 tasting run twice
 (same seed) gives identical counts. `test_balance.py` does not exist yet
 (P1-9), so the balance, swap and outcome-mix checks were **not run**.
-Performance: see the entry above (12.05 s per 2 s hearing). The THIRD-run
-hearing times will be added with the results.
+Performance: see the entry above (12.05 s per 2 s hearing). THIRD-run
+hearing times: 12.38 s (2 s) and 8.87 s (1.5 s); results in POC_REPORT ("Taste probe v4").

@@ -1036,3 +1036,29 @@ more pruning. Details: DECISIONS.md 2026-10-21 (0.3.0).
 - Decide on the ד/ב/ש placement if +0.70 holds on the full new set.
 - Performance: parallel tastings adopted; subcircuit not adopted.
 - Not run: `test_balance.py` (does not exist yet; P1-9).
+
+## Taste probe v4 — judging set THIRD (SIM_VERSION 0.4.0)
+
+Run 2026-10-22 13:11 → 14:59 (`taste-chain6`, log
+`taste_chain6.log`; one reboot at 158/200 of the 1.5 s run, resumed from
+the saved keys). Table v4 (DECISIONS.md 2026-10-22). THIRD = 20
+arguments, 30 pairs, written before any v4 run; full brain, 10 seeds,
+200 tastings and 300 hearings per length.
+
+| Criterion | Rule | 2 s | 1.5 s |
+|---|---|---|---|
+| (a) seed consistency | ≥ 90% of non-trivial pairs ≥ 75% | 27/30 non-trivial; **27/27** (min 0.9) | 26/30; **26/26** (min 0.8) |
+| (b) densest 10% band | ≤ 50% of tastings | 22% | 20% |
+| (c) ρ(MN9, length) | \|ρ\| < 0.5 | +0.01 | −0.03 |
+| (c) ρ(MN9, ד/ב/ש) | \|ρ\| < 0.5 | +0.03 | −0.02 |
+| (d) Win share | ≥ 50% | 94% (tie 6%, froze 0) | 94% (tie 6%, froze 0) |
+| (e) runaway | < 2% | 0/200 (active median 842) | 0/200 (median 833) |
+| longer wins, probe pairs | 40–60% | 113/272 = 42% | 114/272 = 42% |
+| longer wins, all 190 pairs | 40–60% | 794/1679 = 47% | 792/1684 = 47% |
+| hearing time (2 proc × 1 thread, median of 10) | ≤ 15 s | **12.38 s** | **8.87 s** |
+
+All criteria pass at both lengths. ρ(MN9, exciting-letter share) is
++0.61 / +0.57: the verdict follows which letters a text uses, as
+intended. 1.5 s costs a little seed consistency (min 0.8 vs 0.9, one
+fewer non-trivial pair) and saves 28% of hearing time. Not yet run:
+balance / swap / outcome-mix (P1-9), production-host timing.
