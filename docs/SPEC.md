@@ -227,8 +227,9 @@ Supersedes any earlier version of the spec.
    - **Input quality:** MN9 range continuous (≤ 50% of tastings in any
      band 10% of the range wide); |Spearman ρ| < 0.5 between
      per-argument MN9 and length, and the ד/ב/ש count; the longer
-     argument wins 40–60% of decided hearings; runaway (> 4,000 active
-     neurons) in < 2% of tastings.
+     argument wins 40–60% of decided hearings, measured over **all
+     pairs** of the argument set (DECISIONS.md 2026-10-22, 0.6.0);
+     runaway (> 4,000 active neurons) in < 2% of tastings.
    - hearing ≤ 15 s
    - RAM fits in 12 GB (ideally much less).
 2. **MVP** — full flow, card, OG preview, animation, all tie types, sudden

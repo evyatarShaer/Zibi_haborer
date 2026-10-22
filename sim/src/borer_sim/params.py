@@ -24,7 +24,7 @@ TASTING_MS = 1500     # simulated per tasting (SPEC §6; fallback 2000, DECISION
 # "Taste of words" (SPEC §4); values from smell of words, DECISIONS.md 2026-10-20 / 2026-10-22.
 TASTE = {
     "max_chars": 280,     # normalized text is truncated to this length
-    "r_base": 8.0,        # baseline receptor rate (Hz)
+    "r_base": 2.0,        # baseline receptor rate (Hz); silence sweep, DECISIONS.md 2026-10-22
     "r_max": 150.0,       # added rate at saturation (Hz)
     "cap": 120.0,         # max per-GRN rate of a letter's group (Hz), DECISIONS.md 2026-10-22
     "coverage_ref": 0.6,  # coverage at or above which a text keeps full drive (OLD+NEW minimum)

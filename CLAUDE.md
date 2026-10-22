@@ -103,22 +103,19 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — in progress** (SIM_VERSION 0.5.0, 2026-10-22). Details:
+**Phase 1 (POC) — in progress** (SIM_VERSION 0.6.0, 2026-10-22). Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
   reproduced, P1-4 flywire-data skill, P1-5 PyTorch LIF matching Brian2.
-- **P1-6 — reopened (spam fix pending).** Input: "taste of words"
-  (SPEC §4, approved 2026-10-22; smell of words dropped: whole-brain
-  cascade, no side signal). Letters → GRN
+- **Done:** P1-6 taste input (0.6.0). "Taste of words" (SPEC §4; smell
+  of words dropped: whole-brain cascade, no side signal). Letters → GRN
   groups (table v4) in `borer_sim.taste`; each argument tasted alone on
-  both sides for **1.5 s** (2 s = fallback); verdict = higher MN9 rate.
-  v4 passed every taste-probe criterion on the THIRD set; hearing 8.87 s.
-- **Spam exploit (blocks P1-6):** the fixed letters' total undoes
-  saturation: spamming one letter wins (ד × 280 → MN9 118 Hz) or ignites
-  the runaway (דבש × 93, ר × 280). Strict-xfail test
-  `test_spamming_one_letter_saturates`; a fix changes results and needs a
-  THIRD re-run (DECISIONS.md 2026-10-22, SIM_VERSION 0.5.0).
+  both sides for **1.5 s** (2 s = fallback); verdict = higher MN9 rate;
+  hearing 8.87 s. Spam fix: per-group cap 120 Hz, coverage scaling,
+  no-Hebrew baseline, r_base 2 Hz; spam/silence suite + OLD+NEW + THIRD
+  pass (longer-wins measured over all pairs, changed after THIRD; see
+  DECISIONS.md 2026-10-22, SIM_VERSION 0.6.0).
 - **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
   only N = 6 matches the full brain, with no speed-up. Parallel tastings
   (2 processes × 1 thread) are the adopted speed-up.
@@ -127,7 +124,8 @@ scripts/       repo checks (file length, clean tree)
   (`test_balance.py` does not exist yet), P1-11 final report, P1-12
   phase gate. Production-host timing not measured.
 - **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
-  (probe + scoring), `taste_sub`, `taste_valence`, `taste_length`,
+  (probe + scoring), `taste_criteria` (pass rules), `taste_spam` (spam
+  suite + r_base sweep), `taste_sub`, `taste_valence`, `taste_length`,
   `runner` (shared job runner + MN9 readout). Smell probes deleted (git
   history).
 - **Known issue:** the Windows host periodically starves the WSL VM

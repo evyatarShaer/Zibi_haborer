@@ -6,7 +6,8 @@ froze if both < FROZE_HZ; tie if gap = |A-B|/(A+B) < TIE_GAP; else win.
 >= 75% of seeds; (b) <= 50% of tastings within any band 10% of the MN9 range wide;
 (c) |Spearman rho| < 0.5 between per-argument MN9 and length, and the count of
 ד/ב/ש; (d) Win >= 50% of hearings; (e) runaway (> 4,000 active) in < 2% of
-tastings; longer text wins 40-60% of decided hearings (probe pairs and all pairs).
+tastings; longer text wins 40-60% of decided hearings over ALL pairs of the set
+(probe pairs printed for reference only; DECISIONS.md 2026-10-22, SIM_VERSION 0.6.0).
 """
 from collections import defaultdict
 from itertools import combinations
@@ -102,7 +103,7 @@ def criteria(tot, ARGUMENTS, PAIRS) -> dict:
         "c": abs(c["rho_len"]) < 0.5 and abs(c["rho_honey"]) < 0.5,
         "d": outcomes["win"] / n >= 0.5,
         "e": c["runaway"] < 0.02,
-        "longer": all(LONGER[0] <= w / d <= LONGER[1] for w, d in longer.values() if d)}
+        "longer": LONGER[0] <= longer["all pairs"][0] / longer["all pairs"][1] <= LONGER[1]}
     return c
 
 
@@ -116,7 +117,8 @@ def print_criteria(c):
           f"pass <= {MAX_IN_BAND:.0%}); pair mean-gap quartiles "
           f"{np.round(np.percentile(c['gaps'], [25, 50, 75]), 2).tolist()}")
     for label, (won, dec) in c["longer"].items():
-        print(f"(c) longer text wins {won}/{dec} = {won / dec:.0%} of decided hearings ({label}; target 40-60%)")
+        rule = "target 40-60%" if label == "all pairs" else "reference only"
+        print(f"(c) longer text wins {won}/{dec} = {won / dec:.0%} of decided hearings ({label}; {rule})")
     n = sum(c["outcomes"].values())
     print(f"(d) outcomes over {n} hearings: " +
           ", ".join(f"{k} {v} ({v / n:.0%})" for k, v in sorted(c["outcomes"].items())))

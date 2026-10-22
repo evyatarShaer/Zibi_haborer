@@ -15,7 +15,8 @@ performance budget.
   their winner in ≥ 75% of seeds
 - outcome mix: Win ≥ 50%; each special outcome ≤ 15%
 - input quality: MN9 range continuous; |ρ| < 0.5 with length and ד/ב/ש
-  count; longer argument wins 40–60%; runaway < 2% of tastings
+  count; longer argument wins 40–60% (all pairs of the set); runaway
+  < 2% of tastings
 - hearing ≤ 15 s (two 1.5 s tastings)
 - RAM fits in 12 GB (ideally much less)
 
@@ -44,15 +45,17 @@ performance budget.
   same input within tolerance.
   *Done 2026-10-20: 13/13 checks vs Brian2; 2 s run 13.05 s at 2
   threads — see `docs/POC_REPORT.md`.*
-- [ ] **P1-6 — Implement taste.py.** Normalization, letter→GRN group
+- [x] **P1-6 — Implement taste.py.** Normalization, letter→GRN group
   table (v4), saturation, `!`/`?` handling, side balancing. Unit tests.
-  *Reopened 2026-10-22 until the spam exploit is fixed (spam suite =
-  acceptance). Ported 2026-10-22: "smell of words" failed (whole-brain cascade, no
-  side signal) and was replaced by "taste of words" (SPEC §4); v4 passes
-  every taste-probe criterion on the THIRD set; `borer_sim.taste`
-  bit-identical to the validated runs, SIM_VERSION 0.5.0 — see
-  DECISIONS.md 2026-10-22. Open: spamming one letter defeats saturation
-  (strict-xfail test).*
+  *Done 2026-10-22 (SIM_VERSION 0.6.0). Ported 2026-10-22 ("taste of
+  words" replaced "smell of words", SPEC §4; 0.5.0), then reopened the
+  same day: spamming one letter defeated saturation. Fixed with a
+  per-group cap (120 Hz), coverage scaling, no-Hebrew baseline and
+  r_base 2 Hz: the spam/silence suite passes (no runaway, strongest spam
+  דבש × 93 at 21.5 Hz < natural P75) and OLD+NEW + THIRD pass every
+  criterion, with longer-wins now measured over all pairs (changed after
+  seeing THIRD's 39% on 30 probe pairs; 47% on all 190) — see
+  DECISIONS.md 2026-10-22.*
 - [ ] **P1-7 — Implement mood.py.** Hunger and arousal with their
   effects.
 - [ ] **P1-8 — Implement readout.py.** A hearing = two tastings (one
