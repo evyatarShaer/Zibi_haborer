@@ -1,6 +1,7 @@
 """Taste probe argument sets: hand-written test data (typical WhatsApp disputes),
-not product text. OLD was used to build and check the input; NEW is a hold-out
-set, never used for any choice. Pairs are drawn once per set with a fixed seed.
+not product text. OLD was used to build and check the input; NEW was the first
+hold-out (it motivated the v4 table); THIRD is the judging set for v4, never used
+for any choice. Pairs are drawn once per set with a fixed seed.
 """
 import random
 from itertools import combinations
@@ -60,8 +61,34 @@ NEW = [  # hold-out set, written 2026-10-21 before any run with the CHAT_FREQ ta
     " צוחקים חוץ ממני, כי זה כבר לא מצחיק אחרי הפעם העשירית.",
     "תעשה מנוי לחדר כושר רק אם אתה באמת הולך, לא כמו בשנה שעברה.",
 ]
-SETS = {"old": OLD, "new": NEW}
+THIRD = [  # judging set, written 2026-10-22 before any run with the v4 table (0.4.0)
+    "מי שמזמין אוכל בוולט משלם על המשלוח, זה לא מסובך.",
+    "את תמיד לוקחת לי את המטען ולא מחזירה אותו למקום.",
+    "אין שום סיבה לקום בשש בשבת רק כדי לתפוס חניה בחוף.",
+    "הגינה שלנו, אז גם אתה משקה את העציצים, לא רק אני!",
+    "למה הזמנת את אחיך לארוחה בלי להגיד לי קודם?",
+    "המדיח מלא כבר יומיים ואף אחד לא טורח לרוקן אותו.",
+    "אני לא נוסע לחתונה בנתניה ביום שלישי בערב, זה מטורף.",
+    "חצי מהשוקולד במקרר היה שלי, ואתה גמרת הכול בלילה.",
+    "כל פעם שאנחנו יוצאים אתה מאחר בחצי שעה ואני מחכה לבד ברחוב כמו טיפשה, ובסוף אתה"
+    " עוד אומר שאני מגזימה כשאני מתעצבנת על זה. פעם אחת תגיע בזמן ואז נדבר.",
+    "הכביסה של הלבנים לא נכנסת עם הצבעוניים, כמה פעמים אמרתי?",
+    "תפסיק לשלוח לי הודעות קוליות של חמש דקות, תכתוב כמו בן אדם.",
+    "לא אכפת לי שזה מבצע, אנחנו לא צריכים עוד ספה.",
+    "סיכמנו שהשנה פסח אצל ההורים שלי, ועכשיו פתאום אתה אומר שאמא שלך כבר הזמינה את כל"
+    " המשפחה ושאי אפשר לבטל, אז מה היה שווה הסיכום?",
+    "הטלוויזיה בחדר שינה הורסת את השינה, אני מוציא אותה מחר.",
+    "מי שתה את כל החלב ושם את הקרטון הריק בחזרה במקרר?",
+    "הכלב צריך טיול גם בערב, לא רק כשבא לך.",
+    "שלחתי לך שלוש תזכורות על התור לרופא שיניים, ובכל זאת שכחת ללכת, ועכשיו התור הבא"
+    " הוא רק בעוד חודשיים וחצי, אז אל תבוא אליי בטענות כשכואב לך.",
+    "ארבעים שקל על כוס קפה זה שוד לאור יום!",
+    "המזגן בחדר של התינוק חייב להיות דלוק בלילה, נקודה.",
+    "הקבוצה של החברים מהצבא זה לא תירוץ להיעלם כל סוף שבוע, יש לך גם משפחה, ואני כבר"
+    " לא זוכרת מתי בפעם האחרונה עשינו משהו רק שנינו, בלי טלפונים ובלי אף אחד אחר.",
+]
+SETS = {"old": OLD, "new": NEW, "third": THIRD}
 PAIRS = {name: random.Random(seed).sample(list(combinations(range(len(args)), 2)), 30)
-         for (name, args), seed in zip(SETS.items(), (783, 784))}
+         for (name, args), seed in zip(SETS.items(), (783, 784, 785))}
 assert all(30 <= len(a) <= 200 for args in SETS.values() for a in args), \
     [len(a) for args in SETS.values() for a in args]
