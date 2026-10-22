@@ -601,3 +601,34 @@ exact but gives no speed-up). Parallel tastings are adopted for
 hearings. **Surprise logged:** per-step overhead, not neuron count,
 limits speed below ~15k neurons; the next lever is fewer Python ops per
 step (or an activity-based circuit), not more pruning.
+
+---
+
+## 2026-10-22 — Hearing performance re-measured; engine work deferred
+
+**Measurement (2026-10-22 10:45, host at 2.5 GHz after a reboot, idle;
+hearing = 2 tastings × 2 s in parallel, 2 processes × 1 thread, median of
+10, `taste_sub time 3 4 5`):** full brain **12.05 s** (7.8–14.9 s; the
+first 4 hearings ~8.3 s, the last 6 12–15 s, same code, so host load
+varies). The 16.65 s of 2026-10-21 was measured while the CPU was
+throttled to 1.79 GHz. Subcircuits on the same run: N = 3 3.54 s (×3.4),
+N = 4 4.44 s (×2.7), N = 5 7.64 s (×1.6).
+
+**Subcircuit result (unchanged, entry of 2026-10-21):** N = 6 is exact
+(50/50 bit-identical, 225/225 same winner) but gives no speed-up; every
+N ≤ 5 is not exact (212–220/225 same winner, ≤ 12/50 bit-identical), so
+none is adopted.
+
+**Options if more margin is needed (none implemented):**
+
+| Option | Expected gain | Cost / risk |
+|---|---|---|
+| 1.5 s tastings | ×1.33 (~9 s) | (a) estimated 94–95% (p10 ~89%) by scaling 2 s deviations by √(2/1.5); optimistic (ignores the MN9 onset ramp; 2 s → 1 s once cost 93% → 83%). Being measured on the THIRD set. |
+| Compiled step loop (numba / C++ extension) | ×2–3 (estimate) | ~1 day; can stay bit-identical if op order is kept and fast-math is off; re-run determinism and torch-vs-Brian2 tests |
+| Skip neurons at rest | ×1.5–3 (uncertain) | u, g never decay to exactly 0 → needs a cut-off: new results, new sim_version, full re-validation; ~850 spiking neurons still reach tens of thousands of targets |
+| Larger dt (0.2 ms) | ×2 | breaks the Brian2 match (P1-5); not recommended |
+
+**Decision (user, 2026-10-22):** no engine work now. The full brain
+meets (f) on this host, with thin margin. **The final call waits for a
+measurement on the production host** (free tier, likely slower than this
+workstation).
