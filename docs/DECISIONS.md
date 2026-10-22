@@ -632,3 +632,47 @@ none is adopted.
 meets (f) on this host, with thin margin. **The final call waits for a
 measurement on the production host** (free tier, likely slower than this
 workstation).
+
+---
+
+## 2026-10-22 — Taste table v4: MN9 drivers split over frequent letters; ד/ב/ש moderate (SIM_VERSION 0.4.0)
+
+**Why:** taste probe v3 (2 s, 10 seeds) failed (c) on the hold-out set:
+ρ(MN9, ד/ב/ש count) = +0.57 (+0.54 with length partialled out). Cause:
+only LB3c and LB3d drive MN9 on their own (134 / 142 Hz alone); the other
+exciters mainly boost an existing sugar signal. MN9 therefore tracked the
+share of drive on ד/ב (ρ = +0.83 new set, +0.65 old set), and the other
+exciters correlated negatively (−0.78), since they only take share away.
+Moving ד/ב/ש alone would just move the dependence to whichever letters
+inherit LB3c/LB3d.
+
+**What changed (validation/taste.py; user-approved 2026-10-22):**
+- `SPLIT`: LB3c and LB3d are also offered as halves (per side, GRNs
+  sorted by root_id, dealt alternately; no data-driven choice).
+- Halves screen (150 Hz, 3 seeds, 1 s): no runaway (active ≤ 331);
+  MN9 alone LB3d/a 91, LB3c/a 77, LB3c/b 67, LB3d/b 53 Hz; delta on the
+  sugar background +80 / +53 / +65 / +59 Hz (all E).
+- The 4 halves → the 4 most frequent letters (י ו ה א), stronger half to the
+  more frequent letter. Rationale: frequent letters vary least between
+  texts relative to their norm, so the main MN9 drive is nearly
+  constant and the other letters decide.
+- ד/ב/ש → PhG1c / PhG4 / LB4a (MN9 alone 94 / 78 / 64 Hz): the easter
+  egg stays, now at the strength of the halves.
+- `!` → LB1a, `?` → LB2c unchanged. The other 15 letters re-dealt by the
+  unchanged rule (CHAT_FREQ order; E, I, N, … skipping empty classes;
+  stronger |delta| to more frequent letters). E ל נ ע ז צ; I מ ר ח פ ג ט;
+  N ת כ ק ס. Unused: LgAG7, LB1d (weakest inhibitors).
+- Letter mass (CHAT_FREQ): drivers 38%, ד/ב/ש 12%, other E 18%, I 19%, N 13%.
+- Every rule input is screening data or CHAT_FREQ. Nothing was tuned on
+  argument results.
+
+**Judging:** `taste_sets.THIRD`, 20 new arguments + 30 pairs
+(`Random(785)`), committed (54f1279) before any v4 run. NEW is no longer
+a hold-out, because it motivated this change. Runs: THIRD at 2 s and 1.5 s,
+10 seeds each, full brain.
+
+**Tests:** `test_determinism.py` 3/3 pass; a v4 tasting run twice
+(same seed) gives identical counts. `test_balance.py` does not exist yet
+(P1-9), so the balance, swap and outcome-mix checks were **not run**.
+Performance: see the entry above (12.05 s per 2 s hearing). The THIRD-run
+hearing times will be added with the results.

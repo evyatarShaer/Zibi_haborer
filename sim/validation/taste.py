@@ -26,40 +26,45 @@ VALENCE = {  # GRN sub-class -> literature valence (labellar taste), cross-check
 # Letter / mark -> GRN group, by MEASURED effect on MN9 (validation/taste_valence.py:
 # sugar LB3c at 75 Hz -> MN9 69.7 Hz, + group at 150 Hz, 3 seeds, 1 s). Class E/I/N =
 # delta >= +10.5 / <= -10.5 Hz (15% of background) / between; literature (VALENCE) is a
-# cross-check only. Rule: ד ב ש -> the 3 strongest exciters (MN9 alone 134/142/94 Hz);
-# ! ? -> inhibitors; the other 19 letters by conversational frequency (CHAT_FREQ) dealt
-# E,I,N,E,I,N,... until N runs out, stronger |delta| to more frequent letters in a class.
+# cross-check only. v4 rule (0.4.0, screening data only): the only groups that drive MN9
+# alone, LB3c and LB3d, go as halves (SPLIT) to the 4 most frequent letters, stronger half
+# (MN9 alone) to the more frequent letter, so the main drive barely varies between texts;
+# ד ב ש -> the next-strongest exciters (MN9 alone 94/78/64 Hz); ! ? -> inhibitors; the other
+# 15 letters by conversational frequency (CHAT_FREQ) dealt E,I,N,... skipping empty classes,
+# stronger |delta| to more frequent letters in a class. Unused: LgAG7 (I -16), LB1d (I -13).
 TABLE = {  # key: (group, "class delta Hz | literature")
-    "ד": ("sugar:LB3c", "E alone 134 | attractive"),
-    "ב": ("high_salt/heavy_metal:LB3d", "E +96 | aversive"),
-    "ש": ("accessory_pharyngeal_nerve_sensory_group1:PhG1c", "E +51 | neutral"),
+    "י": ("high_salt/heavy_metal:LB3d/a", "E alone 91 | aversive"),
+    "ו": ("sugar:LB3c/a", "E alone 77 | attractive"),
+    "ה": ("sugar:LB3c/b", "E alone 67 | attractive"),
+    "א": ("high_salt/heavy_metal:LB3d/b", "E alone 53 | aversive"),
+    "ד": ("accessory_pharyngeal_nerve_sensory_group1:PhG1c", "E +51 | neutral"),
+    "ב": ("accessory_pharyngeal_nerve_sensory_group1:PhG4", "E +42 | neutral"),
+    "ש": ("putative_attractive:LB4a", "E +35 | attractive"),
     "!": ("bitter:LB1a", "I -24 | aversive"),
     "?": ("putative_aversive:LB2c", "I -47 | aversive"),
-    "י": ("accessory_pharyngeal_nerve_sensory_group1:PhG4", "E +42 | neutral"),
-    "ו": ("SA_VTV_pro_meso_meta:LgAG5", "I -70 | neutral"),
-    "ה": ("SA_VTV_pro_meso_meta:LgAG8", "N -9 | neutral"),
-    "א": ("putative_attractive:LB4b", "E +37 | attractive"),
-    "ל": ("glutamate:LB1e", "I -70 | neutral"),
-    "מ": ("putative_aversive:LB2b", "N -8 | aversive"),
-    "ת": ("putative_attractive:LB4a", "E +35 | attractive"),
-    "נ": ("bitter:LB1c", "I -69 | aversive"),
-    "ר": ("taste peg:claw_tpGRN", "N -2 | neutral"),
-    "כ": ("putative_aversive:LB2a", "E +34 | aversive"),
-    "ע": ("bitter:LB1b", "I -68 | aversive"),
-    "ח": ("SA_VTV_pro_meso_meta:LgAG4", "N +2 | neutral"),
-    "ק": ("SA_VTV_pro_meso_meta:LgAG2", "E +33 | neutral"),
-    "ז": ("water:LB3a", "I -22 | attractive"),
-    "פ": ("SA_VTV_pro_meso_meta:LgAG6", "E +27 | neutral"),
-    "ס": ("SA_VTV_pro_meso_meta:LgAG1", "I -19 | neutral"),
+    "ל": ("putative_attractive:LB4b", "E +37 | attractive"),
+    "מ": ("SA_VTV_pro_meso_meta:LgAG5", "I -70 | neutral"),
+    "ת": ("SA_VTV_pro_meso_meta:LgAG8", "N -9 | neutral"),
+    "נ": ("putative_aversive:LB2a", "E +34 | aversive"),
+    "ר": ("glutamate:LB1e", "I -70 | neutral"),
+    "כ": ("putative_aversive:LB2b", "N -8 | aversive"),
+    "ע": ("SA_VTV_pro_meso_meta:LgAG2", "E +33 | neutral"),
+    "ח": ("bitter:LB1c", "I -69 | aversive"),
+    "ק": ("taste peg:claw_tpGRN", "N -2 | neutral"),
+    "ז": ("SA_VTV_pro_meso_meta:LgAG6", "E +27 | neutral"),
+    "פ": ("bitter:LB1b", "I -68 | aversive"),
+    "ס": ("SA_VTV_pro_meso_meta:LgAG4", "N +2 | neutral"),
     "צ": ("taste peg:dorsal_tpGRN", "E +19 | neutral"),
-    "ג": ("SA_VTV_pro_meso_meta:LgAG7", "I -16 | neutral"),
-    "ט": ("bitter:LB1d", "I -13 | aversive"),
+    "ג": ("water:LB3a", "I -22 | attractive"),
+    "ט": ("SA_VTV_pro_meso_meta:LgAG1", "I -19 | neutral"),
 }
 # Groups that ignite the runaway alone at 150 Hz (taste_probe screen, > 4,000 active):
 # LB3b 3/3 seeds (~8.5k active), LgAG3 2/3 seeds (~8.4k). All other groups <= 565.
 EXCLUDED = {"sugar/low_salt:LB3b", "SA_VTV_pro_meso_meta:LgAG3"}
 # The two groups that drive MN9 alone (134 / 142 Hz) are also offered as halves "<group>/a",
 # "/b": per side, GRNs sorted by root_id and dealt alternately (no data-driven choice).
+# Halves screen (2026-10-22, 3 seeds): active <= 331, MN9 alone LB3d/a 91, LB3c/a 77,
+# LB3c/b 67, LB3d/b 53 Hz; delta on sugar bg +80 / +53 / +65 / +59 (all E).
 SPLIT = {"sugar:LB3c", "high_salt/heavy_metal:LB3d"}
 
 
