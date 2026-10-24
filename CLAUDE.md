@@ -103,7 +103,7 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — in progress** (SIM_VERSION 0.6.0, 2026-10-22). Details:
+**Phase 1 (POC) — in progress** (SIM_VERSION 0.7.0, 2026-10-24). Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
@@ -119,14 +119,19 @@ scripts/       repo checks (file length, clean tree)
 - **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
   only N = 6 matches the full brain, with no speed-up. Parallel tastings
   (2 processes × 1 thread) are the adopted speed-up.
-- **Not started:** P1-7 mood, P1-8 readout/outcomes (MN9 per tasting,
-  SPEC §7), P1-9 balance + seed consistency + outcome mix
+- **Done:** P1-7 mood (`borer_sim.mood`: hunger gain, arousal noise
+  ≤ 10 Hz) and P1-8 readout/outcomes (`borer_sim.readout`; thresholds
+  only in `params.OUTCOME`: gap 5%, froze 6 Hz, food 0.8, flips 8;
+  calibrated by `validation.mood_calib`). **Fled dropped** (GF never
+  fires). See DECISIONS.md 2026-10-24.
+- **Not started:** P1-9 balance + seed consistency + outcome mix
   (`test_balance.py` does not exist yet), P1-11 final report, P1-12
   phase gate. Production-host timing not measured.
 - **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
   (probe + scoring), `taste_criteria` (pass rules), `taste_spam` (spam
   suite + r_base sweep), `taste_sub`, `taste_valence`, `taste_length`,
-  `runner` (shared job runner + MN9 readout). Smell probes deleted (git
+  `runner` (shared job runner + MN9 readout), `mood_probe` (noise scan),
+  `mood_calib` (outcome thresholds). Smell probes deleted (git
   history).
 - **Known issue:** the Windows host periodically starves the WSL VM
   (tastings taking 10–60× longer for minutes at a time); per-run

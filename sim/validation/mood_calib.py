@@ -7,8 +7,8 @@ case seed = CASE0 + 100 p + c, wait ~ Exponential(WAIT_MEAN_H) h from the case s
 (assumption: no product data on waiting yet). Both tastings: same seed, same mood.
 report: outcome mix at params.OUTCOME, the threshold grid, and verdict changes vs no mood.
 Selection rule (fixed before running): a threshold set passes if Win >= 50%, every
-special outcome <= 15%, and every outcome that can occur (Fled only if GF ever fired)
-occurs at least once. Keep the SPEC defaults if they pass; else the passing set with
+special outcome <= 15%, and every outcome that can occur occurs at least once (Fled
+counted only if GF ever fired; it never did, and Fled was dropped, DECISIONS.md 2026-10-24). Keep the SPEC defaults if they pass; else the passing set with
 the fewest thresholds changed, then the smallest summed relative change.
 """
 import sys
@@ -30,7 +30,7 @@ FILE = "mood_calib_1500ms.jsonl"
 NO_MOOD = "taste_v6_natural_1500ms_b2.jsonl"
 GRID = {"tie_gap": (0.03, 0.05, 0.08, 0.10, 0.15), "froze_hz": (2.0, 4.0, 6.0, 8.0),
         "food_hunger": (0.6, 0.7, 0.8), "dither_flips": (2, 3, 4, 5, 6, 8, 10)}
-SPECIAL = ("fled", "froze", "food", "dithered", "tie")
+SPECIAL = ("froze", "food", "dithered", "tie")
 
 
 def case(p: int, c: int) -> tuple[int, mood.Mood]:
@@ -58,7 +58,7 @@ def hearings() -> list[dict]:
         for c in range(len(SEEDS)):
             ta, tb = res[f"{p}|{c}|a"], res[f"{p}|{c}|b"]
             m = readout.metrics(ta["mn9_bins"], tb["mn9_bins"], sec)
-            m |= {"giant_fiber_fired": ta["gf_spikes"] + tb["gf_spikes"] > 0, "p": p, "c": c,
+            m |= {"gf": ta["gf_spikes"] + tb["gf_spikes"], "p": p, "c": c,
                   "mood": case(p, c)[1], "active": max(ta["active"], tb["active"])}
             out.append(m)
     return out
@@ -73,17 +73,15 @@ def mix(hs, th: dict) -> Counter:
         OUTCOME.update(saved)
 
 
-def passes(cnt: Counter, n: int, fled_possible: bool) -> bool:
-    need = [o for o in SPECIAL if o != "fled" or fled_possible]
+def passes(cnt: Counter, n: int) -> bool:
     return (cnt["win"] >= 0.5 * n and all(cnt[o] <= 0.15 * n for o in SPECIAL)
-            and all(cnt[o] > 0 for o in need))
+            and all(cnt[o] > 0 for o in SPECIAL))
 
 
 def choose(hs) -> dict:
-    fled_possible = any(h["giant_fiber_fired"] for h in hs)
     default = {k: OUTCOME[k] for k in GRID}
     ok = [dict(zip(GRID, v)) for v in product(*GRID.values())
-          if passes(mix(hs, dict(zip(GRID, v))), len(hs), fled_possible)]
+          if passes(mix(hs, dict(zip(GRID, v))), len(hs))]
     if not ok:
         return {}
     return min(ok, key=lambda t: (sum(t[k] != default[k] for k in t),
@@ -110,7 +108,7 @@ def changes(hs, th: dict):
         a, b = NATURAL_PAIRS[h["p"]]
         s = str(SEEDS[h["c"]])
         x = readout.metrics([nm[a][s][0] * sec], [nm[b][s][0] * sec], sec)
-        x |= {"giant_fiber_fired": False, "direction_flips": 0}
+        x["direction_flips"] = 0
         rows.append((_verdict(readout.outcome(x, 0.0), x), _verdict(readout.outcome(h, h["mood"].hunger), h), h))
     OUTCOME.update(saved)
     changed = [r for r in rows if r[0] != r[1]]
@@ -133,11 +131,11 @@ def report():
     n = len(hs)
     hunger = np.array([h["mood"].hunger for h in hs])
     print(f"{n} hearings; hunger median {np.median(hunger):.2f}, > 0.8 in {np.mean(hunger > 0.8):.1%}; "
-          f"GF fired in {sum(h['giant_fiber_fired'] for h in hs)}; "
+          f"GF fired in {sum(h['gf'] > 0 for h in hs)}; "
           f"runaway (> 4,000 active) in {sum(h['active'] > 4000 for h in hs)}; "
           f"flips median {np.median([h['direction_flips'] for h in hs]):g}")
     default = {k: OUTCOME[k] for k in GRID}
-    _table(f"SPEC defaults {default}", mix(hs, default), n)
+    _table(f"params.OUTCOME {default}", mix(hs, default), n)
     best = choose(hs)
     print(f"\nchosen (rule in docstring): {best or 'NO THRESHOLD SET PASSES'}")
     if best:

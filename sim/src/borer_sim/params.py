@@ -46,11 +46,12 @@ MOOD = {
 }
 
 # Readout and outcome thresholds (SPEC §6–§7): the ONLY place they are set.
+# Calibrated on OLD+NEW with product mood (validation.mood_calib, DECISIONS.md 2026-10-24).
 OUTCOME = {
     "readout_bin_ms": 50,    # MN9 bins for decision time and direction flips
     "tie_gap": 0.05,         # Win needs gap = |A - B| / (A + B) >= this
-    "froze_hz": 2.0,         # Froze: both A and B below this (Hz, MN9 L + R)
+    "froze_hz": 6.0,         # Froze: both A and B below this (Hz, MN9 L + R); calibrated 0.7.0
     "food_hunger": 0.8,      # Went for food: hunger above this and gap < tie_gap
-    "dither_flips": 3,       # Dithered: at least this many flips and gap < tie_gap
+    "dither_flips": 8,       # Dithered: at least this many flips and gap < tie_gap; calibrated 0.7.0
     "decision_spikes": 3,    # decision: cumulative binned A - B stays >= this (spikes)
 }

@@ -8,9 +8,9 @@ CLOSE, WIDE = OUTCOME["tie_gap"] / 2, OUTCOME["tie_gap"] * 2
 LOW, HIGH = OUTCOME["froze_hz"] / 2, OUTCOME["froze_hz"] * 10
 
 
-def m(a=HIGH, gap=WIDE, flips=0, gf=False):
+def m(a=HIGH, gap=WIDE, flips=0):
     b = a * (1 - gap) / (1 + gap)  # so that |a - b| / (a + b) == gap
-    return {"A": a, "B": b, "gap": gap, "direction_flips": flips, "giant_fiber_fired": gf}
+    return {"A": a, "B": b, "gap": gap, "direction_flips": flips}
 
 
 def test_flips_skip_zeros():
@@ -35,7 +35,6 @@ def test_metrics_margin_gap_winner():
 
 
 @pytest.mark.parametrize("case, hunger, expected", [
-    (m(gf=True, a=LOW, gap=CLOSE), 1.0, "fled"),           # Fled beats everything
     (m(a=LOW, gap=CLOSE, flips=9), 1.0, "froze"),          # Froze beats food / dithered
     (m(a=LOW, gap=WIDE), 0.0, "froze"),                    # ... even with a wide gap
     (m(gap=CLOSE, flips=9), OUTCOME["food_hunger"] + 0.01, "food"),
@@ -51,4 +50,4 @@ def test_outcome_rules(case, hunger, expected):
 
 
 def test_outcome_names_cover_rules():
-    assert set(readout.OUTCOMES) == {"fled", "froze", "food", "dithered", "win", "tie"}
+    assert set(readout.OUTCOMES) == {"froze", "food", "dithered", "win", "tie"}

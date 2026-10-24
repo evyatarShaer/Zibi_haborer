@@ -103,11 +103,16 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   Intentional: after ~8 h of waiting hunger exceeds 0.8, so a close case
   becomes "went for food" — a late side starves the fly.
 - `arousal` ∈ [0, 1] — seeded from case id. Sets background noise →
-  more flee / dither.
+  more dither (and the odd changed verdict).
 
 **Effects:**
-- Hunger raises gain of the MN9-exciting GRN groups.
-- Arousal increases background spike noise.
+- Hunger raises gain of the MN9-exciting GRN groups (drive above
+  baseline × (1 + 0.5 · hunger)).
+- Arousal increases background spike noise (random-sign 2 mV kicks to
+  every neuron at up to 10 Hz at arousal 1; 20 Hz ignites runaways).
+- Same seed and same mood for both tastings of a hearing. Measured on
+  OLD+NEW (600 hearings): mood changes the verdict in 10.5% of hearings,
+  flips the winner in 3.2% of decided ones (DECISIONS.md 2026-10-24).
 
 ## 6. Simulation & readout
 
@@ -132,8 +137,6 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   - `active_neurons` — count of neurons that spiked (per tasting)
   - `deciding_neuron` — the more active MN9 of the winning tasting + its
     FlyWire id
-  - `giant_fiber_fired` — bool, GF spiked in either tasting (escape
-    circuit)
 - **Replay.** Per-region activity in 20 ms frames, saved for animation.
 - **Performance target.** ≤ **15 s per hearing** (both tastings).
   Measured 8.87 s on the workstation (2 processes × 1 thread). The
@@ -142,14 +145,16 @@ ignites a whole-brain runaway with a fixed, side-blind output.
 ## 7. Outcomes
 
 First matching row wins. `gap` as defined in §6. Thresholds calibrated
-in POC.
+in POC (SIM_VERSION 0.7.0, DECISIONS.md 2026-10-24); the only copy in
+code is `borer_sim.params.OUTCOME`. **Fled was dropped** (2026-10-24):
+the Giant Fiber never fires in a taste-driven hearing (0 of 1,200
+tastings with product mood; only in a noise-saturated, runaway brain).
 
 | Outcome        | Condition                                   | Card headline (HE)                  |
 |---              |---                                           |---                                   |
-| Fled           | Giant Fiber fired in either tasting          | הזבוב עזב את האולם                   |
-| Froze          | both tastings' MN9 (`A`, `B`) < 2 Hz         | שתי הטענות לא עניינו את הזבוב       |
+| Froze          | both tastings' MN9 (`A`, `B`) < 6 Hz         | שתי הטענות לא עניינו את הזבוב       |
 | Went for food  | `hunger > 0.8` and `gap < 5%`                | יש דברים חשובים מהוויכוח שלכם        |
-| Dithered       | `direction_flips ≥ 3` and `gap < 5%`         | הזבוב קרוע                          |
+| Dithered       | `direction_flips ≥ 8` and `gap < 5%`         | הזבוב קרוע                          |
 | Win            | `gap ≥ 5%`                                   | הזבוב פסק לטובת {name}              |
 | Plain tie      | otherwise                                    | אין הכרעה                           |
 
@@ -223,7 +228,7 @@ Supersedes any earlier version of the spec.
      the tastings exactly): ≥ 90% of non-trivial pairs (mean gap ≥ 10%)
      keep their winner in ≥ 75% of seeds.
    - **Outcome mix:** ≥ 50% of hearings end in Win; each special
-     outcome (Fled / Froze / Went for food / Dithered) ≤ 15%.
+     outcome (Froze / Went for food / Dithered) ≤ 15%.
    - **Input quality:** MN9 range continuous (≤ 50% of tastings in any
      band 10% of the range wide); |Spearman ρ| < 0.5 between
      per-argument MN9 and length, and the ד/ב/ש count; the longer
@@ -241,7 +246,8 @@ Supersedes any earlier version of the spec.
 ## 13. Open questions (resolve in POC → `DECISIONS.md`)
 
 - Letter → GRN group table (measured valence) and its balance.
-- Thresholds (5% gap, 3 flips, hunger 0.8, froze 2 Hz).
+- ~~Thresholds~~ — resolved 2026-10-24: 5% gap, 8 flips, hunger 0.8,
+  froze 6 Hz (DECISIONS.md).
 - Rename the "Went for food" outcome — every argument is food now
   (MVP copywriting).
 - FlyWire data license terms for possible commercial use.

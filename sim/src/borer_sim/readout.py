@@ -11,11 +11,11 @@ from borer_sim import anatomy, data, mood
 from borer_sim.model import Model, Result
 from borer_sim.params import BIN_MS, OUTCOME, TASTING_MS
 
-OUTCOMES = ("fled", "froze", "food", "dithered", "win", "tie")  # SPEC §7 order
+OUTCOMES = ("froze", "food", "dithered", "win", "tie")  # SPEC §7 order (Fled dropped, 0.7.0)
 
 
 def _both(cells) -> list[int]:
-    """Model indices of a per-side cell set (anatomy.mn9 / giant_fiber), left then right."""
+    """Model indices of a per-side cell set (e.g. anatomy.mn9), left then right."""
     return [i for side in anatomy.SIDES for i in cells(side)]
 
 
@@ -67,8 +67,6 @@ def metrics(bins_a, bins_b, seconds: float) -> dict:
 def outcome(m: dict, hunger: float) -> str:
     """SPEC §7: first matching row wins."""
     o, close = OUTCOME, m["gap"] < OUTCOME["tie_gap"]
-    if m["giant_fiber_fired"]:
-        return "fled"
     if m["A"] < o["froze_hz"] and m["B"] < o["froze_hz"]:
         return "froze"
     if hunger > o["food_hunger"] and close:
@@ -81,8 +79,6 @@ def outcome(m: dict, hunger: float) -> str:
 def hearing(res_a: Result, res_b: Result, seconds: float) -> dict:
     """All SPEC §6 metrics of one hearing."""
     m = metrics(mn9_bins(res_a), mn9_bins(res_b), seconds)
-    gf = _both(anatomy.giant_fiber)
-    m["giant_fiber_fired"] = bool(res_a.counts[gf].sum() + res_b.counts[gf].sum())
     m["active_neurons"] = [len(res_a.active), len(res_b.active)]
     m["deciding_neuron"] = None
     if m["winner"]:

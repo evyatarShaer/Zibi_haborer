@@ -1062,3 +1062,53 @@ All criteria pass at both lengths. ρ(MN9, exciting-letter share) is
 intended. 1.5 s costs a little seed consistency (min 0.8 vs 0.9, one
 fewer non-trivial pair) and saves 28% of hearing time. Not yet run:
 balance / swap / outcome-mix (P1-9), production-host timing.
+
+## Mood, readout and outcome calibration (P1-7 / P1-8, SIM_VERSION 0.7.0)
+
+Run 2026-10-22 19:17 → 10-24 21:29 (`mood-calib`, log `mood_calib.log`,
+one restart resumed from saved keys). OLD+NEW 60 pairs × 10 cases = 600
+hearings / 1,200 tastings at 1.5 s, mood sampled as in the product
+(waiting ~ Exponential(mean 2 h), assumed). Full decision and rule:
+DECISIONS.md 2026-10-24.
+
+### Noise scan (arousal → background noise, 2 mV kicks)
+
+| noise | max active | GF spikes | flips median (max) |
+|---|---|---|---|
+| 0 Hz | 915 | 0 | 0 (10) |
+| 10 Hz | 1,209 | 0 | 1 (12) |
+| 20 Hz | 8,367 runaway | 0 | 1 (12) |
+| 50 Hz | 17,758 runaway | 2 | 0 (7) |
+| 300 Hz | 126,214 runaway | 12 | 2 (8) |
+
+→ `noise_hz` = 10 at arousal 1. GF fires only in a runaway brain.
+
+### Outcome mix (thresholds chosen by the pre-registered rule)
+
+| outcome | SPEC defaults (gap 5%, froze 2 Hz, food 0.8, flips 3) | chosen (froze 6 Hz, flips 8) |
+|---|---|---|
+| froze | 0 | 1 (0.2%) |
+| food | 1 (0.2%) | 1 (0.2%) |
+| dithered | 21 (3.5%) | 19 (3.2%) |
+| win | 578 (96.3%) | 577 (96.2%) |
+| tie | 0 | 2 (0.3%) |
+
+Fled: GF fired in 0/1,200 tastings → outcome dropped.
+
+### Checks
+
+| item | value | target |
+|---|---|---|
+| Win share | 96.2% | ≥ 50% |
+| largest special outcome | dithered 3.2% | ≤ 15% |
+| runaway | 11/1,200 = 0.9% (all arousal ≥ 0.48) | < 2% |
+| verdict changed by mood | 63/600 = 10.5% | — |
+| winner flipped by mood (decided both ways) | 18/554 = 3.2% | — |
+| gap median (P10–P90) | 0.34 (0.11–0.81) | — |
+| decision time median / P90 | 150 / 700 ms (none in 6) | — |
+| flips median / P75 | 7 / 10 | — |
+| wall-clock per tasting (3 × 2 threads) | median 11.8 s | hearing ≤ 15 s |
+| pytest | 85 passed | — |
+
+Not yet run: balance + seed consistency + outcome mix on 1,000 random
+pairs (P1-9), production-host timing, peak RSS.

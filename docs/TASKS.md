@@ -56,16 +56,24 @@ performance budget.
   criterion, with longer-wins now measured over all pairs (changed after
   seeing THIRD's 39% on 30 probe pairs; 47% on all 190) — see
   DECISIONS.md 2026-10-22.*
-- [ ] **P1-7 — Implement mood.py.** Hunger and arousal with their
+- [x] **P1-7 — Implement mood.py.** Hunger and arousal with their
   effects.
-- [ ] **P1-8 — Implement readout.py.** A hearing = two tastings (one
+  *Done 2026-10-24 (SIM_VERSION 0.7.0). Hunger gain 0.5 on class-E
+  groups; arousal = random-sign 2 mV noise kicks up to 10 Hz (20 Hz
+  ignites runaways). On OLD+NEW mood changes 10.5% of verdicts, flips
+  3.2% of winners; runaway 0.9% of tastings — DECISIONS.md 2026-10-24.*
+- [x] **P1-8 — Implement readout.py.** A hearing = two tastings (one
   per argument, same seed, 1.5 s each, run in parallel). Readout = MN9
   (L + R) per tasting → `A`, `B`, `margin`, `gap`; `decision_time_ms`
   and `direction_flips` from the binned A − B; `active_neurons`;
   `deciding_neuron` (more active MN9 of the winning tasting);
-  `giant_fiber_fired` (either tasting). Outcomes per SPEC §7: Fled (GF)
-  → Froze (both MN9 < 2 Hz) → Went for food (hunger > 0.8, gap < 5%) →
-  Dithered (≥ 3 flips, gap < 5%) → Win (gap ≥ 5%) → Plain tie.
+  Outcomes per SPEC §7: Froze (both MN9 < 6 Hz) → Went for food
+  (hunger > 0.8, gap < 5%) → Dithered (≥ 8 flips, gap < 5%) → Win
+  (gap ≥ 5%) → Plain tie.
+  *Done 2026-10-24 (SIM_VERSION 0.7.0). Thresholds calibrated on 600
+  OLD+NEW hearings by a rule fixed before running: froze 2 → 6 Hz, flips
+  3 → 8; mix Win 96.2%, dithered 3.2%, tie 0.3%, froze 0.2%, food 0.2%.
+  Fled dropped: GF fired in 0/1,200 tastings — DECISIONS.md 2026-10-24.*
 - [ ] **P1-9 — Determinism + balance tests.** Determinism: same input
   twice → identical metrics. `test_balance.py`: balance (1,000 seeded
   random pairs, side A wins 45–55%), seed consistency (≥ 90% of

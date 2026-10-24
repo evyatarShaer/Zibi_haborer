@@ -877,3 +877,105 @@ TASKS exit criteria and `validation.taste_criteria` updated.
 
 **Data:** `sim/data/processed/validation/taste_v6_{spam,natural,third}_1500ms_b{4,2}.jsonl`,
 `taste_spam6.log` (gitignored).
+
+---
+
+## 2026-10-24 — Mood, readout and outcomes; thresholds calibrated; Fled dropped (SIM_VERSION 0.7.0)
+
+**Context:** P1-7 (mood) and P1-8 (readout + outcomes, SPEC §5–§7). The
+SPEC thresholds (5% gap, 3 flips, hunger 0.8, froze 2 Hz) were
+placeholders "calibrated in POC". Mood had to be shaped so it colours
+verdicts without making them random.
+
+**Decision:**
+- **Mood** (`borer_sim.mood`, `params.MOOD`): hunger ~ U(0, 0.4) at case
+  open + 0.1/h waiting (cap 1); arousal ~ U(0, 1); both seeded from the
+  case seed on their own stream; identical for both tastings. Hunger
+  multiplies the above-baseline drive of the MN9-exciting letter groups
+  (class E) by 1 + 0.5·hunger. Arousal sets background noise: random-sign
+  2 mV kicks to every neuron at arousal × 10 Hz, drawn after the input
+  spikes (noise 0 is bit-identical to 0.6.0; same seed = same noise in
+  both tastings).
+- **Noise level from the noise scan** (`validation.mood_probe`, 4
+  arguments × 2 seeds): 10 Hz is clean (max 1,209 active); 20 Hz and up
+  ignite runaways (8,367 → 126,214 active). GF fired only in the
+  runaway brain (50 Hz: 2 spikes, 300 Hz: 12).
+- **Readout** (`borer_sim.readout`): SPEC §6 metrics from 50 ms MN9 bins
+  (`BIN_MS` 20 → 10 so 50 ms bins aggregate exactly); one code path for
+  product and validation records.
+- **Fled dropped** (outcome and the `giant_fiber_fired` metric). GF spiked
+  in **0 of 1,200** product-mood tastings; it only fires in a
+  noise-saturated brain that we exclude by design. An outcome that can
+  never happen is dead code. `anatomy.giant_fiber` stays for validation
+  diagnostics.
+- **Thresholds** (`params.OUTCOME`): **tie_gap 0.05, froze_hz 6.0,
+  food_hunger 0.8, dither_flips 8** (froze 2 → 6 Hz, flips 3 → 8).
+
+**Calibration** (`validation.mood_calib`, run 2026-10-22 19:17 → 10-24
+21:29, one restart resumed from saved keys): OLD+NEW 60 pairs × 10
+cases = 600 hearings, 1,200 tastings at 1.5 s, mood sampled as the
+product would (waiting ~ Exponential(mean 2 h) — an assumption, no
+product data yet). **Selection rule fixed before running** (docstring):
+pass = Win ≥ 50%, each special outcome ≤ 15%, every possible special
+outcome occurs at least once; keep the SPEC defaults if they pass, else
+the passing set with the fewest changes, then the smallest summed
+relative change; grid tie_gap {.03–.15} × froze {2–8 Hz} × food
+{.6–.8} × flips {2–10}.
+
+| outcome | SPEC defaults | chosen |
+|---|---|---|
+| froze | 0 | 1 (0.2%) |
+| food | 1 (0.2%) | 1 (0.2%) |
+| dithered | 21 (3.5%) | 19 (3.2%) |
+| win | 578 (96.3%) | 577 (96.2%) |
+| tie | 0 | 2 (0.3%) |
+
+Defaults failed only the "occurs at least once" clause (no Froze, no
+plain Tie). Why the chosen values move it: flips are common (median 7
+per hearing, P75 10) so a 3-flip rule turned every close hearing into
+Dithered and Plain tie never appeared; at 8 flips 2 close hearings stay
+plain ties. Froze 6 Hz catches the single pair of near-silent tastings.
+
+**Sensitivity** (vary one, others at chosen): tie_gap 0.10 → Win 541
+(90%), dithered 47; tie_gap 0.15 → Win 496 (83%), dithered 88 (15%,
+the limit). food_hunger 0.6 → food 7. froze 2/4 Hz → 0 froze.
+
+**Effect of mood** (vs the same seeds with no mood, 0.6.0 data):
+verdict changed in **63/600 (10.5%)**, winner flipped in **18/554
+(3.2%)** of hearings decided both ways; most changes are close
+hearings tipping (tie → win 23, win → dithered 14). Changes by tercile:
+arousal 26 / 19 / 18, hunger 21 / 18 / 24 of 200 — no dose response at
+these levels; mood is a light seasoning.
+
+**Other numbers:** gap P10/P25/median/P75/P90 = 0.11 / 0.20 / 0.34 /
+0.65 / 0.81; decision time median 150 ms, P90 700 ms, none in 6/600;
+hunger median 0.37, > 0.8 in 6.0%. **Runaway: 11/1,200 tastings
+(0.9%)** (< 2% target), all at arousal ≥ 0.48, active median 903, P99
+1,434. Wall-clock per tasting (3 workers × 2 threads) median 11.8 s
+(10.4 s at 0.6.0 without noise); p95 215 s is host starvation (known
+issue), not the model.
+
+**Surprise (documented):** special outcomes are rare — Win 96%. The
+fly almost always prefers one argument. Accepted: the outcome-mix
+criterion caps specials, it does not require many. Raising tie_gap
+would buy more drama at the cost of verdicts; revisit in MVP with real
+cases.
+
+**Why:** pre-registered rule, applied as written; no criterion changed
+after seeing results.
+
+**Alternatives considered:** keeping Fled with a GF threshold lowered or
+a "noise burst" trigger — rejected: it would be an invented escape not
+driven by the arguments; tie_gap 0.08–0.10 for more ties — not the
+fewest-changes passing set.
+
+**Not run:** balance test (`test_balance.py`, P1-9), production-host
+timing, peak RSS (model size unchanged). `pytest`: 85 passed (incl.
+hearing determinism with mood, noise fairness, outcome rules).
+
+**Impacts:** SPEC §5 (effects), §6 (metric list), §7 (Fled row removed,
+froze 6 Hz, flips 8), §12 (outcome mix list), §13 (thresholds
+resolved); `params.OUTCOME`, `readout`, `validation.mood_calib`; P1-9
+runs the outcome mix at these thresholds. Data:
+`sim/data/processed/validation/mood_calib_1500ms.jsonl`,
+`mood_calib.log`, `mood_noise_2mv.jsonl`, `mood_noise.log` (gitignored).
