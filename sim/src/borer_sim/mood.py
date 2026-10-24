@@ -35,7 +35,7 @@ def from_case(case_seed: int, wait_hours: float = 0.0) -> Mood:
     """The case's mood after waiting `wait_hours` (case open → both submitted)."""
     hunger, arousal = np.random.default_rng((case_seed, STREAM)).random(2)
     hunger = hunger * MOOD["hunger_base_max"] + MOOD["hunger_per_hour"] * max(0.0, wait_hours)
-    return Mood(float(min(1.0, hunger)), float(arousal))
+    return Mood(float(min(1.0, hunger)), float(arousal * MOOD["arousal_max"]))
 
 
 def tasting(text: str, mood: Mood) -> list[tuple[list[int], float]]:

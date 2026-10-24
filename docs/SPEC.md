@@ -102,14 +102,16 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   Shown in UI ("the fly has been hungry for 3 hours").
   Intentional: after ~8 h of waiting hunger exceeds 0.8, so a close case
   becomes "went for food" — a late side starves the fly.
-- `arousal` ∈ [0, 1] — seeded from case id. Sets background noise →
+- `arousal` ∈ [0, 0.45] — seeded from case id (uniform; capped at 0.45
+  because runaways appeared only from 0.48, DECISIONS.md 2026-10-24).
+  Sets background noise →
   more dither (and the odd changed verdict).
 
 **Effects:**
 - Hunger raises gain of the MN9-exciting GRN groups (drive above
   baseline × (1 + 0.5 · hunger)).
 - Arousal increases background spike noise (random-sign 2 mV kicks to
-  every neuron at up to 10 Hz at arousal 1; 20 Hz ignites runaways).
+  every neuron at arousal × 10 Hz, so ≤ 4.5 Hz; 20 Hz ignites runaways).
 - Same seed and same mood for both tastings of a hearing. Measured on
   OLD+NEW (600 hearings): mood changes the verdict in 10.5% of hearings,
   flips the winner in 3.2% of decided ones (DECISIONS.md 2026-10-24).
@@ -250,5 +252,10 @@ Supersedes any earlier version of the spec.
   froze 6 Hz (DECISIONS.md).
 - Rename the "Went for food" outcome — every argument is food now
   (MVP copywriting).
+- **"Brain overload" as an MVP special outcome?** A whole-brain runaway
+  (> 4,000 active neurons) is a real signal of the simulated brain,
+  unlike Fled (GF never fires on its own). Arousal is capped below it in
+  POC (0.45); an MVP could allow it rarely and show it as its own
+  outcome. Decide in MVP planning.
 - FlyWire data license terms for possible commercial use.
 - Publish the mapping table openly or let players discover it?

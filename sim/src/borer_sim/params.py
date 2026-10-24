@@ -41,6 +41,7 @@ MOOD = {
     "hunger_base_max": 0.4,  # hunger at case open ~ U(0, this); waiting adds the rest
     "hunger_per_hour": 0.1,  # + per hour from case open until both submitted (cap 1)
     "hunger_gain": 0.5,      # MN9-exciting groups' drive above baseline x (1 + gain * hunger)
+    "arousal_max": 0.45,     # arousal ~ U(0, this): no runaway below 0.48 (DECISIONS.md 2026-10-24)
     "noise_hz": 10.0,        # background kicks per neuron at arousal 1 (Hz); 20 Hz ignites runaways
     "noise_mv": 2.0,         # size of one background kick, random sign (mV)
 }

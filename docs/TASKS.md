@@ -74,7 +74,9 @@ performance budget.
   OLD+NEW hearings by a rule fixed before running: froze 2 → 6 Hz, flips
   3 → 8; mix Win 96.2%, dithered 3.2%, tie 0.3%, froze 0.2%, food 0.2%.
   Fled dropped: GF fired in 0/1,200 tastings — DECISIONS.md 2026-10-24.*
-- [ ] **P1-9 — Determinism + balance tests.** Determinism: same input
+- [ ] **P1-9 — Determinism + balance tests.** *In progress 2026-10-24
+  (SIM_VERSION 0.8.0): `validation.balance` (detached run) +
+  `tests/test_balance.py`; method in DECISIONS.md 2026-10-24 (P1-9).* Determinism: same input
   twice → identical metrics. `test_balance.py`: balance (1,000 seeded
   random pairs, side A wins 45–55%), seed consistency (≥ 90% of
   non-trivial pairs keep their winner in ≥ 75% of seeds) and outcome

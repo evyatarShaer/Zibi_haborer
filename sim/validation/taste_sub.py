@@ -8,20 +8,17 @@ mean MN9 within +-5% (or +-0.5 Hz below 10 Hz) and the same winner on every pair
 Validated with the v3 table (0.3.0): the reference is REF; a later TABLE needs a new ref.
 Timing (time [ms] [set] [N...]): a hearing = its two tastings in parallel, 2 processes x 1 thread.
 """
-import multiprocessing as mp
 import statistics
 import sys
-import time
 from itertools import combinations
 
 import numpy as np
-import torch
 
 from borer_sim import anatomy, data, subcircuit
 from borer_sim.params import TASTING_MS
 from borer_sim.model import Model
 from borer_sim.taste import mapping, tasting
-from validation.runner import connectome_model, load, run_jobs
+from validation.runner import connectome_model, load, run_jobs, timed_hearings
 from validation.sugar_mn9 import OUT
 from validation.taste_sets import PAIRS, SETS
 
@@ -29,7 +26,6 @@ ARGS, SEEDS = range(10), tuple(range(783, 788))
 REL_TOL, ABS_TOL = 0.05, 0.5
 REF = "taste_v3_new.jsonl"  # full-brain results, v3 table
 REF_MS = 2000  # the N = 6 validation ran at 2 s tastings
-_model = None
 
 
 def _keep(n_hops: int) -> np.ndarray:
@@ -78,24 +74,10 @@ def check(n_hops):
           f"{sum(sub[k]['MN9'] == full[k]['MN9'] for k in sub)}/{len(sub)}")
 
 
-def _taste(job):
-    drives, seed, ms = job
-    torch.set_num_threads(1)
-    _model.run(drives, ms, seed)
-
-
 def _hearing_times(model, ms, arg_set, n=10) -> list[float]:
-    global _model
-    _model = model
     args = SETS[arg_set]
-    hearings = [(tasting(args[a]), tasting(args[b])) for a, b in PAIRS[arg_set][:n]]
-    times = []
-    with mp.get_context("fork").Pool(2) as pool:
-        for k, (x, y) in enumerate(hearings):
-            t = time.perf_counter()
-            pool.map(_taste, [(x, 783 + k, ms), (y, 783 + k, ms)], chunksize=1)
-            times.append(time.perf_counter() - t)
-    return times
+    return timed_hearings(model, [(tasting(args[a]), tasting(args[b]), 783 + k, 0.0)
+                                  for k, (a, b) in enumerate(PAIRS[arg_set][:n])], ms)[1]
 
 
 def timing(ms=TASTING_MS, arg_set="new", *n_hops):

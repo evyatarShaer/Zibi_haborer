@@ -33,10 +33,21 @@ GRID = {"tie_gap": (0.03, 0.05, 0.08, 0.10, 0.15), "froze_hz": (2.0, 4.0, 6.0, 8
 SPECIAL = ("froze", "food", "dithered", "tie")
 
 
+def product_mood(seed: int) -> mood.Mood:
+    """A case's mood as the product would sample it (waiting time drawn from the case seed)."""
+    wait = float(np.random.default_rng((seed, WAIT_STREAM)).exponential(WAIT_MEAN_H))
+    return mood.from_case(seed, wait)
+
+
 def case(p: int, c: int) -> tuple[int, mood.Mood]:
     seed = CASE0 + 100 * p + c
-    wait = float(np.random.default_rng((seed, WAIT_STREAM)).exponential(WAIT_MEAN_H))
-    return seed, mood.from_case(seed, wait)
+    return seed, product_mood(seed)
+
+
+def record_hearing(ta: dict, tb: dict) -> dict:
+    """SPEC §6 metrics of a hearing from its two runner records (extra = mood_probe.extra)."""
+    m = readout.metrics(ta["mn9_bins"], tb["mn9_bins"], TASTING_MS / 1000)
+    return m | {"gf": ta["gf_spikes"] + tb["gf_spikes"], "active": max(ta["active"], tb["active"])}
 
 
 def run():
@@ -52,16 +63,9 @@ def run():
 
 
 def hearings() -> list[dict]:
-    res, sec = load(FILE), TASTING_MS / 1000
-    out = []
-    for p in range(len(NATURAL_PAIRS)):
-        for c in range(len(SEEDS)):
-            ta, tb = res[f"{p}|{c}|a"], res[f"{p}|{c}|b"]
-            m = readout.metrics(ta["mn9_bins"], tb["mn9_bins"], sec)
-            m |= {"gf": ta["gf_spikes"] + tb["gf_spikes"], "p": p, "c": c,
-                  "mood": case(p, c)[1], "active": max(ta["active"], tb["active"])}
-            out.append(m)
-    return out
+    res = load(FILE)
+    return [record_hearing(res[f"{p}|{c}|a"], res[f"{p}|{c}|b"]) | {"p": p, "c": c, "mood": case(p, c)[1]}
+            for p in range(len(NATURAL_PAIRS)) for c in range(len(SEEDS))]
 
 
 def mix(hs, th: dict) -> Counter:

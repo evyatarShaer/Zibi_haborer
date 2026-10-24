@@ -66,6 +66,27 @@ def _work(job):
     return key, m, t0, round(time.perf_counter() - start, 2)
 
 
+def _tasting(job):
+    drives, seed, noise_hz, ms = job
+    torch.set_num_threads(1)
+    return _model.run(drives, ms, seed, noise_hz)
+
+
+def timed_hearings(model: Model, hearings: list, ms: float) -> tuple[list, list[float]]:
+    """Each hearing's two tastings in parallel, 2 processes x 1 thread (as the product).
+    hearings: [(drives_a, drives_b, seed, noise_hz)] -> ([(Result a, Result b)], seconds)."""
+    global _model
+    _model = model
+    out, times = [], []
+    with mp.get_context("fork").Pool(2) as pool:
+        for a, b, seed, noise_hz in hearings:
+            t = time.perf_counter()
+            out.append(tuple(pool.map(_tasting, [(a, seed, noise_hz, ms), (b, seed, noise_hz, ms)],
+                                      chunksize=1)))
+            times.append(time.perf_counter() - t)
+    return out, times
+
+
 @cache
 def connectome_model() -> Model:
     return Model.from_connectome()

@@ -979,3 +979,55 @@ resolved); `params.OUTCOME`, `readout`, `validation.mood_calib`; P1-9
 runs the outcome mix at these thresholds. Data:
 `sim/data/processed/validation/mood_calib_1500ms.jsonl`,
 `mood_calib.log`, `mood_noise_2mv.jsonl`, `mood_noise.log` (gitignored).
+
+---
+
+## 2026-10-24 — Arousal capped at 0.45; P1-9 balance method (SIM_VERSION 0.8.0)
+
+**Context:** In the 0.7.0 calibration all 11 runaway tastings (0.9%) had
+arousal ≥ 0.48; none below. P1-9 needs a balance run on arguments the
+model was never tuned on.
+
+**Decision:**
+- `arousal` ~ U(0, `MOOD["arousal_max"]` = 0.45) (scaled, not clipped,
+  so it stays uniform): background noise ≤ 4.5 Hz. Behaviour change for
+  the same case seed → **SIM_VERSION 0.8.0**. Outcome thresholds are
+  unchanged; P1-9 re-measures the outcome mix at 0.8.0.
+- "Brain overload" (runaway) noted in SPEC §13 as a possible MVP special
+  outcome — a real brain signal, unlike Fled.
+- **P1-9 method** (`validation.balance`, `tests/test_balance.py`):
+  - 2,000 arguments = 1,000 pairs, seeded (0x62616C). **Deviation:** the
+    downloaded "conversational corpus" is only the OpenSubtitles 2018
+    word-*frequency* list — no utterances. Arguments are word sequences
+    drawn by corpus frequency (top 100k tokens, punctuation tokens
+    attached), 30–200 chars, ≥ 10 Hebrew letters. They read as word
+    salad, but a tasting depends only on letter/mark counts and length
+    (`borer_sim.taste`), not on word order, so letter statistics are
+    conversational. Real utterances (topic, repeated words) would vary
+    the letter mix more; not covered here. Not OLD/NEW/THIRD.
+  - Product path: case seed = simulation seed (CASE0 20,000 + i), mood
+    `mood_calib.product_mood` (waiting ~ Exp(2 h)), hearing metrics and
+    outcome from `borer_sim.readout`. Tastings run through the shared
+    runner (3 × 2 threads); the `time` step reruns 20 hearings as the
+    product does (2 processes × 1 thread, `runner.timed_hearings`) and
+    checks they match the records exactly.
+  - Seed consistency: pairs 0–49 × 10 case seeds (each seed is a new
+    case, so mood differs too). Non-trivial = mean gap ≥ 10%.
+  - Longer-wins: over all decided hearings of the 1,000 pairs (equal
+    normalized length excluded).
+  - Pass rules exactly as SPEC §12 (Plain tie is not a special outcome).
+  - 2,900 tastings; estimated 3–3.5 h at 3 workers (~3.7 s per tasting
+    throughput) on an unstarved host.
+
+**Why:** arousal above 0.45 buys no outcome the product wants and is
+the only source of runaways seen.
+
+**Alternatives considered:** clipping arousal at 0.45 (piles 55% of
+cases at the cap); downloading OpenSubtitles monolingual text for real
+utterances (new large download, needs approval; taste is
+order-independent so the gain is small).
+
+**Impacts:** `params.MOOD`, `mood.from_case`, SPEC §5 and §13;
+`runner.timed_hearings` (shared with `taste_sub` timing);
+`mood_calib.product_mood` / `record_hearing` (shared with `balance`).
+Results will be logged in a follow-up entry.

@@ -12,7 +12,7 @@ def test_seeded_and_in_range():
     assert a == b and a != mood.from_case(43)
     for s in range(200):
         x = mood.from_case(s)
-        assert 0 <= x.hunger <= params.MOOD["hunger_base_max"] and 0 <= x.arousal < 1
+        assert 0 <= x.hunger <= params.MOOD["hunger_base_max"] and 0 <= x.arousal < params.MOOD["arousal_max"]
 
 
 def test_hunger_rises_while_waiting_capped():
