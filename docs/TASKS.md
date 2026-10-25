@@ -282,42 +282,183 @@ from env, with no workstation paths in code.
 
 ## Epic: Phase 2B — MVP (shareable / server)
 
-**Goal** (SPEC §12): what 2A does not deliver:
-- the two-device flow with a link and response window (§3, §8: tokens,
-  deadline, plain water, reminder);
-- hosting;
-- verdict card page + OG image + WhatsApp preview (§9);
-- the 10–15 s brain animation and replay;
-- sudden death;
-- a group-level how-it-works page;
-- moderation;
-- appeal-bypass prevention;
-- production-host timing;
-- the stack decision (§11).
+**Goal** (SPEC §12, §15): a real two-device game, shared over WhatsApp,
+running on a free server.
+- Blind arguments with personal links, a 3 h deadline, a nudge after 1 h
+  and plain water at the deadline.
+- Hunger from the real wait.
+- Live reveal for B and replay for A.
+- Appeals: once per side, up to 3 hearings per case.
+- Public card + teaser + OG images.
+- Meters that fill from the MN9 curves.
+- The brain view without taste classes, and a how-it-works page.
+- Moderation and 7-day retention.
+- Oracle Always Free + Caddy + a free subdomain.
 
-**Exit criteria:** 20 real cases in friends' groups, ≥ half shared
-onward.
+**Exit criteria** (from `SPEC.md §12`):
+- 20 real cases in friends' groups; of the decided cases, ≥ half had
+  "send the verdict" tapped (server-side counter).
+- On the production host: hearing ≤ 15 s (submit → verdict) and
+  bit-identical determinism.
 
-**Carried over from Phase 1** (POC_REPORT.md summary): production-host
-timing; "Brain overload" outcome decision; real-utterance arguments;
-watch side-A (46.3%) and shorter-wins (44.7%) drift; FlyWire licence
-(non-commercial).
+**Decided 2026-10-25:** DECISIONS.md, the eleven 2B planning entries.
+**Open questions** that tasks below must settle: SPEC §13 (lunch break
+under real waits, appeal hunger, no-show display and appeal, report
+scope, B's link in a group, brain view on the public card, rate limit).
 
-**Must revisit before anything is public:** the brain view's
-taste-class output still leaks a coarse letter → class map. An argument
-that repeats one letter lights up that letter's class (DECISIONS.md
-2026-10-25, class-level leak).
+**Carried over:** real-utterance arguments; watch the side-A (46.3%)
+and shorter-wins (44.7%) drift; FlyWire licence (non-commercial). Also
+the owner's Hebrew copy and fly art.
 
-**Also open from the 2A gate** (POC_REPORT.md Phase 2A): the owner's
-Hebrew copy and real fly art; a real-brain play-test that lands on each
-non-win outcome; the Froze meter showing 100% appetite; timing headroom
-(14.46 s on battery).
+### Tasks (build order)
 
-### Tasks
-
-Not yet broken down. First step: the stack decision (§11) and hosting,
-since the two-device flow, the card page and production timing all
-depend on them.
+- [ ] **P2B-1 — Outcome mix under real waits (analysis only).** Reweight
+  the saved P1-9 records (`balance_1500ms.jsonl`, 1,000 pairs × seeds,
+  with their hunger) to realistic wait distributions. No new long run.
+  The distributions: B answers within minutes, ~Exp(30 min), ~Exp(1 h),
+  uniform 0–3 h, and a no-show share at exactly 3 h.
+  *Accept:*
+  - A table per distribution: win / dithered / tie / froze / food rate,
+    and side-A share.
+  - The food rate re-checked. The hunger ceiling (0.4 + 0.3 = 0.7 < 0.8)
+    predicts 0%; confirm it.
+  - POC_REPORT section + DECISIONS entry. The owner decides the lunch
+    break question (SPEC §13) before P2B-4.
+- [ ] **P2B-2 — Host setup.** The owner creates the Oracle Cloud
+  account; the signup asks for a card, and only Always Free resources
+  are used. Then:
+  - an ARM (Ampere A1) VM with Ubuntu, `uv` and the FlyWire v783 files
+    (137 MB);
+  - a free DuckDNS subdomain;
+  - Caddy with automatic HTTPS;
+  - the app as a systemd service, restarted on boot;
+  - a deploy script from git;
+  - the same env config as 2A (no workstation paths).
+  *Accept:*
+  - `https://<sub>.duckdns.org` serves the app after a reboot.
+  - The certificate renews automatically (Caddy).
+  - No paid resource exists in the tenancy (checked in the console).
+  - Risk noted: Oracle may reclaim idle Always Free VMs; check the
+    current rule and keep a note in DECISIONS.
+- [ ] **P2B-3 — Production-host timing and ARM determinism.** 20
+  timing hearings on the server.
+  Run with the 2A app and sim right after setup; it decides whether the
+  host works at all. Re-measured on the 2B sim at the gate.
+  *Accept:*
+  - Submit → verdict ≤ 15 s (median and max reported).
+  - Peak RAM measured.
+  - Same seed twice bit-identical on ARM.
+  - `borer_api.recheck` reports 100% on the server DB.
+  - The agreement of ARM verdicts with the x86 records (balance timing
+    set) is reported (not required to be equal: §2.2 is per platform).
+  - If > 15 s: stop and decide (fallback: worker on the home PC).
+- [ ] **P2B-4 — `borer_sim` for 2B** (`sim-change` skill; version bump).
+  - The product hearing takes the real wait: `mood.from_case(seed,
+    wait_h)`. The 2A simulated wait stays only for 2A tests and
+    validation.
+  - Plain water as side B: baseline GRN rates only (the no-Hebrew
+    baseline).
+  - The brain summary drops `taste_hz`.
+  - Any hunger-rule change decided in P2B-1.
+  *Accept:*
+  - Same seed + wait twice gives bit-identical results (test).
+  - The water hearing runs ≤ 15 s and is deterministic (test).
+  - The summary has no taste-class field (test).
+  - The balance check per the skill; full sim suite green.
+- [ ] **P2B-5 — Case storage.** SQLite schema per SPEC §10:
+  - `case`, `hearing` (n 0–2, `appealed_by`), `report` and `counter`;
+  - token hashes;
+  - a purge 7 days after case open (counters kept);
+  - `hidden_at` and `shared_at`.
+  The 2A `hearing` table is retired (2A data is not migrated).
+  *Accept:*
+  - Tests on a temp DB: create → B submits → decided; at most 3 hearings
+    per case and one appeal per side, enforced in the DB; the purge
+    removes exactly the cases older than 7 days, with their children;
+    counters survive the purge (injected clock).
+- [ ] **P2B-6 — Case API.**
+  - A opens a case and gets their link. B submits through B's link.
+  - A deadline sweep in the process runs the plain-water hearing at 3 h.
+  - The nudge becomes available at 1 h.
+  - Appeals: per side, within 3 h of the latest verdict, on the original
+    arguments with a fresh seed; the latest verdict is final.
+  - The one-courtroom queue as in 2A.
+  - Expired, deleted or hidden cases → one generic "case closed" answer.
+  *Accept:*
+  - API tests with a fake sim:
+    - B's token never receives `text_a` while waiting;
+    - a wrong token gets 404 (no difference between "wrong" and "gone");
+    - the deadline fires the water hearing (fake clock);
+    - the nudge is hidden before 1 h;
+    - a second appeal by the same side, a 4th hearing and an appeal
+      after 3 h are refused;
+    - "accepted" uses the previous verdict's winner.
+  - The allowlist test from 2A extended (no letter or table data, no
+    arguments on public endpoints).
+  - Open questions settled first: appeal hunger; no-show display and
+    appeal; B's link in a group.
+- [ ] **P2B-7 — Moderation.**
+  - A Hebrew offensive-word filter on the topic, names and arguments,
+    after §4.1 normalization. The owner supplies the list. A match gives
+    a soft block with a fly-themed message.
+  - A report button that hides the case at once.
+  - An admin command: `python -m borer_api.admin list|delete|restore`.
+  *Accept:*
+  - Tests: listed words are blocked after normalization (final letters,
+    niqqud); clean text passes.
+  - A report hides the public card (and the personal pages, if decided)
+    immediately.
+  - Delete and restore work. No AI anywhere.
+- [ ] **P2B-8 — Pages: case flow.** Hebrew RTL, mobile-first, the 2A
+  modules reused:
+  - A's open-case screen + "send to the other side" (`wa.me`);
+  - A's waiting page with a "nudge again" button from 1 h;
+  - B's blind input;
+  - B's live story → verdict → "send the verdict";
+  - A's replay from stored data;
+  - the history line; the appeal button with its window;
+  - the "this link is personal" note;
+  - the generic "case closed" page.
+  *Accept:*
+  - Node tests for each screen model.
+  - The full two-link flow in headless Chrome at 360 px, for every
+    outcome, a no-show and an appeal chain of 3 (scripted sim, as at
+    the 2A gate).
+  - No horizontal overflow.
+- [ ] **P2B-9 — Live meters, brain view, how it works.**
+  - The appetite meters fill from the stored MN9 bins during the story
+    (cumulative rate), live and on replay; hidden on Froze.
+  - The brain view without taste bars (MN9 curves, mood, seed,
+    `SIM_VERSION`, platform).
+  - A general how-it-works page with the FlyWire (Dorkenwald et al.
+    2024; Schlegel et al. 2024) and Shiu et al. 2024 credit.
+  *Accept:*
+  - The meter's end value equals the stored A/B share (test).
+  - Froze shows no meters.
+  - The lab view and the how-it-works page contain no letter, GRN group
+    or class table (automated check).
+- [ ] **P2B-10 — Public card, teaser and OG images.**
+  - Server-rendered OG tags for the teaser (B's link: fly + topic, no
+    verdict) and the public card (topic, names, final verdict, history,
+    no arguments).
+  - 1200×630 images drawn with Pillow, with RTL Hebrew shaping
+    (libraqm).
+  *Accept:*
+  - Tests: no argument text in the public page or any image's source
+    data; the teaser has no verdict.
+  - Hebrew renders right to left with joined final forms (golden image).
+  - A real WhatsApp preview checked on the owner's phone.
+- [ ] **P2B-11 — Share counters.** Server-side aggregate counters
+  (`cases_opened`, `cases_decided`, `cases_shared`, no-shows, appeals,
+  reports) per day, kept past the 7-day purge. An admin command prints
+  them.
+  *Accept:* tests: one `case_shared` per case however many taps; no case
+  data in the counter table.
+- [ ] **P2B-12 — Friends beta.** Run real cases in friends' WhatsApp
+  groups. Fix what breaks.
+  *Accept:* 20 decided real cases; counters show the shared share.
+- [ ] **P2B-13 — Phase 2B gate.** Every exit criterion with evidence
+  (`phase-gate` skill).
 
 ## Epic: Phase 3
 

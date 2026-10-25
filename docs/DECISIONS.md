@@ -1643,3 +1643,229 @@ passed. Open for 2B: the SPEC §12 2B list, the class-level leak in the
 brain view (before anything is public), the owner's copy and art, a
 real-brain play-test of the non-win outcomes, the Froze meter wording,
 and timing headroom. Tag `phase-2a-done`.
+
+## 2026-10-25 — 2B planning (1/11): two-device flow, blind, 3 h deadline
+
+**Context:** 2B planning with the owner. SPEC §3 had a response window
+of 1 h / 6 h / 24 h (default 6 h), device claiming and a reminder link.
+
+**Decision:**
+- Side A opens a case and writes blind. B gets a link and writes blind;
+  B never sees A's argument before submitting.
+- B has **3 hours**. After 1 hour, A gets a "nudge again" button that
+  opens WhatsApp with a ready message. There are no push notifications.
+- At the deadline, A's argument is tasted against plain water. The
+  headline is "הצד השני לא התייצב לדיון".
+
+**Why:** a short, fixed window keeps the joke fresh inside a chat;
+blind writing keeps it fair (§2.4).
+
+**Alternatives considered:** the selectable window; push notifications
+(they need a service and permissions).
+
+**Impacts:** SPEC §3, §8, §15.2; TASKS P2B-6, P2B-8. Open (§13): how A
+losing to water is shown; whether a no-show can be appealed.
+
+---
+
+## 2026-10-25 — 2B planning (2/11): hunger from the real wait
+
+**Context:** In 2A, the wait was drawn from the seed (~Exp(2 h), SPEC
+§5). In 2B, a real wait exists.
+
+**Decision:**
+- Hunger follows the real wait, case open → B submits; a no-show counts
+  the full 3 h. This replaces the simulated wait.
+- A task recomputes the expected outcome mix under realistic wait
+  distributions from saved data (no new long run) and re-checks the
+  food rate.
+
+**Why:** the fly's hunger then means something the players caused.
+
+**Finding while writing the spec:** hunger = U(0, 0.4) + 0.1/h, so a
+3 h cap gives at most 0.7, below the lunch-break threshold of 0.8. The
+lunch break cannot happen in 2B as the parameters stand. This is left
+to the owner after P2B-1 (SPEC §13); no parameter was changed.
+
+**Impacts:** SPEC §5, §15.3, §13; TASKS P2B-1, P2B-4 (sim-change,
+version bump).
+
+---
+
+## 2026-10-25 — 2B planning (3/11): reveal live for B, replay for A
+
+**Decision:**
+- B watches the waiting story and the verdict live, then shares with a
+  "send the verdict" button.
+- A, opening their link, gets the same story as a replay from stored
+  data.
+- Non-parties go straight to the verdict.
+
+**Why:** B triggers the hearing, so B is the one present. The stored
+MN9 bins make the replay exact without rerunning the sim.
+
+**Impacts:** SPEC §3.3, §9, §15.6; TASKS P2B-8, P2B-9.
+
+---
+
+## 2026-10-25 — 2B planning (4/11): appeals per side; sudden death dropped
+
+**Context:** 2A allowed one appeal per hearing, and SPEC §3.4 had
+sudden death on a tie.
+
+**Decision:**
+- Each side may appeal once, within 3 hours of the latest verdict.
+- Every appeal is judged on the original arguments with a fresh mood.
+- The latest verdict is final, with at most 3 hearings per case.
+- The card shows the history (verdict → appeal accepted → appeal
+  rejected).
+- **Sudden death is dropped entirely.**
+
+**Why:** both sides get the same recourse; a fixed cap ends the case.
+Sudden death needed new input rules and rounds in the seed for little
+fun.
+
+**Alternatives considered:** one appeal per case; sudden death on ties.
+
+**Impacts:** SPEC §2.4 (no rounds), §3.4, §9, §10, §15.4; TASKS P2B-5,
+P2B-6. Open (§13): which wait sets an appeal's hunger.
+
+---
+
+## 2026-10-25 — 2B planning (5/11): personal links, teaser, public card
+
+**Decision:**
+- **Personal links:** one tokenized link per side. Only these show the
+  arguments and the appeal button, with a small "this link is personal"
+  note.
+- **Teaser:** the link for the other side. Its WhatsApp preview shows
+  only the fly and the topic, with no verdict (no spoiler).
+- **Public share card:** topic, names, final verdict and history. **No
+  arguments.**
+
+**Why:** the arguments stay between the two sides; whatever spreads in
+groups is the verdict.
+
+**Supersedes:** SPEC §9 "arguments appear on the page" and §10 token
+cookies.
+
+**Impacts:** SPEC §9, §10, §15.1; TASKS P2B-5, P2B-6, P2B-8, P2B-10.
+Open (§13): B's link pasted into a group.
+
+---
+
+## 2026-10-25 — 2B planning (6/11): 7-day retention, expired-link page
+
+**Decision:** everything is deleted 7 days after case open. An expired
+link shows a generic "case closed, open a new case" page. Hidden cases
+use the same page.
+
+**Why:** carries 2A's rule (§14.8) over, so no backups are needed (see
+10/11).
+
+**Addition while writing the spec:** aggregate counters (no case data)
+are kept past the purge, so the 2B exit criterion can be measured (§10,
+TASKS P2B-11).
+
+**Impacts:** SPEC §10, §15.8; TASKS P2B-5, P2B-8.
+
+---
+
+## 2026-10-25 — 2B planning (7/11): moderation without AI
+
+**Decision:**
+- A Hebrew offensive-word filter on input, as a soft block with a
+  fly-themed message.
+- A "report" button on the public page, which hides the case
+  immediately.
+- An admin command to delete or restore a case.
+- No AI moderation (§2.1).
+
+**Alternatives considered:** the 2026-10-19 list's 20 cases/day per IP.
+It is not in this decision and is left open (SPEC §13).
+
+**Impacts:** SPEC §11, §15.5; TASKS P2B-7. Open (§13): whether a report
+also hides the personal pages.
+
+---
+
+## 2026-10-25 — 2B planning (8/11): courtroom story, live meters, no neuron graphics
+
+**Context:** SPEC §3 / §6 had a 10–15 s brain animation, from
+per-region frames saved for replay.
+
+**Decision:**
+- Keep the ~7 s courtroom waiting story.
+- The appetite meters fill live from the real stored MN9 curves.
+- No neuron graphics, and no per-region frames are stored.
+
+**Why:** the story already works on phones (2A play-test). The meters
+show the real signal that decides the verdict.
+
+**Impacts:** SPEC §6 (Replay), §11, §15.6; TASKS P2B-9.
+
+---
+
+## 2026-10-25 — 2B planning (9/11): disclosure — no taste classes; how-it-works page
+
+**Context:** the class-level leak (DECISIONS.md 2026-10-25, "Known leak:
+taste-class output"), which had to be settled before anything is
+public.
+
+**Decision:**
+- Remove the taste-class bars from the brain view; the summary no longer
+  stores or sends them. Keep the MN9 curves, mood, seed and SIM_VERSION.
+- A general "how it works" page: FlyWire, words become tastes, mood, no
+  AI. It credits FlyWire and Shiu et al. 2024, as CC-BY-NC requires.
+- The letter table is never published.
+
+**Why:** dropping the per-class view is the only listed option that
+removes the leak instead of blurring it.
+
+**Supersedes:** "classes kept" in the leak entry (2A only).
+
+**Impacts:** SPEC §2.3, §13, §15.7; `borer_sim.hearing.brain`
+(P2B-4, sim-change); TASKS P2B-9.
+
+---
+
+## 2026-10-25 — 2B planning (10/11): stack — 2A stack on Oracle Always Free
+
+**Context:** SPEC §11 was "under review"; the 2026-10-19 table had
+Vercel, Neon, Next.js, R2 and a Postgres queue.
+
+**Decision:**
+- **Host:** Oracle Cloud Always Free ARM, running the same FastAPI +
+  SQLite + static HTML as 2A.
+- **HTTPS:** Caddy.
+- **OG card images:** Pillow, with proper RTL Hebrew.
+- **Domain:** a free subdomain (e.g. DuckDNS) for now.
+- **Not used:** Vercel, Neon, Next.js, R2.
+- **Backups:** none (7-day data).
+- Production-host timing is a 2B task.
+
+**Why:** one process and one file, already proven in 2A; everything is
+free with no trial.
+
+**Supersedes:** 2026-10-19 "Initial stack and architecture".
+
+**Risks:**
+- Determinism is per platform, and ARM verdicts can differ from the x86
+  records.
+- Oracle can reclaim idle Always Free VMs.
+- The signup asks for a card; only Always Free resources may be used.
+These are covered in TASKS P2B-2 and P2B-3.
+
+**Impacts:** SPEC §11, §12, §13; TASKS P2B-2, P2B-3, P2B-10.
+
+---
+
+## 2026-10-25 — 2B planning (11/11): small ones
+
+**Decision:**
+- "Brain overload" is not in 2B.
+- Hide the appetite meters on a Froze verdict.
+- "Went for food" is already renamed ("הפסקת צהריים") and comes off the
+  open list.
+
+**Impacts:** SPEC §7, §13, §15.6; TASKS 2B "carried over".

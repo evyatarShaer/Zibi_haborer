@@ -23,33 +23,48 @@ It's a fly, not a judge — the humor is part of the product.
    bit-identical result **on the same platform** (CPU architecture +
    torch version). All randomness is seeded. Each run is computed once
    and stored; the verdict card always reads the stored result. Hearings
-   are kept **7 days**, then deleted (§14).
+   are kept **7 days**, then deleted (§14.8, §15.8).
 3. **Transparent.** The verdict card shows what the brain did. There's a
    public "how it works" page. Everything shown is **group-level only**:
    the letter → GRN table is never published (not in the UI, a "how it
    works" page or an API response; DECISIONS.md 2026-10-25).
-4. **Fair.** Arguments hidden until both are submitted. Each argument is
-   tasted separately, on both sides of the mouth, with the same seed
-   (case seed + round), so swapping the sides swaps the result exactly.
+4. **Fair.** Each side writes blind: arguments are hidden until both
+   are submitted (§3). Each argument is tasted separately, on both sides
+   of the mouth, with the hearing's seed, so swapping the sides swaps the
+   result exactly.
 5. **Humor without humiliation.** Mock the dispute, not the loser.
 6. **WhatsApp-first.** Mobile, link-based, no sign-up, good link preview.
 
 ## 3. User flow
 
-1. **Open a case.** Side A enters: topic, own name, other side's name,
-   response window (1h / 6h / 24h, default 6h), own argument. Gets a link.
-2. **Share.** Side A shares the link in WhatsApp. Side B opens it, claims
-   side B, writes their argument. A device that submitted one side cannot
-   submit the other.
-3. **Hearing.** When both have submitted (or the deadline passed), the
-   "hearing" runs. Anyone with the link watches a 10–15s brain animation,
-   then the verdict.
-4. **Tie → sudden death (optional).** Each side adds ONE word, rerun with
-   the same fly mood. Max 2 rounds. Then the tie is final.
+Phase 2B (decided 2026-10-25; details in §15). Each side writes **blind**
+and has a **personal link** (§15.1).
+
+1. **Open a case.** Side A enters a topic, their own name, the other
+   side's name and their argument. A gets their personal link and a
+   "send to the other side" button. The button opens WhatsApp with B's
+   link, which has a teaser preview (§9).
+2. **B's turn.** B opens their link and sees the topic and the names,
+   **never A's argument**, then writes their own. B has **3 hours** from
+   case open. A's link shows that the court is waiting for B. **After
+   1 hour** A gets a "nudge again" button, which opens WhatsApp with a
+   ready message and B's link. There are no push notifications.
+3. **Hearing.** It runs when B submits, or at the deadline against
+   plain water (§8).
+   - B watches the waiting story and the verdict **live**, then shares
+     with a "send the verdict" button (the public card link).
+   - When A opens their link, they get the **same story as a replay**
+     from stored data, then the verdict.
+   - Anyone else (the public card) goes straight to the verdict.
+4. **Appeal.** Each side may appeal once, within 3 hours of the latest
+   verdict (§15.4).
+
+Sudden death was dropped on 2026-10-25 (DECISIONS.md).
 
 **Argument rule:** an argument needs **at least 10 Hebrew letters** (after
 §4.1 normalization) to be submitted — a deterministic check in the UI,
-no AI. The simulation still handles any text safely (§4.6).
+no AI. The simulation still handles any text safely (§4.6). Names, topic
+and arguments also pass the offensive-word filter (§15.5).
 
 ## 4. "Taste of words" (argument → receptor input)
 
@@ -101,11 +116,11 @@ ignites a whole-brain runaway with a fixed, side-blind output.
 
 > We say this publicly: it's an *added* layer, not from the connectome.
 
-- `hunger` ∈ [0, 1] — seeded from case id; rises while waiting
-  (**+0.1 / hour** from case open until both submitted, capped at 1).
-  Shown in UI ("the fly has been hungry for 3 hours").
-  Intentional: after ~8 h of waiting hunger exceeds 0.8, so a close case
-  becomes "went for food" — a late side starves the fly.
+- `hunger` ∈ [0, 1] — a base draw U(0, 0.4) from the hearing seed,
+  plus **+0.1 / hour of real wait** (Phase 2B: case open → B submits;
+  3 h for a no-show), capped at 1. It is shown in the UI ("the fly has
+  been hungry for 3 hours"). With the 3 h deadline, hunger is at most
+  0.7, below the lunch-break threshold of 0.8 (open, §13).
 - `arousal` ∈ [0, 0.45] — seeded from case id (uniform; capped at 0.45
   because runaways appeared only from 0.48, DECISIONS.md 2026-10-24).
   Sets background noise →
@@ -116,8 +131,8 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   baseline × (1 + 0.5 · hunger)).
 - Arousal increases background spike noise (random-sign 2 mV kicks to
   every neuron at arousal × 10 Hz, so ≤ 4.5 Hz; 20 Hz ignites runaways).
-- **Hearing without a waiting time** (Phase 2A, both sides typed at
-  once): the wait is drawn from the hearing seed, ≈ Exp(2 h), and
+- **Hearing without a waiting time** (Phase 2A only, both sides typed
+  at once; 2B uses the real wait): the wait is drawn from the hearing seed, ≈ Exp(2 h), and
   hunger follows the rule above. This is the distribution P1-9
   validated ("went for food" ≈ 1.7%). The user never chooses the mood.
 - Same seed and same mood for both tastings of a hearing. Measured on
@@ -147,9 +162,11 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   - `active_neurons` — count of neurons that spiked (per tasting)
   - `deciding_neuron` — the more active MN9 of the winning tasting + its
     FlyWire id
-- **Replay.** Per-region activity in 20 ms frames, saved for animation.
+- **Replay.** The stored MN9 bins (brain summary) drive the story's
+  meters and A's replay (§15.6). No per-region frames are stored.
 - **Performance target.** ≤ **15 s per hearing** (both tastings).
-  Measured 8.87 s on the workstation (2 processes × 1 thread). The
+  Measured 8.87 s on the workstation (2 processes × 1 thread); the
+  production host (ARM) is measured in 2B. The
   subcircuit (P1-10) gives no speed-up and is not used.
 
 ## 7. Outcomes
@@ -172,73 +189,97 @@ Headlines decided 2026-10-25 (DECISIONS.md). "Went for food" is renamed
 to **lunch break** in all user-facing text; the code key stays `food`.
 Dithered names the side with the higher MN9 rate (`winner`), even though
 the gap is < 5%. The topic, if given, is shown on a separate line
-above the headline: "התיק: {topic}" (§14.4). A Win
-also shows an appetite meter per side (A vs B MN9 rate).
+above the headline: "התיק: {topic}" (§14.4). Every outcome except
+Froze shows an appetite meter per side (A vs B MN9 rate). On Froze the
+meters are hidden (2026-10-25). A no-show hearing has its own headline
+(§8).
 
-Track outcome frequencies globally; show rarity on the card.
+Rarity on the card is not in 2B (§13).
 
 ## 8. Side B doesn't answer
 
-- **Reminder button.** `wa.me` link with prefilled message.
-- **Deadline passes.** Side B gets "plain water" (baseline GRN rates
-  only); simulation runs normally. Outcome described as "lost to silence".
+- **Nudge.** After 1 hour, A's link shows a "nudge again" button. It
+  opens WhatsApp (`wa.me`) with a ready message and B's link.
+- **Deadline (3 h from case open).** A's argument is tasted against
+  **plain water** (baseline GRN rates only, the same input as a text
+  with no Hebrew letters). The simulation runs normally, with hunger
+  from the full 3 h wait (§5). The headline is **"הצד השני לא התייצב
+  לדיון"**. Open (§13): how the computed result is shown, since A can
+  lose to water, and whether a no-show case can be appealed.
 - **Public defender** — Phase 3, not MVP. Anyone with the link can write
   for B after half the window elapses.
 
 ## 9. Verdict card
 
-Page + 1200×630 OG image.
+Three views of a case (§15.1):
 
-**Shows:** topic, names, winner or tie type, margin + A/B bar, decision
-time, direction flips, fly mood, mini brain map, deciding neuron id, one
-template sentence, rarity, buttons (share / new case / sudden death).
+- **Personal page** (A's or B's link): the story (live or replay), the
+  verdict, both arguments, the history, the appeal button while
+  allowed, "send the verdict", the brain view (§15.7) and a small "this
+  link is personal" note.
+- **Public share card** (page + 1200×630 OG image): topic, names, the
+  final verdict and the history (verdict → appeal accepted → appeal
+  rejected). **No arguments**, on the page or in the image. Buttons: new
+  case, report (§15.5).
+- **Teaser** (the preview of B's link): only the fly and the topic, with
+  no verdict, so nothing is spoiled.
 
-**Arguments appear on the page but NOT in the OG image.**
+OG tags are rendered server-side (WhatsApp's crawler runs no JS). Images
+are drawn with Pillow, with correct RTL Hebrew shaping.
 
-**Template sentences:** 3–5 per outcome type, human-written. Choice seeded
-by case.
+Not in 2B (§13): template sentences, rarity, decision time, direction
+flips, deciding neuron id and the mini brain map.
 
 ## 10. Data model
 
-- **Case:** `id`, `slug`, `topic`, `side_a_name`, `side_b_name`,
-  `deadline_at`, `status` (`open`|`ready`|`running`|`decided`|`expired`),
-  `seed`, `hunger`, `arousal`, `created_at`.
-- **Argument:** `id`, `case_id`, `side`, `round` (0 main, 1–2 sudden
-  death), `text`, `author_token_hash`, `is_public_defender`,
-  `defender_name`, `created_at`.
-- **Run:** `id`, `case_id`, `round`, `input_rates` (jsonb, both
-  tastings), `metrics` (jsonb), `outcome`, `replay_url`, `sim_version`,
-  `platform`, `duration_ms`.
-- **Template:** `id`, `outcome_type`, `text`, `weight`.
-- **Report:** `id`, `case_id`, `reason`, `created_at`.
+Phase 2B, SQLite (§11). The 2A `hearing` table (§14) grows into:
 
-**No user accounts.** Each side is identified by a token cookie.
+- **case:** `id`, `created_at`, `deadline_at` (created + 3 h), `topic`,
+  `name_a`, `name_b`, `text_a`, `text_b` (null until B submits; null for
+  a no-show = plain water), `b_submitted_at`, `token_a_hash`,
+  `token_b_hash`, `status` (`waiting`|`hearing`|`decided`|`no_show`),
+  `hidden_at` (set by a report or the admin), `shared_at` (first "send
+  the verdict" tap; it also bumps the `case_shared` counter once).
+- **hearing:** `id`, `case_id`, `n` (0 = verdict, 1–2 = appeals; ≤ 3 per
+  case), `appealed_by` (`A`|`B`|null), `seed`, `wait_h`, `hunger`,
+  `arousal`, `status`, `metrics`, `outcome`, `winner`, `brain` (MN9 bins,
+  mood, seed, version, platform; no taste classes), `sim_version`,
+  `platform`, `duration_ms`, `created_at`.
+- **report:** `id`, `case_id`, `created_at`.
+- **counter:** `day`, `event`, `count`. These are aggregate numbers with
+  no case data or ids. They survive the 7-day deletion so that the 2B
+  exit criterion can be measured (§12).
+
+Everything except `counter` is deleted 7 days after case open.
+
+**No user accounts.** A side is identified by the token in its personal
+link. Only the token's hash is stored.
 
 ## 11. Tech stack (FREE only)
 
-Supersedes any earlier version of the spec. **Under review for Phase
-2B** (DECISIONS.md 2026-10-25). Phase 2A runs on the workstation only,
-with FastAPI wrapping `borer_sim`, one static HTML page (Hebrew, RTL, no
-framework) and local SQLite. 2A is written so that the same code can move
-to a server unchanged. Whether 2B keeps that stack or moves to the table
-below is decided in 2B planning.
+Decided for Phase 2B on 2026-10-25 (DECISIONS.md). This replaces the
+2026-10-19 table: no Vercel, Neon, Next.js, R2 or Postgres queue. It is
+the 2A stack (§14), moved to a server.
 
 | Layer          | Choice                                                                             |
 |---              |---                                                                                  |
-| Simulation     | Python 3.12 + PyTorch sparse (validate against Shiu's Brian2 model first)          |
+| Simulation     | Python 3.12 + PyTorch sparse (`borer_sim`), 2 tasting processes × 1 thread          |
 | Data           | FlyWire v783 as Parquet, loaded in memory                                          |
-| API            | FastAPI                                                                            |
-| Queue          | **Postgres itself** (jobs table, `SELECT … FOR UPDATE SKIP LOCKED`) — no Redis     |
-| DB             | Neon Postgres (free tier)                                                          |
-| Frontend       | Next.js + React + Tailwind (SSR OG tags required — WhatsApp's crawler is JS-less)  |
-| OG images      | `@vercel/og` (Satori)                                                              |
-| Animation      | Canvas 2D (PixiJS if needed)                                                       |
-| Live status    | SSE or 3 s polling                                                                 |
-| Files          | Cloudflare R2 (free tier)                                                          |
-| Hosting (web)  | Vercel Hobby — non-commercial only; upgrade if it ever earns money                 |
-| Hosting (api)  | Oracle Cloud Always Free ARM (2 OCPU / 12 GB); beta fallback: worker on home PC    |
-| Moderation     | Hebrew blocked-word list + 20 cases/day per IP + report button                     |
-| Analytics      | PostHog free tier                                                                  |
+| API + pages    | FastAPI (`borer_api`), serving the static page and server-rendered OG tags         |
+| Frontend       | Static HTML + ES modules (Hebrew, RTL, no framework), as in 2A                     |
+| DB             | SQLite file on the server; 7-day data, so **no backups**                            |
+| Queue          | In process: one courtroom, up to 3 waiting (§14.7)                                  |
+| OG images      | Pillow, with RTL Hebrew shaping                                                    |
+| Animation      | The ~7 s courtroom waiting story; meters fill from stored MN9 bins (§15.6)         |
+| Live status    | Polling, as in 2A                                                                  |
+| Host           | Oracle Cloud Always Free ARM (Ampere A1), Always Free resources only               |
+| HTTPS          | Caddy (automatic Let's Encrypt certificates)                                       |
+| Domain         | A free subdomain (e.g. DuckDNS) for now                                            |
+| Moderation     | Hebrew offensive-word filter + report button + admin command (§15.5), no AI        |
+
+Determinism stays per platform (§2.2): verdicts on the ARM host need not
+match the x86 workstation bit for bit. Production-host timing and an ARM
+determinism check are 2B tasks.
 
 ## 12. Phases
 
@@ -272,35 +313,76 @@ below is decided in 2B planning.
    - No API response or page exposes the letter → GRN table (automated
      check).
    - The cleanup deletes hearings older than 7 days (test).
-3. **Phase 2B — MVP (shareable / server)** — what 2A does not deliver:
-   two-device flow with a link and response window (§3, §8: tokens,
-   deadline, plain water, reminder), hosting, verdict card page + OG
-   image and WhatsApp preview (§9), the 10–15 s brain animation and
-   replay, sudden death, a group-level how-it-works page, moderation,
-   appeal-bypass prevention, production-host timing, stack decision
-   (§11).
-   **Exit:** 20 real cases in friends' groups, ≥ half shared onward.
+3. **Phase 2B — MVP (shareable / server)** (§15):
+   - the two-device flow: blind arguments, personal links, a 3 h
+     deadline, a nudge after 1 h, plain water at the deadline (§3, §8);
+   - hunger from the real wait (§5);
+   - live reveal for B and replay for A;
+   - appeals: once per side, up to 3 hearings per case;
+   - the public card + teaser + OG images (§9);
+   - meters that fill from the MN9 curves;
+   - the brain view without taste classes, and the how-it-works page
+     with credits;
+   - moderation;
+   - 7-day retention and the expired-link page;
+   - hosting on Oracle Always Free + Caddy + a free subdomain (§11);
+   - production-host timing.
+   **Exit:**
+   - **20 real cases** in friends' groups, **≥ half shared onward**: of
+     the decided cases, at least half had "send the verdict" tapped at
+     least once (server-side counter, §10).
+   - On the production host: hearing ≤ 15 s (submit → verdict) and
+     bit-identical determinism.
 4. **Phase 3** — public defender, group bets, case history, verdict
    themes, public "what the fly likes" stats (group-level only, §2.3).
 
-## 13. Open questions (resolve in POC → `DECISIONS.md`)
+## 13. Open questions (resolve → `DECISIONS.md`)
 
 - Letter → GRN group table (measured valence) and its balance.
 - ~~Thresholds~~ — resolved 2026-10-24: 5% gap, 8 flips, hunger 0.8,
   froze 6 Hz (DECISIONS.md).
 - ~~Rename "Went for food"~~ — resolved 2026-10-25: "lunch break"
   (הבורר יצא להפסקת צהריים), §7.
-- **"Brain overload" as an MVP special outcome?** A whole-brain runaway
-  (> 4,000 active neurons) is a real signal of the simulated brain,
-  unlike Fled (GF never fires on its own). Arousal is capped below it in
-  POC (0.45); an MVP could allow it rarely and show it as its own
-  outcome. Decide in MVP planning.
-- FlyWire data license terms for possible commercial use.
+- ~~"Brain overload" as an MVP special outcome?~~ — resolved
+  2026-10-25: **not in 2B**. A whole-brain runaway (> 4,000 active
+  neurons) is a real signal, unlike Fled; arousal stays capped below it
+  (0.45). It may come back after 2B.
+- FlyWire data licence (CC-BY-NC) for any commercial use. The credit is
+  on the how-it-works page (§15.7).
 - ~~Publish the mapping table?~~ — resolved 2026-10-25: **never
   published**; group-level only (§2.3).
-- 2B stack (§11): keep the 2A stack on a server or move to the table.
+- ~~2B stack (§11)~~ — resolved 2026-10-25: the 2A stack on Oracle
+  Always Free ARM + Caddy + a free subdomain.
+- ~~Class-level leak in the brain view~~ — resolved 2026-10-25: the
+  taste-class bars are removed (§15.7).
+- **Lunch break under real waits.** Hunger = U(0, 0.4) + 0.1/h of wait
+  (`params.MOOD`). A 3 h deadline caps it at 0.7, **below the 0.8
+  threshold**, so a lunch break cannot happen in 2B. Decide after P2B-4
+  (the outcome mix from saved data). Options: accept no lunch break, or
+  change the hunger rule or the threshold (a sim change with a version
+  bump).
+- **Appeal hunger.** An appeal gets a fresh seed (new arousal and
+  noise). Which wait sets its hunger is open. Proposed: the case's own
+  wait (case open → B submits), with a fresh base draw. The alternative
+  is case open → appeal.
+- **No-show display.** At the deadline, A can lose to plain water. Open:
+  how the computed outcome sits under "הצד השני לא התייצב לדיון", and
+  whether a no-show case can be appealed (B has no argument).
+- **Reports.** Does a report hide the personal pages too, or only the
+  public card?
+- **B's link in a group chat.** Whoever opens it first can write as B.
+  Accept this, or bind B's link to the first device that submits?
+- **Brain view on the public card**, or on personal pages only?
+- **Rate limit** (the 2026-10-19 list had 20 cases/day per IP): not in
+  the 2B decisions.
+- **Not in 2B; maybe later:** template sentences, rarity, decision time,
+  direction flips, deciding neuron and the mini brain map on the card
+  (§9); analytics beyond the server-side counters.
 
 ## 14. Phase 2A — Local UI POC
+
+Done (gate passed 2026-10-25). Phase 2B (§15) changes items 2
+(real wait), 5 (appeals) and 6 (no taste classes) on the server.
 
 Runs on the workstation only (FastAPI + static HTML page + SQLite, §11).
 There are no cases, links, tokens or deadlines: one person types both
@@ -351,3 +433,72 @@ sides on one screen. Each **hearing** is one stored row.
    a cleanup that ships with the API, so it carries over to a server.
 9. **Out of scope:** server/hosting, WhatsApp sharing and link previews,
    appeal-bypass prevention, production timing (all 2B).
+
+## 15. Phase 2B — MVP (shareable / server)
+
+Decided on 2026-10-25 (DECISIONS.md, one entry per point). Builds on 2A
+(§14): the same `borer_sim`, `borer_api`, `web/` and SQLite, now on a
+server (§11). The flow is in §3, the no-show in §8, the card in §9 and
+the data model in §10.
+
+1. **Links.**
+   - Each side has a **personal tokenized link**. Only personal links
+     show the arguments and the appeal button. Each carries a small
+     "this link is personal" note.
+   - B's link is the one A sends. Its WhatsApp preview is the **teaser**:
+     the fly and the topic only, no verdict.
+   - The **public share card** (from "send the verdict") shows the
+     topic, names, the final verdict and the history, but **no
+     arguments**.
+   - Tokens are unguessable. Only their hashes are stored.
+2. **Blind writing.** B never sees A's argument before submitting. No
+   API response or page for B's token contains `text_a` while the case
+   is `waiting` (test).
+3. **Mood.** Hunger follows the **real wait**, case open → B submits
+   (3 h for a no-show; §5). This replaces the simulated wait of §14.2.
+   Arousal is drawn from the hearing seed, as before.
+4. **Appeals.**
+   - Each side may appeal **once**, within **3 hours of the latest
+     verdict**.
+   - Every appeal is judged on the **original arguments** with a fresh
+     seed and a fresh mood (appeal hunger: §13).
+   - The **latest verdict is final**. There are at most **3 hearings per
+     case** (the verdict + one appeal per side).
+   - An appeal is "accepted" if its winner differs from the previous
+     verdict's winner. A non-win outcome counts as "no winner".
+   - The card shows the history, e.g. verdict → appeal accepted → appeal
+     rejected.
+   - The appellant watches the appeal live; the other side gets it as a
+     replay.
+5. **Moderation (no AI).**
+   - **Input filter:** a Hebrew offensive-word list, checked on the
+     topic, the names and the arguments after §4.1 normalization. A
+     match is a **soft block**: the text is not submitted, and a
+     fly-themed message asks the user to rephrase. The owner supplies
+     the list.
+   - **Report:** a button on the public card. One report **hides the
+     case immediately** (`hidden_at`).
+   - **Admin:** a command on the server lists reported cases and
+     deletes or restores one.
+6. **Animation.** The ~7 s courtroom waiting story (§14.3) stays. The
+   appetite meters fill **live from the stored MN9 curves**, as
+   cumulative rate over the tasting. There are no neuron graphics. **On
+   a Froze verdict the meters are hidden.**
+7. **Disclosure.**
+   - The brain view loses the **taste-class bars**; they are neither
+     stored nor sent. It keeps the MN9 curves, the mood, the seed,
+     `SIM_VERSION` and the platform. This closes the class-level leak
+     (DECISIONS.md 2026-10-25).
+   - A **"how it works"** page at a general level: FlyWire, words become
+     tastes, the fly's mood, no AI. It carries the credit CC-BY-NC
+     requires: FlyWire (Dorkenwald et al. 2024; Schlegel et al. 2024)
+     and Shiu et al. 2024.
+   - The letter table is never published (§2.3).
+8. **Retention.** Everything about a case (hearings, appeals, reports)
+   is deleted **7 days after case open**. An expired, deleted or hidden
+   link shows one generic page: "case closed, open a new case".
+   Aggregate counters (§10) are kept.
+9. **One courtroom** as in §14.7. The deadline check runs in the API
+   process, and a no-show hearing joins the same queue.
+10. **Not in 2B:** sudden death (dropped), "Brain overload", push
+    notifications, accounts, backups, the public defender (Phase 3).
