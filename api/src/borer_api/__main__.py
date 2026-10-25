@@ -1,5 +1,5 @@
 """python -m borer_api: one uvicorn process (the court's queue lives in it), bound to
-BORER_HOST (default 0.0.0.0, reachable from phones on the same Wi-Fi) : BORER_PORT."""
+BORER_HOST (default 0.0.0.0) : BORER_PORT. Phones use scripts/tunnel.sh, not the LAN."""
 import os
 
 import uvicorn

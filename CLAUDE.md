@@ -51,6 +51,16 @@ fly's choice is the verdict — the humor is the point.
   relaunched with the same command. Give the user the check command, then
   end the turn. Reason: the Claude Code UI used ~24% CPU on Windows
   during long polls, and the PC throttled to 1.79 GHz.
+- **Play-testing (Phase 2A).** Server: `scripts/detach.sh haborer
+  api/data/server.log scripts/run_local.sh` (port 8000; restart with
+  `systemctl --user restart haborer`). Phone: `scripts/tunnel.sh`
+  (Cloudflare quick tunnel, unit `haborer-tunnel`; prints a new
+  `https://*.trycloudflare.com` URL on every start; stop with
+  `systemctl --user stop haborer-tunnel`). **LAN access does not work:**
+  phones timed out on `http://<Wi-Fi IP>:8000` even with a Hyper-V
+  firewall rule for TCP 8000 (WSL mirrored mode). The rule was removed;
+  don't retry it (DECISIONS.md 2026-10-25). Anyone with the tunnel URL
+  can use the app while it runs.
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting
@@ -86,7 +96,7 @@ sim/           Phase 1 lives here (Python)
   tests/
 api/           Phase 2A local API (own uv project; tests: cd api && uv run pytest)
 web/           Phase 2A static page (Hebrew RTL, no framework), served by the API
-scripts/       repo checks (file length, clean tree); run_local.sh = 2A server on 0.0.0.0:8000
+scripts/       repo checks (file length, clean tree); run_local.sh (2A server), tunnel.sh (phone access)
 .githooks/     git hooks (pre-commit → file-length check)
 .mcp.json      GitHub MCP server config
 .claude/settings.json  hooks (file-length after edits, clean tree on stop)

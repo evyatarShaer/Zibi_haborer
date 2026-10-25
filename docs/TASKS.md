@@ -206,6 +206,8 @@ from env, with no workstation paths in code.
   - Submit stays disabled until both arguments are valid.
   - The server rejects the same cases.
   - Usable at 360 px width.
+  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):
+  `web/`, `api/tests/test_web.py`.*
 - [ ] **P2A-5 — Waiting screen.** Mood story line → "tasting side A" →
   "tasting side B" → "deliberating", which loops. Polls
   `GET /hearing/{id}`.
@@ -214,6 +216,8 @@ from env, with no workstation paths in code.
   - A slow host (sim delayed to 40 s, fake) still loops cleanly.
   - A failed hearing shows a Hebrew error with a retry.
   - Shown on screen: about 7 s at the measured speed.
+  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):
+  `web/`, `api/tests/test_web.py`.*
 - [ ] **P2A-6 — Verdict screen.** Courtroom front with a placeholder
   judge fly (emoji/SVG). Topic line "התיק: {topic}" above the headline
   (hidden when there is no topic); headline per outcome (SPEC §7);
@@ -223,6 +227,8 @@ from env, with no workstation paths in code.
   (Win, Dithered with a name, Tie, Froze, Lunch break). With a topic,
   the line "התיק: {topic}" appears above the headline; without one, the
   line is absent (not an empty line).
+  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):
+  `web/`, `api/tests/test_web.py`.*
 - [ ] **P2A-7 — Appeal.** `POST /hearing/{id}/appeal`: one per hearing;
   same texts and names, new random seed, stored with `appeal_of`. The
   result screen shows "הערעור התקבל!" if the winner changed, otherwise

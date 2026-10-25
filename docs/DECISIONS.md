@@ -1526,3 +1526,85 @@ in 2A).
 `validation.balance`; `api/` (app, court, validate, views, store,
 tests); `web/index.html` (placeholder); `scripts/run_local.sh`; SPEC
 §14.7.
+
+---
+
+## 2026-10-25 — Phone access via a Cloudflare quick tunnel, not the LAN
+
+**Context:** Phones timed out on `http://10.225.153.149:8000`, even with
+a Hyper-V firewall rule allowing TCP 8000 into WSL (mirrored
+networking). The owner removed the rule.
+
+**Decision:** Play-testing from phones uses a Cloudflare quick tunnel,
+started by `scripts/tunnel.sh`.
+- Free and needs no account: `cloudflared tunnel --url
+  http://localhost:8000`. Chosen by the owner.
+- Runs detached as the user unit `haborer-tunnel`, and prints the
+  random `*.trycloudflare.com` URL, which is new on every start.
+- The server keeps binding 0.0.0.0:8000; inbound LAN traffic stays
+  blocked by the default Hyper-V firewall.
+
+**Why:** it works from the owner's phone, and nothing on Windows changes.
+
+**Risk:** the URL is public while the tunnel runs; anyone who has it can
+use the app (including `/docs` and, from P2A-8, the brain view with the
+known class-level leak, DECISIONS.md 2026-10-25). Run it only for
+play-test sessions; stop it after.
+
+**Impacts:** `scripts/tunnel.sh`, `scripts/run_local.sh`, CLAUDE.md
+(run instructions).
+
+---
+
+## 2026-10-25 — P2A-4/5/6 page: input, waiting story, verdict (built, awaiting play-test)
+
+**Decision:**
+- **Stack:** one `web/index.html` with no build step. ES modules in
+  `web/js/` (each under 200 lines; ES2019 so Node 12 can test the
+  logic) and one `web/css/app.css`. Hebrew RTL, mobile first (360 px,
+  max 480 px column).
+  - Font: **Heebo** from Google Fonts (free; the phone fetches it).
+  - Look: courtroom (wood header, gold rule); judge fly placeholder
+    🪰 / 🪰⚖️.
+  - User text only ever goes in as text nodes (`dom.el`), never
+    innerHTML.
+- **Routing:** `#/` is the input screen; `#/h/{id}` is the waiting
+  screen, then the verdict. A hearing submitted from this tab gets the
+  whole story; reopening the link of a decided hearing goes straight to
+  the verdict.
+- **Letter counter:** `web/js/letters.js` mirrors `taste.normalize` and
+  `argument.hebrew_letters` (NFKD, strip marks, finals, 280 code
+  points). It is tested against Python on the spam/silence suite,
+  OLD/NEW/THIRD and edge texts. The JS letter set is alphabetical, not
+  the table's order, so the order gives no hint.
+- **Waiting story** (`web/js/stages.js`, pure):
+  1. queued → "waiting in line" until the hearing leaves the queue;
+  2. mood ≥ 2.2 s;
+  3. tasting A ≥ 1.8 s;
+  4. tasting B ≥ 1.8 s;
+  5. deliberating ≥ 1.2 s, its line changing every 2 s until the
+     verdict.
+
+  The minimum story is 7.0 s; the measured hearing is ~7 s. Polls every
+  0.7 s. After 5 failed polls in a row, a "no connection" note appears
+  and polling continues. Failed → Hebrew error + "try again", which
+  resubmits the same arguments (falling back to a prefilled form).
+- **Verdict:** SPEC §7 headlines (tested against the SPEC table), the
+  topic line "התיק: {topic}" only when there is a topic, and an
+  appetite meter per side.
+  - The bar's length is relative to the stronger side; the number is the
+    side's share of A + B.
+  - Buttons: "ויכוח חדש" (names kept for the next case) and disabled
+    "ערעור (בקרוב)" / "מה קרה במוח? (בקרוב)".
+- **Placeholder copy:** the mood line ("מצב השופט היום: …"), the waiting
+  lines and the court subtitle were written by Claude as placeholders
+  for the owner to rewrite. They are not verdict text, and no AI runs at
+  play time.
+
+**Tests:** `api/tests/test_web.py` (8, in Node): counter == Python;
+fast, queued, slow (40 s) and failed stories; all 5 outcomes with and
+without a topic; page and modules served. API suite 42 passed. Not
+tested in a real browser; that is the play-test.
+
+**Impacts:** `web/`; `api/tests/test_web.py`; TASKS P2A-4..6 (built,
+not ticked).
