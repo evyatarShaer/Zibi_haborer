@@ -148,7 +148,7 @@ from env, with no workstation paths in code.
   - The brain summary is per taste class (15 classes), with no letters
     and no GRN-group names (`tests/test_hearing.py`).
   - Full suite: 97 passed. DECISIONS.md 2026-10-25 (P2A-1).
-- [ ] **P2A-2 — SQLite storage + 7-day cleanup.** `hearing` table: id,
+- [x] **P2A-2 — SQLite storage + 7-day cleanup.** `hearing` table: id,
   created_at, topic, name_a, name_b, text_a, text_b, seed, hunger,
   arousal, status (running / decided / failed), metrics (JSON), outcome,
   winner, brain (JSON), sim_version, platform, duration_ms, appeal_of
@@ -158,6 +158,16 @@ from env, with no workstation paths in code.
   - Tests on a temp DB: insert, read, appeal link; the cleanup removes
     exactly the rows older than 7 days (injected clock).
   - The schema is created on first run.
+  *Done 2026-10-25:* `api/src/borer_api/store.py`, `api/tests/test_store.py`
+  (13 passed).
+  - The ids are unguessable (`token_urlsafe(9)`).
+  - One appeal per original, enforced in the DB (`appeal_of` UNIQUE + FK
+    ON DELETE CASCADE): a younger appeal goes when its original
+    expires.
+  - Rows past 7 days read as gone even before the purge.
+  - `fail_running()` marks hearings orphaned by a restart.
+  - `cleanup_loop` purges at start and then on a timer. It is wired
+    into the app's startup in P2A-3.
 - [ ] **P2A-3 — FastAPI API.** The model loads once at startup.
   - `POST /hearing` (topic?, names, arguments) checks the argument rules
     (≥ 10 Hebrew letters, ≤ 280 chars, names required), draws a random

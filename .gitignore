@@ -56,3 +56,7 @@ secrets/
 
 # ───── Local Claude state ─────
 .claude/settings.local.json
+
+# ───── Local API database (Phase 2A) ─────
+*.sqlite3
+api/data/

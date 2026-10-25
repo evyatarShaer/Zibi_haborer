@@ -1,0 +1,18 @@
+[project]
+name = "borer-api"
+version = "0.0.1"
+description = "HaBorer local API (Phase 2A): FastAPI + SQLite around borer_sim"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
