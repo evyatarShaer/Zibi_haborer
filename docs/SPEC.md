@@ -338,7 +338,9 @@ sides on one screen. Each **hearing** is one stored row.
    stored per hearing when the hearing runs; it is never recomputed and
    never holds raw spikes. It contains:
    - MN9 rate over time for each tasting (50 ms bins);
-   - activation per taste **group** (never per letter);
+   - activation per taste **class** (GRN sub-class: sugar, bitter,
+     water, ...; never per letter or per GRN group, since a GRN group is
+     fed by one letter);
    - the mood values, seed, `sim_version` and platform.
    Line shown: "140K neurons of a real fly brain, no AI."
 7. **Retention.** Hearings (appeals included) are deleted after 7 days by

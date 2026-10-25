@@ -9,7 +9,6 @@ Metrics always see rates in Hz (counts / seconds), whatever the duration.
 import json
 import multiprocessing as mp
 import os
-import platform
 import time
 from datetime import datetime
 from functools import cache
@@ -19,7 +18,8 @@ import numpy as np
 import pandas as pd
 import torch
 
-from borer_sim import anatomy, data
+from borer_sim import anatomy, data, hearing
+from borer_sim.hearing import PLATFORM
 from borer_sim.model import Model
 from validation.sugar_mn9 import OUT
 
@@ -28,7 +28,6 @@ from validation.sugar_mn9 import OUT
 WORKERS = int(os.environ.get("BORER_WORKERS", 3))
 THREADS = int(os.environ.get("BORER_THREADS", 2))
 RUNAWAY = 4000  # a run with more active neurons is a runaway (whole-brain cascade)
-PLATFORM = f"{platform.platform()} | {platform.python_version()} | torch {torch.__version__}"
 
 _model = None
 _metric = None
@@ -69,23 +68,14 @@ def _work(job):
     return key, m, t0, round(time.perf_counter() - start, 2)
 
 
-def _tasting(job):
-    drives, seed, noise_hz, ms = job
-    torch.set_num_threads(1)
-    return _model.run(drives, ms, seed, noise_hz)
-
-
 def timed_hearings(model: Model, hearings: list, ms: float) -> tuple[list, list[float]]:
-    """Each hearing's two tastings in parallel, 2 processes x 1 thread (as the product).
+    """Each hearing's two tastings in parallel, as the product (borer_sim.hearing).
     hearings: [(drives_a, drives_b, seed, noise_hz)] -> ([(Result a, Result b)], seconds)."""
-    global _model
-    _model = model
     out, times = [], []
-    with mp.get_context("fork").Pool(2) as pool:
+    with hearing.workers(model) as pool:
         for a, b, seed, noise_hz in hearings:
             t = time.perf_counter()
-            out.append(tuple(pool.map(_tasting, [(a, seed, noise_hz, ms), (b, seed, noise_hz, ms)],
-                                      chunksize=1)))
+            out.append(hearing.taste_both(pool, a, b, seed, noise_hz, ms))
             times.append(time.perf_counter() - t)
     return out, times
 

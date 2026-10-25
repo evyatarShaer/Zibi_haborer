@@ -8,8 +8,8 @@ so validation records (stored bins) and product runs share one code path.
 import numpy as np
 
 from borer_sim import anatomy, data, mood
-from borer_sim.model import Model, Result
-from borer_sim.params import BIN_MS, OUTCOME, TASTING_MS
+from borer_sim.model import Result
+from borer_sim.params import BIN_MS, OUTCOME
 
 OUTCOMES = ("froze", "food", "dithered", "win", "tie")  # SPEC §7 order (Fled dropped, 0.7.0)
 
@@ -90,10 +90,7 @@ def hearing(res_a: Result, res_b: Result, seconds: float) -> dict:
     return m
 
 
-def run_hearing(model: Model, text_a: str, text_b: str, case_mood: mood.Mood, seed: int,
-                duration_ms: float = TASTING_MS) -> dict:
-    """Both tastings (same seed, same mood; run one after the other here) → metrics + outcome."""
-    res = [model.run(mood.tasting(t, case_mood), duration_ms, seed, case_mood.noise_hz)
-           for t in (text_a, text_b)]
-    m = hearing(*res, duration_ms / 1000)
+def verdict(res_a: Result, res_b: Result, case_mood: mood.Mood, seconds: float) -> dict:
+    """SPEC §6 metrics + §7 outcome of a hearing's two tastings."""
+    m = hearing(res_a, res_b, seconds)
     return m | {"outcome": outcome(m, case_mood.hunger)}

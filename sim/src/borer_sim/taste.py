@@ -110,6 +110,13 @@ def groups() -> dict[str, pd.Index]:
 
 
 @cache
+def classes() -> dict[str, list[int]]:
+    """GRN sub-class (sugar, bitter, ...) -> model indices of all its GRNs: the only taste
+    level ever shown to players; the letter table stays private (SPEC §2.3)."""
+    return {sub: data.to_index(d.index) for sub, d in grns().groupby("cell_sub_class")}
+
+
+@cache
 def mapping() -> dict[str, tuple[str, pd.Index]]:
     """letter or mark -> (GRN group name, root_ids), from TABLE."""
     pool = groups()

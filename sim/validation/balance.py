@@ -6,7 +6,7 @@ word list (data/raw/opus_he_freq: word counts only, no utterances were downloade
 30-200 chars, >= 10 Hebrew letters; not the OLD/NEW/THIRD sets. A tasting depends only
 on the letter and mark counts and the length (borer_sim.taste), not on word order.
 Pair i = arguments 2i, 2i+1; case seed CASE0 + i is also the simulation seed (as in the
-product); mood = mood_calib.product_mood(case seed). Seed consistency: pairs < N_CONSIST
+product); mood = mood.product(case seed). Seed consistency: pairs < N_CONSIST
 x N_SEEDS case seeds (CASE0 + i + SEED_STEP k). Input quality: densest band over all
 tastings; Spearman rho of per-argument MN9 (mean over its seeds) with length and the
 ד/ב/ש count, as taste_criteria. Pass rules: tests/test_balance.py.
@@ -25,7 +25,7 @@ import numpy as np
 
 from borer_sim import mood, readout, taste
 from borer_sim.params import TASTING_MS
-from validation.mood_calib import product_mood, record_hearing
+from validation.mood_calib import record_hearing
 from validation.mood_probe import extra
 from validation.runner import PLATFORM, RUNAWAY, connectome_model, load, run_jobs, timed_hearings
 from validation.sugar_mn9 import OUT
@@ -79,7 +79,7 @@ def _pair(i: int) -> tuple[str, str]:
 def run():
     jobs = {}
     for (i, k), s in cases().items():
-        m = product_mood(s)
+        m = mood.product(s)
         for side, text in zip("ab", _pair(i)):
             jobs[f"{i}|{k}|{side}"] = (mood.tasting(text, m), s, m.noise_hz)
     print(f"{FILE}: {len(jobs)} jobs", flush=True)
@@ -91,7 +91,7 @@ def hearings() -> dict[tuple[int, int], dict]:
     out = {}
     for (i, k), s in cases().items():
         h = record_hearing(res[f"{i}|{k}|a"], res[f"{i}|{k}|b"])
-        out[i, k] = h | {"outcome": readout.outcome(h, product_mood(s).hunger)}
+        out[i, k] = h | {"outcome": readout.outcome(h, mood.product(s).hunger)}
     return out
 
 
@@ -138,13 +138,13 @@ def timing():
     model, hs = connectome_model(), hearings()
     jobs = []
     for i in range(TIME_N):
-        m, s = product_mood(CASE0 + i), CASE0 + i
+        m, s = mood.product(CASE0 + i), CASE0 + i
         jobs.append((*(mood.tasting(t, m) for t in _pair(i)), s, m.noise_hz))
     results, times = timed_hearings(model, jobs, TASTING_MS)
     same = 0
     for i, (ra, rb) in enumerate(results):
         h = readout.hearing(ra, rb, TASTING_MS / 1000)
-        h["outcome"] = readout.outcome(h, product_mood(CASE0 + i).hunger)
+        h["outcome"] = readout.outcome(h, mood.product(CASE0 + i).hunger)
         same += all(h[k] == hs[i, 0][k] for k in ("A", "B", "gap", "direction_flips",
                                                   "decision_time_ms", "winner", "outcome"))
     row = {"median_s": round(statistics.median(times), 2), "times_s": [round(t, 2) for t in times],

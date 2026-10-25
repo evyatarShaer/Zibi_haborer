@@ -1360,3 +1360,61 @@ topic. This replaces "topic in the headline" (Verdict copy entry,
 is confirmed.
 
 **Impacts:** SPEC §7, §14.4, §14.5; TASKS P2A-6.
+
+---
+
+## 2026-10-25 — P2A-1: product hearing in `borer_sim` (SIM_VERSION 0.8.1)
+
+**Context:** Phase 2A needs one product call: two texts + a hearing
+seed → verdict + brain summary. The pieces were in `validation`
+(`mood_calib.product_mood`, `runner.timed_hearings`).
+
+**Decision:**
+- New `borer_sim.hearing`:
+  - `workers(model)`: the pool of 2 tasting processes, forked with the
+    model.
+  - `taste_both`: both tastings in parallel, same seed and noise.
+  - `run(pool, text_a, text_b, seed)` returns seed, mood, metrics +
+    outcome, brain summary, sim_version, platform, duration_ms.
+  - `PLATFORM` (OS | Python | torch).
+- `mood.product(seed)`: the simulated-wait mood (wait ~ Exp(2 h) from
+  the seed, `MOOD["wait_mean_h"]`), moved from
+  `validation.mood_calib.product_mood`.
+- `readout.verdict` (metrics + outcome) replaces the sequential
+  `readout.run_hearing`, which only a test used.
+- `validation.runner` and `validation.balance` call these; the copies
+  in `validation` are deleted.
+- Brain summary:
+  - MN9 Hz per 50 ms bin for each tasting;
+  - mean GRN Hz per **taste class** (GRN sub-class: sugar, bitter,
+    water, ... — 15 classes, all GRNs of the class, used or not);
+  - mood, seed, SIM_VERSION, platform.
+  - About 1.7 KB per hearing. No letter, no cell-type (GRN group) name.
+- **SIM_VERSION 0.8.0 → 0.8.1** (patch: refactor with identical output,
+  as the sim-change skill requires). This replaces "stays 0.8.0" in the
+  P2A-1 acceptance text, which predates the check against the skill.
+
+**Why taste classes, not GRN groups:** under table v4 each GRN group is
+fed by one letter (two for the split sugar/salt groups). Per-group
+activation would therefore be the letter table, readable from a single
+one-letter argument. Classes mix several letters plus unused GRNs, which
+keeps SPEC §2.3.
+
+**Numbers (workstation, see 2026-10-25 platform):**
+- `balance time` through the moved code: 20/20 hearings equal to the
+  P1-9 records (A, B, gap, flips, decision time, winner, outcome).
+  Median 7.23 s; p95 8.35 s; max 9.18 s.
+- `hearing.run` (1.5 s tastings, with the summary), 10 balance pairs:
+  10/10 equal to the records. Median 7.35 s, max 9.27 s.
+- Peak RSS: 2.04 GB parent, 1.68 GB largest child.
+- `test_balance` 8/8 on the stored P1-9 data. The outcome mix is
+  unchanged by construction (identical output).
+- Full suite: 97 passed.
+
+**Alternatives considered:** keep SIM_VERSION 0.8.0 (the skill says
+patch for refactors); per-GRN-group activation (reveals the table).
+
+**Impacts:** `borer_sim.hearing`, `mood`, `readout`, `taste.classes`,
+`params.MOOD`, `version`; `validation.runner`, `mood_calib`, `balance`;
+tests `test_hearing.py` (new), `test_mood.py`, `test_determinism.py`;
+SPEC §14.6 ("taste group" = taste class).

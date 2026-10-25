@@ -13,6 +13,7 @@ from borer_sim import taste
 from borer_sim.params import MOOD
 
 STREAM = 0x6D6F6F64  # "mood": keeps mood draws independent of the simulation seed's use
+WAIT_STREAM = 0x77616974  # "wait": the simulated wait of a hearing without one
 EXCITING = tuple(k for k, (_, note) in taste.TABLE.items() if note.startswith("E"))
 
 
@@ -36,6 +37,13 @@ def from_case(case_seed: int, wait_hours: float = 0.0) -> Mood:
     hunger, arousal = np.random.default_rng((case_seed, STREAM)).random(2)
     hunger = hunger * MOOD["hunger_base_max"] + MOOD["hunger_per_hour"] * max(0.0, wait_hours)
     return Mood(float(min(1.0, hunger)), float(arousal * MOOD["arousal_max"]))
+
+
+def product(seed: int) -> Mood:
+    """A hearing's mood when nobody waited (SPEC §5, §14): the wait is drawn from the seed,
+    ~ Exp(wait_mean_h) h, as validated in P1-9 (DECISIONS.md 2026-10-25)."""
+    wait = float(np.random.default_rng((seed, WAIT_STREAM)).exponential(MOOD["wait_mean_h"]))
+    return from_case(seed, wait)
 
 
 def tasting(text: str, mood: Mood) -> list[tuple[list[int], float]]:

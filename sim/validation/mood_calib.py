@@ -3,7 +3,7 @@
 Run from sim/:  PYTHONPATH=src:. uv run python -m validation.mood_calib run|report
 run: the 60 OLD+NEW probe pairs x 10 cases. Case c of pair p: simulation seed SEEDS[c]
 (the no-mood run's seed, for a paired comparison), mood = mood.from_case(case seed, wait),
-case seed = CASE0 + 100 p + c, wait ~ Exponential(WAIT_MEAN_H) h from the case seed
+case seed = CASE0 + 100 p + c, wait ~ Exponential(2 h) from the case seed (mood.product)
 (assumption: no product data on waiting yet). Both tastings: same seed, same mood.
 report: outcome mix at params.OUTCOME, the threshold grid, and verdict changes vs no mood.
 Selection rule (fixed before running): a threshold set passes if Win >= 50%, every
@@ -25,7 +25,7 @@ from validation.sugar_mn9 import OUT
 from validation.taste_probe import SEEDS
 from validation.taste_spam import NATURAL, NATURAL_PAIRS
 
-CASE0, WAIT_MEAN_H, WAIT_STREAM = 10_000, 2.0, 0x77616974
+CASE0 = 10_000
 FILE = "mood_calib_1500ms.jsonl"
 NO_MOOD = "taste_v6_natural_1500ms_b2.jsonl"
 GRID = {"tie_gap": (0.03, 0.05, 0.08, 0.10, 0.15), "froze_hz": (2.0, 4.0, 6.0, 8.0),
@@ -33,15 +33,9 @@ GRID = {"tie_gap": (0.03, 0.05, 0.08, 0.10, 0.15), "froze_hz": (2.0, 4.0, 6.0, 8
 SPECIAL = ("froze", "food", "dithered", "tie")
 
 
-def product_mood(seed: int) -> mood.Mood:
-    """A case's mood as the product would sample it (waiting time drawn from the case seed)."""
-    wait = float(np.random.default_rng((seed, WAIT_STREAM)).exponential(WAIT_MEAN_H))
-    return mood.from_case(seed, wait)
-
-
 def case(p: int, c: int) -> tuple[int, mood.Mood]:
     seed = CASE0 + 100 * p + c
-    return seed, product_mood(seed)
+    return seed, mood.product(seed)
 
 
 def record_hearing(ta: dict, tb: dict) -> dict:

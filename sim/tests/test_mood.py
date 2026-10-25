@@ -23,6 +23,16 @@ def test_hunger_rises_while_waiting_capped():
     assert mood.from_case(7, wait_hours=100).hunger == 1.0
 
 
+def test_product_mood_simulated_wait():
+    """No waiting time: the wait is drawn from the seed, so hunger can pass the food bar."""
+    assert mood.product(42) == mood.product(42) != mood.product(43)
+    ms = [mood.product(s) for s in range(2000)]
+    assert all(0 <= m.hunger <= 1 and 0 <= m.arousal < params.MOOD["arousal_max"] for m in ms)
+    assert all(m.arousal == mood.from_case(s).arousal for s, m in enumerate(ms))
+    assert any(m.hunger > params.OUTCOME["food_hunger"] for m in ms)
+    assert all(m.hunger >= mood.from_case(s).hunger for s, m in enumerate(ms))
+
+
 def test_hunger_gains_only_exciting_groups():
     assert mood.Mood(0.0, 0.5).gains == {k: 1.0 for k in mood.EXCITING}
     g = mood.Mood(1.0, 0.0).gains

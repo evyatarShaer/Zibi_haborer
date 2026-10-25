@@ -123,7 +123,7 @@ from env, with no workstation paths in code.
 
 ### Tasks (build order)
 
-- [ ] **P2A-1 — Product hearing in `borer_sim`.** Add one function:
+- [x] **P2A-1 — Product hearing in `borer_sim`.** Add one function:
   (text A, text B, seed) → metrics, outcome, mood and the brain summary.
   - The mood draw moves from `validation.mood_calib.product_mood` into
     `borer_sim.mood` (simulated wait, DECISIONS.md 2026-10-25), and
@@ -134,12 +134,20 @@ from env, with no workstation paths in code.
     taste group (no letters), mood, seed, `SIM_VERSION`, platform.
   - Run the `sim-change` skill.
   *Accept:*
-  - SIM_VERSION stays 0.8.0, because the values for a seed don't change:
-    the 20 timing hearings of `validation.balance` reproduce the
-    records exactly (`test_balance` stays green).
+  - Output for a seed doesn't change (patch bump 0.8.1, sim-change
+    skill): the 20 timing hearings of `validation.balance` reproduce
+    the records exactly (`test_balance` stays green).
   - The same seed twice gives a bit-identical result and summary
     (test).
   - The summary has no per-letter field (test).
+  *Done 2026-10-25 (SIM_VERSION 0.8.1):*
+  - `balance time` 20/20 match the records (median 7.23 s);
+    `hearing.run` 10/10 match (median 7.35 s, max 9.27 s).
+  - Same seed twice gives a bit-identical result; a different seed
+    differs.
+  - The brain summary is per taste class (15 classes), with no letters
+    and no GRN-group names (`tests/test_hearing.py`).
+  - Full suite: 97 passed. DECISIONS.md 2026-10-25 (P2A-1).
 - [ ] **P2A-2 — SQLite storage + 7-day cleanup.** `hearing` table: id,
   created_at, topic, name_a, name_b, text_a, text_b, seed, hunger,
   arousal, status (running / decided / failed), metrics (JSON), outcome,
