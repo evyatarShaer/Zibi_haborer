@@ -15,6 +15,7 @@ export const T = {
   noConnection: "אין חיבור לשרת. נסו שוב",
   queued: "התיק ממתין בתור. השופט מסיים דיון אחר…",
   enters: "השופט נכנס לאולם",
+  entersAppeal: "ערעור! השופט חוזר לאולם",
   tasting: (name) => `טועם את הטענה של ${name}…`,
   deliberating: ["השופט מתלבט…", "שוקל את הטעמים…", "עוד רגע ההכרעה…"],
   failed: "משהו השתבש בדיון. אפשר לנסות שוב",
@@ -22,8 +23,14 @@ export const T = {
   notFound: "התיק לא נמצא (אולי עברו 7 ימים והוא נמחק)",
   appetite: "תיאבון",
   newArgument: "ויכוח חדש",
-  appealSoon: "ערעור (בקרוב)",
-  brainSoon: "מה קרה במוח? (בקרוב)",
+  appeal: "ערעור",
+  appealing: "מגישים ערעור…",
+  toAppeal: "לתוצאת הערעור",
+  appealAccepted: "הערעור התקבל!",
+  appealRejected: "הערעור נדחה. הפסק סופי",
+  brain: "מה קרה במוח?",
+  brainHide: "הסתר את המוח",
+  brainLoading: "פותחים את המוח…",
 };
 
 const HUNGER = [[0.25, "שבע"], [0.5, "קצת רעב"], [0.8, "רעב"], [Infinity, "מורעב"]];
@@ -47,3 +54,34 @@ export function headline(h) {
     food: "הבורר יצא להפסקת צהריים. הדיון נדחה",
   }[h.outcome];
 }
+
+// The lab view (SPEC §14.6). Taste classes are GRN sub-classes, never letters or groups.
+export const LAB = {
+  title: "מה קרה במוח?",
+  noAi: "140 אלף נוירונים של מוח זבוב אמיתי. בלי AI.",
+  mn9: "נוירון הבליעה (MN9)",
+  mn9Hint: "קצב הירי בזמן הטעימה (הרץ), ממוצע נע של רבע שנייה",
+  at: (s, parts) => `${s.toFixed(2)} ש׳ · ${parts.join(" · ")}`,
+  hz: (x) => `${Math.round(x)} הרץ`,
+  seconds: "ש׳",
+  taste: "מה הזבוב טעם",
+  tasteHint: "פעילות ממוצעת של חיישני הטעם לפי סוג (הרץ)",
+  judge: "מצב השופט",
+  hunger: "רעב",
+  irritability: "עצבנות",
+  seed: "זרע אקראי",
+  version: "גרסת סימולציה",
+  platform: "מחשב",
+  error: "לא הצלחנו לפתוח את המוח. נסו שוב",
+};
+
+export const CLASSES = {
+  sugar: "מתוק", "sugar/low_salt": "מתוק / מעט מלח", bitter: "מר", water: "מים",
+  glutamate: "אוממי (גלוטמט)", "high_salt/heavy_metal": "מלוח מאוד / מתכתי",
+  putative_attractive: "כנראה מושך", putative_aversive: "כנראה דוחה", "taste peg": "יתדות טעם",
+  SA_VTV_pro_meso_meta: "חיישני רגליים",
+  accessory_pharyngeal_nerve_sensory_group1: "לוע (עזר) 1",
+  accessory_pharyngeal_nerve_sensory_group2: "לוע (עזר) 2",
+  pharyngeal_nerve_sensory_group1: "לוע 1", pharyngeal_nerve_sensory_group2: "לוע 2",
+  pharyngeal_nerve_sensory_group3: "לוע 3",
+};

@@ -67,7 +67,7 @@ export function waiting(root, id, fresh, { onVerdict, onNew, onSubmitted }) {
       title.textContent = T.queued;
       line.textContent = "";
     } else if (v.key === "mood") {
-      title.textContent = T.enters;
+      title.textContent = h.appeal_of ? T.entersAppeal : T.enters;
       line.textContent = moodLine(h.mood);
     } else if (v.key === "tasteA" || v.key === "tasteB") {
       title.textContent = T.tasting(v.key === "tasteA" ? h.name_a : h.name_b);

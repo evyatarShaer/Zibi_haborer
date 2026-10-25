@@ -29,7 +29,7 @@ function route() {
   cleanup = waiting(root, id, fresh, {
     onNew: goNew,
     onSubmitted: goHearing,
-    onVerdict: (h) => { cleanup = verdict(root, h, goNew); },
+    onVerdict: (h) => { cleanup = verdict(root, h, { onNew: goNew, onAppealed: goHearing }); },
   });
 }
 

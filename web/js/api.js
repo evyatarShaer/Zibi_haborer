@@ -15,3 +15,5 @@ async function call(method, path, body) {
 
 export const postHearing = (body) => call("POST", "/hearing", body);
 export const getHearing = (id) => call("GET", `/hearing/${encodeURIComponent(id)}`);
+export const postAppeal = (id) => call("POST", `/hearing/${encodeURIComponent(id)}/appeal`);
+export const getBrain = (id) => call("GET", `/hearing/${encodeURIComponent(id)}/brain`);

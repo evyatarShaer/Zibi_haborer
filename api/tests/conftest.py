@@ -1,7 +1,11 @@
-"""Tests marked `needs_data` are skipped when the v783 raw files are absent."""
+"""Tests marked `needs_data` are skipped when the v783 raw files are absent.
+`sim` / `client`: the app on a temp DB with a fake simulation (fake.py)."""
 import pytest
+from fastapi.testclient import TestClient
 
+from borer_api.app import create_app
 from borer_sim import data
+from fake import FakeSim
 
 
 def pytest_collection_modifyitems(items):
@@ -11,3 +15,14 @@ def pytest_collection_modifyitems(items):
     for item in items:
         if "needs_data" in item.keywords:
             item.add_marker(skip)
+
+
+@pytest.fixture
+def sim():
+    return FakeSim()
+
+
+@pytest.fixture
+def client(tmp_path, sim):
+    with TestClient(create_app(sim, str(tmp_path / "h.sqlite3"))) as c:
+        yield c

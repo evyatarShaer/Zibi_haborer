@@ -1,6 +1,5 @@
 """API (P2A-3) with a fake simulation: rules, statuses, queue limit, response allowlist."""
 import json
-import threading
 import time
 
 import pytest
@@ -9,49 +8,7 @@ from fastapi.testclient import TestClient
 from borer_api import court
 from borer_api.app import create_app
 from borer_sim import mood, taste
-
-OK = {"topic": "פיצה", "name_a": "דנה", "name_b": "יוסי",
-      "text_a": "פיצה עם אננס זה פשוט טעים", "text_b": "אננס על פיצה זה פשע נגד האנושות"}
-BRAIN = {"bin_ms": 50, "mn9_hz": [[1.0, 2.0], [3.0, 4.0]], "taste_hz": [{"sugar": 5.0}] * 2,
-         "mood": {}, "seed": 1, "sim_version": "0.8.2", "platform": "test"}
-
-
-class FakeSim:
-    """Answers `outcome` / `winner`; with gate set to False it blocks until opened."""
-
-    def __init__(self, outcome="win", winner="A"):
-        self.outcome, self.winner, self.gate, self.calls = outcome, winner, threading.Event(), []
-        self.gate.set()
-
-    def __call__(self, a, b, seed):
-        self.calls.append((a, b, seed))
-        self.gate.wait(10)
-        m = mood.product(seed)
-        metrics = {"A": 30.0, "B": 20.0, "gap": 0.2, "winner": self.winner, "outcome": self.outcome}
-        return {"seed": seed, "mood": {"hunger": m.hunger, "arousal": m.arousal}, "metrics": metrics,
-                "brain": BRAIN, "sim_version": "0.8.2", "platform": "test", "duration_ms": 5}
-
-
-@pytest.fixture
-def sim():
-    return FakeSim()
-
-
-@pytest.fixture
-def client(tmp_path, sim):
-    with TestClient(create_app(sim, str(tmp_path / "h.sqlite3"))) as c:
-        yield c
-
-
-def wait_status(client, hid, status, timeout=5.0):
-    end = time.time() + timeout
-    while time.time() < end:
-        h = client.get(f"/hearing/{hid}").json()
-        if h["status"] == status:
-            return h
-        time.sleep(0.01)
-    raise AssertionError(f"{hid} never reached {status}: {h}")
-
+from fake import OK, FakeSim, wait_status
 
 def test_hearing_queued_to_decided(client, sim):
     hid = client.post("/hearing", json=OK).json()["id"]
@@ -140,7 +97,8 @@ def test_responses_allowlisted_no_table_data(client):
     hid = client.post("/hearing", json=OK).json()["id"]
     h = wait_status(client, hid, "decided")
     assert set(h) == {"id", "status", "topic", "name_a", "name_b", "text_a", "text_b", "appeal_of",
-                      "mood", "can_appeal", "outcome", "winner", "winner_name", "appetite"}
+                      "mood", "can_appeal", "appeal_id", "outcome", "winner", "winner_name",
+                      "appetite"}
     brain = client.get(f"/hearing/{hid}/brain").json()
     assert set(brain) == {"bin_ms", "mn9_hz", "taste_hz", "mood", "seed", "sim_version", "platform"}
     text = json.dumps([h, brain], ensure_ascii=False)

@@ -7,6 +7,7 @@ process is never forked) and warms them up. It also starts the 7-day purge loop.
 """
 import os
 import secrets
+import sqlite3
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -69,24 +70,45 @@ def create_app(runner=None, db_path: str = DB, purge_every_s: float = 3600) -> F
         texts = {"a": req.text_a.strip(), "b": req.text_b.strip()}
         if errors := validate.problems(topic, names, texts):
             return JSONResponse({"errors": errors}, status_code=422)
+        return file(topic, names, texts)
+
+    def file(topic, names, texts, appeal_of=None):
+        """Store a new hearing with a fresh random seed (and so a fresh mood) and queue it."""
         seed = secrets.randbelow(2 ** 31)
         m = mood.product(seed)
         store = app.state.store
-        hid = store.create(names["a"], names["b"], texts["a"], texts["b"], seed,
-                           {"hunger": m.hunger, "arousal": m.arousal}, topic)
+        try:
+            hid = store.create(names["a"], names["b"], texts["a"], texts["b"], seed,
+                               {"hunger": m.hunger, "arousal": m.arousal}, topic, appeal_of)
+        except sqlite3.IntegrityError:  # a second appeal raced the first
+            return JSONResponse({"error": views.APPEALED}, status_code=409)
         try:
             app.state.court.submit(hid)
         except court.Busy:
             store.delete(hid)
             return JSONResponse({"error": court.BUSY}, status_code=503)
-        return {"id": hid}
+        return JSONResponse({"id": hid}, status_code=201)
+
+    @app.post("/hearing/{hid}/appeal")
+    def appeal(hid: str):
+        """One appeal per original hearing: same names and texts, new seed (SPEC §14.5)."""
+        store = app.state.store
+        h = store.get(hid)
+        if h is None:
+            return views.not_found()
+        if refused := views.appeal_refused(h, store.appeal_of(hid)):
+            return JSONResponse({"error": refused}, status_code=409)
+        return file(h["topic"], {"a": h["name_a"], "b": h["name_b"]},
+                    {"a": h["text_a"], "b": h["text_b"]}, appeal_of=hid)
 
     @app.get("/hearing/{hid}")
     def get_hearing(hid: str):
-        h = app.state.store.get(hid)
+        store = app.state.store
+        h = store.get(hid)
         if h is None:
             return views.not_found()
-        return views.hearing(h, app.state.store.appeal_of(hid) is not None)
+        original = store.get(h["appeal_of"]) if h["appeal_of"] else None
+        return views.hearing(h, store.appeal_of(hid), original)
 
     @app.get("/hearing/{hid}/brain")
     def get_brain(hid: str):

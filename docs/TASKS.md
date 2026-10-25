@@ -241,6 +241,15 @@ from env, with no workstation paths in code.
     refused.
   - The comparison uses the outcome winner (a non-win outcome counts as
     "no winner").
+  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):*
+  - API: `app.py` `POST /hearing/{id}/appeal` (201 / 404 / 409 for an
+    undecided hearing, a second appeal or an appeal of an appeal / 503
+    when the court is full, retryable). `GET /hearing/{id}` adds
+    `appeal_id` and, on a decided appeal, `appeal_accepted`.
+  - Page: the appeal plays the waiting story again ("ערעור! השופט חוזר
+    לאולם" + the new mood), then the result line above the headline. The
+    original links to its appeal.
+  - Tests: `api/tests/test_appeal.py`, `test_web_lab.py`.
 - [ ] **P2A-8 — Brain view.** The lab view is fetched on demand:
   - MN9 rate over time, both tastings on one chart;
   - group-level taste activation bars;
@@ -250,6 +259,17 @@ from env, with no workstation paths in code.
   - Renders from stored data only, with no sim call (test: the sim is
     not touched on GET).
   - No letter appears in the view.
+  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):*
+  - `web/js/lab.js` (pure model) + `brain.js` (view): fetched on the
+    first tap only, then toggles.
+  - MN9 chart: inline SVG, side B dashed as well as colored, with a
+    display-only 250 ms moving average (raw 50 ms bins are 0/20/40 Hz
+    spikes). Tap or drag for the values at a time.
+  - Taste bars per class, both sides; classes under 0.5 Hz on both
+    sides are hidden. Hebrew labels cover all 15 classes (test against
+    `taste.classes()`).
+  - Mood, seed, SIM_VERSION, platform; the "no AI" line.
+  - Tests: GET brain never calls the sim; the view has no GRN-group names.
 - [ ] **P2A-9 — Phase 2A gate.** Walk through every exit criterion,
   including a determinism rerun of all stored hearings, then run the
   `phase-gate` skill.

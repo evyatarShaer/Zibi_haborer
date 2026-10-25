@@ -9,6 +9,8 @@
   --win: #2f7d4f;
   --line: #e4d8c3;
   --error: #b3261e;
+  --side-a: #3b6ea8;
+  --side-b: #a8483b;
 }
 
 * { box-sizing: border-box; }
@@ -63,8 +65,8 @@ input:focus, textarea:focus { outline: 2px solid var(--gold); border-color: var(
 
 .side { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 2px; margin: 0 0 12px; }
 .side legend { padding: 0 6px; font-weight: 800; color: var(--wood); }
-.side-a { border-inline-start: 4px solid #3b6ea8; }
-.side-b { border-inline-start: 4px solid #a8483b; }
+.side-a { border-inline-start: 4px solid var(--side-a); }
+.side-b { border-inline-start: 4px solid var(--side-b); }
 
 .hint, .counter { margin: 4px 0 0; font-size: 0.8rem; font-weight: 400; color: var(--muted); }
 .counter.ok { color: var(--win); }

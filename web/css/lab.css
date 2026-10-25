@@ -1,0 +1,38 @@
+/* Verdict extras and the lab view (P2A-7/8): appeal result, MN9 chart, taste bars. */
+.appeal-result {
+  text-align: center; font-weight: 800; font-size: 1.15rem; margin: 0 0 4px;
+  padding: 8px; border-radius: 10px; background: var(--paper); color: var(--wood);
+}
+.appeal-result.accepted { background: #e6f2ea; color: var(--win); }
+
+.lab { margin-top: 14px; }
+.lab h3 { margin: 0; font-size: 1.25rem; text-align: center; }
+.lab h4 { margin: 18px 0 0; font-size: 1rem; color: var(--wood); }
+.lab .no-ai { text-align: center; color: var(--muted); font-weight: 500; margin: 2px 0 0; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 4px; font-size: 0.9rem; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { display: inline-block; width: 20px; height: 0; border-top: 3px solid; }
+.swatch.lab-a { border-color: var(--side-a); }
+.swatch.lab-b { border-color: var(--side-b); border-top-style: dashed; }
+
+.chart { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .tick { fill: var(--muted); font-size: 10px; font-family: inherit; }
+.chart .curve { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .curve.lab-a { stroke: var(--side-a); }
+.chart .curve.lab-b { stroke: var(--side-b); stroke-dasharray: 5 3; }
+.chart .cursor { stroke: var(--muted); stroke-width: 1; }
+.readout { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); min-height: 1.3em; }
+
+.taste-row { display: grid; grid-template-columns: 7.5em 1fr; gap: 2px 8px; margin-top: 8px; font-size: 0.85rem; }
+.taste-label { grid-row: span 2; align-self: center; }
+.taste-bar { display: flex; align-items: center; gap: 6px; height: 14px; }
+.taste-bar .fill { height: 8px; border-radius: 4px; min-width: 2px; }
+.taste-bar .fill.lab-a { background: var(--side-a); }
+.taste-bar .fill.lab-b { background: var(--side-b); opacity: 0.85; }
+.taste-bar span { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 8px 0 0; font-size: 0.9rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; direction: ltr; text-align: end; }

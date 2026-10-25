@@ -2,9 +2,7 @@
 import json
 import os
 import re
-import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,19 +10,9 @@ from fastapi.testclient import TestClient
 from borer_api.app import create_app
 from borer_api.validate import problems
 from borer_sim.argument import hebrew_letters
+from fake import JS, ROOT, needs_node, node
 
-ROOT = Path(__file__).resolve().parents[2]
-JS = ROOT / "web" / "js"
-pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
-
-
-def node(tmp_path, imports: str, body: str):
-    """Run an ES module that imports web/js files and prints JSON; return the value."""
-    script = tmp_path / "run.mjs"
-    script.write_text(imports.replace("@/", (JS.as_uri() + "/")) + f"\nconsole.log(JSON.stringify({body}));\n")
-    out = subprocess.run(["node", str(script)], capture_output=True, text=True, check=True)
-    return json.loads(out.stdout)
-
+pytestmark = needs_node
 
 EXTRA = ["שָׁלוֹם עֲלֵיכֶם וּבְרָכָה", "ךםןףץ ךםןףץ", "   רווחים\n\tבכל מקום   ",
          "😂" * 200 + " אבגדהוזחטי", "א" * 300, "ﬠﬡﬢ צורות רחבות", "abc אבג 123 דהו !? זחט"]
