@@ -100,22 +100,143 @@ performance budget.
   *Passed 2026-10-25, tag `phase-1-done` (DECISIONS.md 2026-10-25 —
   Phase 1 gate passed).*
 
-## Epic: Phase 2 — MVP
+## Epic: Phase 2A — Local UI POC
 
-**Goal** (SPEC §12): full flow, verdict card, OG preview, animation, all
-tie types, sudden death, how-it-works page.
+**Goal** (SPEC §12, §14): try the whole experience on the workstation:
+input, waiting, verdict for every outcome, appeal, brain view, 7-day
+retention. FastAPI + one static HTML page (Hebrew, RTL, no framework) +
+SQLite, written so it can move to a server unchanged.
 
 **Exit criteria** (from `SPEC.md §12`):
-- 20 real cases in friends' groups, ≥ half shared onward.
+- The whole flow works end to end in a mobile-width browser (RTL):
+  input → waiting → verdict → appeal → brain view, for every outcome.
+- Determinism: every stored hearing reruns bit-identically from its seed
+  (same platform).
+- Submit → verdict ≤ 15 s on the workstation; the waiting screen never
+  looks stuck.
+- No API response or page exposes the letter → GRN table (automated).
+- The cleanup deletes hearings older than 7 days (test).
+
+**Layout:** `api/` (FastAPI app, imports `borer_sim`), `web/` (static
+page, split into files ≤ 200 lines). Config (DB path, host, port) comes
+from env, with no workstation paths in code.
+
+### Tasks (build order)
+
+- [ ] **P2A-1 — Product hearing in `borer_sim`.** Add one function:
+  (text A, text B, seed) → metrics, outcome, mood and the brain summary.
+  - The mood draw moves from `validation.mood_calib.product_mood` into
+    `borer_sim.mood` (simulated wait, DECISIONS.md 2026-10-25), and
+    validation imports it from there.
+  - Parallel tastings (2 processes × 1 thread) move from
+    `validation.runner.timed_hearings` into `borer_sim`, shared by both.
+  - Brain summary: MN9 rate per 50 ms bin per tasting, activation per
+    taste group (no letters), mood, seed, `SIM_VERSION`, platform.
+  - Run the `sim-change` skill.
+  *Accept:*
+  - SIM_VERSION stays 0.8.0, because the values for a seed don't change:
+    the 20 timing hearings of `validation.balance` reproduce the
+    records exactly (`test_balance` stays green).
+  - The same seed twice gives a bit-identical result and summary
+    (test).
+  - The summary has no per-letter field (test).
+- [ ] **P2A-2 — SQLite storage + 7-day cleanup.** `hearing` table: id,
+  created_at, topic, name_a, name_b, text_a, text_b, seed, hunger,
+  arousal, status (running / decided / failed), metrics (JSON), outcome,
+  winner, brain (JSON), sim_version, platform, duration_ms, appeal_of
+  (FK; the appeal row is deleted with the original). The cleanup deletes
+  rows older than 7 days; it runs at startup and on a timer.
+  *Accept:*
+  - Tests on a temp DB: insert, read, appeal link; the cleanup removes
+    exactly the rows older than 7 days (injected clock).
+  - The schema is created on first run.
+- [ ] **P2A-3 — FastAPI API.** The model loads once at startup.
+  - `POST /hearing` (topic?, names, arguments) checks the argument rules
+    (≥ 10 Hebrew letters, ≤ 280 chars, names required), draws a random
+    seed, starts the hearing in the background and returns `id`.
+  - `GET /hearing/{id}` returns status, then the verdict data: outcome,
+    winner name, A/B for the meter, mood, topic, `appeal_of`,
+    `can_appeal`.
+  - `GET /hearing/{id}/brain` returns the stored summary.
+  - `POST /hearing/{id}/appeal` (P2A-7).
+  - The app serves `web/`.
+  *Accept:*
+  - API tests with a fake sim: validation errors in Hebrew, 404 for
+    unknown or deleted ids, status running → decided.
+  - An allowlist test asserts that no response contains letter-level or
+    table data.
+  - One real end-to-end hearing finishes in ≤ 15 s (POST → decided)
+    on the workstation.
+- [ ] **P2A-4 — Input screen.** Hebrew RTL, mobile-first, no framework:
+  topic (optional, labelled as not tasted), two sides with name and
+  argument. A live 10-letter counter uses the same normalization as §4.1
+  (one shared JS helper, tested against `borer_sim.taste` on the
+  spam/silence texts).
+  *Accept:*
+  - Submit stays disabled until both arguments are valid.
+  - The server rejects the same cases.
+  - Usable at 360 px width.
+- [ ] **P2A-5 — Waiting screen.** Mood story line → "tasting side A" →
+  "tasting side B" → "deliberating", which loops. Polls
+  `GET /hearing/{id}`.
+  *Accept:*
+  - Something animates at all times.
+  - A slow host (sim delayed to 40 s, fake) still loops cleanly.
+  - A failed hearing shows a Hebrew error with a retry.
+  - Shown on screen: about 7 s at the measured speed.
+- [ ] **P2A-6 — Verdict screen.** Courtroom front with a placeholder
+  judge fly (emoji/SVG). Headline per outcome (SPEC §7) with the topic;
+  appetite meter per side; "what happened in the brain?" button; appeal
+  button (original hearings only).
+  *Accept:* each of the 5 outcomes renders correctly from fixture data
+  (Win, Dithered with a name, Tie, Froze, Lunch break; with and without
+  a topic).
+- [ ] **P2A-7 — Appeal.** `POST /hearing/{id}/appeal`: one per hearing;
+  same texts and names, new random seed, stored with `appeal_of`. The
+  result screen shows "הערעור התקבל!" if the winner changed, otherwise
+  "הערעור נדחה. הפסק סופי". The appeal hearing shows no appeal button.
+  *Accept:*
+  - API tests: a second appeal is refused (409); appealing an appeal is
+    refused.
+  - The comparison uses the outcome winner (a non-win outcome counts as
+    "no winner").
+- [ ] **P2A-8 — Brain view.** The lab view is fetched on demand:
+  - MN9 rate over time, both tastings on one chart;
+  - group-level taste activation bars;
+  - mood, seed, SIM_VERSION, platform;
+  - the line "140K neurons of a real fly brain, no AI".
+  *Accept:*
+  - Renders from stored data only, with no sim call (test: the sim is
+    not touched on GET).
+  - No letter appears in the view.
+- [ ] **P2A-9 — Phase 2A gate.** Walk through every exit criterion,
+  including a determinism rerun of all stored hearings, then run the
+  `phase-gate` skill.
+
+## Epic: Phase 2B — MVP (shareable / server)
+
+**Goal** (SPEC §12): what 2A does not deliver:
+- the two-device flow with a link and response window (§3, §8: tokens,
+  deadline, plain water, reminder);
+- hosting;
+- verdict card page + OG image + WhatsApp preview (§9);
+- the 10–15 s brain animation and replay;
+- sudden death;
+- a group-level how-it-works page;
+- moderation;
+- appeal-bypass prevention;
+- production-host timing;
+- the stack decision (§11).
+
+**Exit criteria:** 20 real cases in friends' groups, ≥ half shared
+onward.
 
 **Carried over from Phase 1** (POC_REPORT.md summary): production-host
-timing (deployment); "Brain overload" outcome decision; rename "Went for
-food"; real-utterance arguments; watch side-A (46.3%) and shorter-wins
-(44.7%) drift; FlyWire licence (non-commercial).
+timing; "Brain overload" outcome decision; real-utterance arguments;
+watch side-A (46.3%) and shorter-wins (44.7%) drift; FlyWire licence
+(non-commercial).
 
-### Tasks
-
-Not yet planned (next session: break the MVP scope into P2-n tasks).
+Not yet planned (after the 2A gate).
 
 ## Epic: Phase 3
 

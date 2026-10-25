@@ -1136,3 +1136,215 @@ was changed for the gate. All timing is from the workstation; production
 timing is deferred to deployment. Side A and longer-wins pass but sit
 below 50% (2.2 / 3.2 SE) and are carried into Phase 2 as watch items.
 Tagged `phase-1-done`; Phase 2 Epic opened in TASKS.md.
+
+---
+
+## 2026-10-25 — Phase 2 split into 2A (Local UI POC) and 2B (MVP)
+
+**Context:** SPEC §12 defined Phase 2 as the full shareable MVP. We want a
+local UI first, to try the experience before building the server.
+
+**Decision:** Phase 2A — Local UI POC (workstation only, SPEC §14), with
+its own exit criteria. Phase 2B — MVP, which keeps the old Phase 2 exit
+criterion (20 real cases, ≥ half shared onward); its scope shrinks to
+what 2A does not deliver (sharing, server, card + OG, animation, sudden
+death, how-it-works, moderation, appeal-bypass prevention, production
+timing). Phase 3 is unchanged.
+
+**Why:** the UI and verdict copy can be judged locally at no cost;
+2B then adds only what sharing needs.
+
+**Alternatives considered:** keep 2B's scope unchanged (duplicates the
+work); renumber all phases (breaks existing references).
+
+**Impacts:** SPEC §12, §14; TASKS.md Phase 2A/2B Epics.
+
+---
+
+## 2026-10-25 — 2A stack: FastAPI + static HTML + SQLite; 2B stack under review
+
+**Context:** 2A runs locally. SPEC §11 picked Next.js/Vercel, Neon,
+R2 and @vercel/og for the MVP.
+
+**Decision:**
+- 2A: FastAPI wraps `borer_sim`; one static HTML page (Hebrew, RTL, no
+  framework); local SQLite; workstation only.
+- The code is written so it can move to a server unchanged (config from
+  env, no workstation paths).
+- §11 is marked "under review": 2B planning decides whether 2B keeps
+  this stack or moves to §11's.
+
+**Why:** fewest moving parts; free; no build step.
+
+**Alternatives considered:** adopt the 2A stack for 2B now (FastAPI can
+server-render OG tags); keep §11 and rewrite the front end in 2B. The
+choice is deferred to 2B planning.
+
+**Impacts:** SPEC §11, §14; `api/`, `web/`.
+
+---
+
+## 2026-10-25 — 2A input screen
+
+**Decision:** An optional topic, shown on the verdict only and never fed
+to the fly. Two sides, each with a name and an argument. The argument
+rule is unchanged (≥ 10 Hebrew letters after normalization, ≤ 280
+chars), checked in the page and again in the API.
+
+**Why:** the topic adds humour to the verdict without touching the
+simulation.
+
+**Impacts:** SPEC §14.1.
+
+---
+
+## 2026-10-25 — 2A waiting screen
+
+**Decision:** ~7 s waiting screen.
+1. The drawn mood as a story line.
+2. "Tasting side A's argument".
+3. "Tasting side B's argument".
+4. "Deliberating", looping until the result arrives.
+
+The order is presentation only: the two tastings run in parallel. The
+screen never looks stuck.
+
+**Why:** the measured hearing is 6.7 s; the sequence explains what the
+fly does while it runs.
+
+**Impacts:** SPEC §14.3.
+
+---
+
+## 2026-10-25 — 2A mood: random per hearing, simulated wait
+
+**Context:** 2A has no waiting time. With a wait of 0, hunger is
+U(0, 0.4) and "lunch break" (hunger > 0.8) could never happen.
+
+**Decision:** Each hearing gets a random seed (stored), and the mood
+comes from that seed.
+- Hunger: the waiting time is drawn from the seed, ≈ Exp(2 h), exactly
+  as `validation.mood_calib.product_mood`. That function moves into
+  `borer_sim` and validation imports it from there.
+- Arousal ("irritability") is U(0, 0.45), as now.
+- The user never chooses the mood.
+- No SIM_VERSION bump: the code moves, the values for a given seed do
+  not.
+
+**Why:** this is the exact distribution P1-9 validated (lunch break
+1.7%, dithered 8.2%).
+
+**Alternatives considered:** base hunger only (lunch break never
+appears); hunger ~ U(0, 1) (unvalidated mix, SIM_VERSION bump).
+
+**Impacts:** SPEC §5, §14.2; `borer_sim.mood`, `validation.mood_calib`.
+
+---
+
+## 2026-10-25 — 2A style: courtroom front, lab behind a button
+
+**Decision:**
+- Front: a courtroom with a judge fly and Hebrew legal wording.
+- The lab view sits behind a "what happened in the brain?" button.
+- The fly art is a placeholder (emoji or simple SVG); the real art comes
+  later from the owner.
+
+**Impacts:** SPEC §14.4, §14.6.
+
+---
+
+## 2026-10-25 — Verdict copy; "Went for food" renamed "lunch break"
+
+**Decision:** Verdict headlines (Hebrew):
+
+| Outcome | Headline |
+|---|---|
+| Win | פסק הדין: הצדק עם {name}, plus an appetite meter per side |
+| Dithered | אחרי התלבטות קשה... הצדק עם {name} (the side with the higher MN9 rate) |
+| Tie | תיקו. הזבוב לא השתכנע מאף אחד |
+| Froze | הזבוב קפא. התיק הזה גדול עליו |
+| Lunch break | הבורר יצא להפסקת צהריים. הדיון נדחה |
+
+The topic, if given, appears in the headline. The rename closes the open
+question; the code key stays `food` (no SIM_VERSION change). These lines
+replace the SPEC §7 card headlines.
+
+**Impacts:** SPEC §7, §13.
+
+---
+
+## 2026-10-25 — Appeal
+
+**Decision:**
+- One appeal per hearing.
+- It reruns the same arguments with a fresh random seed. Mood and
+  simulation noise both come from the seed, so both change.
+- Result: "הערעור התקבל!" if the winner changes, otherwise "הערעור נדחה.
+  הפסק סופי".
+- Stored as its own hearing with `appeal_of` = the original's id. An
+  appeal hearing has no appeal button.
+- Getting around the limit by re-entering the same text is accepted in
+  2A; preventing it is 2B.
+
+**Why:** gives the loser a second chance that stays the fly's call.
+Mood flips ~3% of decided winners and noise adds more, so an appeal
+rarely succeeds — fitting for an appeal.
+
+**Impacts:** SPEC §14.5; hearing schema.
+
+---
+
+## 2026-10-25 — "What happened in the brain?" summary
+
+**Decision:** Fetched on demand: `GET /hearing/{id}/brain`. The summary
+is stored per hearing when it runs; it is never recomputed and never
+holds raw spikes. It contains:
+- MN9 rate over time for each tasting (50 ms bins);
+- activation per taste group (group level only);
+- mood values, seed, SIM_VERSION and platform.
+
+Line shown: "140K neurons of a real fly brain, no AI."
+
+**Why:** cheap to store and serve; the verdict page stays light.
+
+**Impacts:** SPEC §14.6; hearing schema.
+
+---
+
+## 2026-10-25 — Retention: hearings deleted after 7 days
+
+**Decision:** Hearings, appeals included, are deleted 7 days after they
+are created, by a cleanup that ships with the API (at startup and on a
+timer), so it carries over to a server.
+
+**Why:** no reason to keep people's arguments; it limits stored personal
+text.
+
+**Impacts:** SPEC §2.2, §14.7. A 2B verdict link expires after 7 days.
+
+---
+
+## 2026-10-25 — The letter → GRN table is never published (firm)
+
+**Context:** This was an open question since 2026-10-19 (publish the
+table, or let players discover it). The GitHub repo
+`evyatarShaer/Zibi_haborer` was **public**, with the table in
+`borer_sim/taste.py` and its rules in SPEC §4.2 and POC_REPORT.md.
+
+**Decision:**
+- The table is never published: not in the UI, not on a "how it works"
+  page, not in API responses, not in Phase 3 stats.
+- Everything shown is group-level only.
+- The repo is made private (done by the owner on GitHub).
+- An automated check keeps per-letter data out of API responses.
+
+**Why:** discovering what the fly likes by playing is part of the fun,
+and a published table invites gaming.
+
+**Alternatives considered:** product-only secrecy with a public repo;
+also stripping the letter-level detail from the docs (kept: the repo is
+private).
+
+**Impacts:** SPEC §2.3, §4.2, §12 (Phase 3), §13. The repo was public
+from 2026-10-19 to 2026-10-25 with 0 forks and 0 stars; anything cached
+in that time cannot be taken back.

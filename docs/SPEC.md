@@ -22,9 +22,12 @@ It's a fly, not a judge — the humor is part of the product.
 2. **Deterministic.** Same case + same arguments + same `sim_version` →
    bit-identical result **on the same platform** (CPU architecture +
    torch version). All randomness is seeded. Each run is computed once
-   and stored; the verdict card always reads the stored result.
+   and stored; the verdict card always reads the stored result. Hearings
+   are kept **7 days**, then deleted (§14).
 3. **Transparent.** The verdict card shows what the brain did. There's a
-   public "how it works" page.
+   public "how it works" page. Everything shown is **group-level only**:
+   the letter → GRN table is never published (not in the UI, a "how it
+   works" page or an API response; DECISIONS.md 2026-10-25).
 4. **Fair.** Arguments hidden until both are submitted. Each argument is
    tasted separately, on both sides of the mouth, with the same seed
    (case seed + round), so swapping the sides swaps the result exactly.
@@ -68,7 +71,8 @@ ignites a whole-brain runaway with a fixed, side-blind output.
    exciters (PhG1c, PhG4, LB4a — the honey easter egg, moderate); the
    other 15 letters are dealt excite / inhibit / neutral by
    conversational frequency, stronger effect to more frequent letters.
-   The table is fixed in code (`borer_sim/taste.py`).
+   The table is fixed in code (`borer_sim/taste.py`) and is
+   **confidential**: it is never published (§2.3).
 3. **Intensity.** Each letter's input is its share **relative to its
    conversational Hebrew frequency** (OpenSubtitles 2018). The letters'
    total drive is fixed (scaled only by the length gain), so the text
@@ -112,6 +116,10 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   baseline × (1 + 0.5 · hunger)).
 - Arousal increases background spike noise (random-sign 2 mV kicks to
   every neuron at arousal × 10 Hz, so ≤ 4.5 Hz; 20 Hz ignites runaways).
+- **Hearing without a waiting time** (Phase 2A, both sides typed at
+  once): the wait is drawn from the hearing seed, ≈ Exp(2 h), and
+  hunger follows the rule above. This is the distribution P1-9
+  validated ("went for food" ≈ 1.7%). The user never chooses the mood.
 - Same seed and same mood for both tastings of a hearing. Measured on
   OLD+NEW (600 hearings): mood changes the verdict in 10.5% of hearings,
   flips the winner in 3.2% of decided ones (DECISIONS.md 2026-10-24).
@@ -152,13 +160,19 @@ code is `borer_sim.params.OUTCOME`. **Fled was dropped** (2026-10-24):
 the Giant Fiber never fires in a taste-driven hearing (0 of 1,200
 tastings with product mood; only in a noise-saturated, runaway brain).
 
-| Outcome        | Condition                                   | Card headline (HE)                  |
-|---              |---                                           |---                                   |
-| Froze          | both tastings' MN9 (`A`, `B`) < 6 Hz         | שתי הטענות לא עניינו את הזבוב       |
-| Went for food  | `hunger > 0.8` and `gap < 5%`                | יש דברים חשובים מהוויכוח שלכם        |
-| Dithered       | `direction_flips ≥ 8` and `gap < 5%`         | הזבוב קרוע                          |
-| Win            | `gap ≥ 5%`                                   | הזבוב פסק לטובת {name}              |
-| Plain tie      | otherwise                                    | אין הכרעה                           |
+| Outcome        | Condition                                   | Verdict headline (HE)                         |
+|---              |---                                           |---                                             |
+| Froze          | both tastings' MN9 (`A`, `B`) < 6 Hz         | הזבוב קפא. התיק הזה גדול עליו                 |
+| Lunch break (code `food`) | `hunger > 0.8` and `gap < 5%`     | הבורר יצא להפסקת צהריים. הדיון נדחה           |
+| Dithered       | `direction_flips ≥ 8` and `gap < 5%`         | אחרי התלבטות קשה... הצדק עם {name}            |
+| Win            | `gap ≥ 5%`                                   | פסק הדין: הצדק עם {name}                      |
+| Plain tie      | otherwise                                    | תיקו. הזבוב לא השתכנע מאף אחד                 |
+
+Headlines decided 2026-10-25 (DECISIONS.md). "Went for food" is renamed
+to **lunch break** in all user-facing text; the code key stays `food`.
+Dithered names the side with the higher MN9 rate (`winner`), even though
+the gap is < 5%. The topic, if given, appears in the headline. A Win
+also shows an appetite meter per side (A vs B MN9 rate).
 
 Track outcome frequencies globally; show rarity on the card.
 
@@ -201,7 +215,12 @@ by case.
 
 ## 11. Tech stack (FREE only)
 
-Supersedes any earlier version of the spec.
+Supersedes any earlier version of the spec. **Under review for Phase
+2B** (DECISIONS.md 2026-10-25). Phase 2A runs on the workstation only,
+with FastAPI wrapping `borer_sim`, one static HTML page (Hebrew, RTL, no
+framework) and local SQLite. 2A is written so that the same code can move
+to a server unchanged. Whether 2B keeps that stack or moves to the table
+below is decided in 2B planning.
 
 | Layer          | Choice                                                                             |
 |---              |---                                                                                  |
@@ -239,23 +258,87 @@ Supersedes any earlier version of the spec.
      runaway (> 4,000 active neurons) in < 2% of tastings.
    - hearing ≤ 15 s
    - RAM fits in 12 GB (ideally much less).
-2. **MVP** — full flow, card, OG preview, animation, all tie types, sudden
-   death, how-it-works page.
+2. **Phase 2A — Local UI POC** (workstation only, §14) — input,
+   waiting, verdict (all outcomes), appeal, "what happened in the
+   brain?", 7-day retention.
+   **Exit:**
+   - The whole flow works end to end in a mobile-width browser (RTL):
+     input → waiting → verdict → appeal → brain view, for every outcome.
+   - Determinism: every stored hearing, rerun from its stored seed and
+     texts, gives bit-identical metrics and outcome (same platform).
+   - Submit → verdict ≤ 15 s on the workstation; the waiting screen never
+     looks stuck.
+   - No API response or page exposes the letter → GRN table (automated
+     check).
+   - The cleanup deletes hearings older than 7 days (test).
+3. **Phase 2B — MVP (shareable / server)** — what 2A does not deliver:
+   two-device flow with a link and response window (§3, §8: tokens,
+   deadline, plain water, reminder), hosting, verdict card page + OG
+   image and WhatsApp preview (§9), the 10–15 s brain animation and
+   replay, sudden death, a group-level how-it-works page, moderation,
+   appeal-bypass prevention, production-host timing, stack decision
+   (§11).
    **Exit:** 20 real cases in friends' groups, ≥ half shared onward.
-3. **Phase 3** — public defender, group bets, case history, verdict
-   themes, public "what the fly likes" stats.
+4. **Phase 3** — public defender, group bets, case history, verdict
+   themes, public "what the fly likes" stats (group-level only, §2.3).
 
 ## 13. Open questions (resolve in POC → `DECISIONS.md`)
 
 - Letter → GRN group table (measured valence) and its balance.
 - ~~Thresholds~~ — resolved 2026-10-24: 5% gap, 8 flips, hunger 0.8,
   froze 6 Hz (DECISIONS.md).
-- Rename the "Went for food" outcome — every argument is food now
-  (MVP copywriting).
+- ~~Rename "Went for food"~~ — resolved 2026-10-25: "lunch break"
+  (הבורר יצא להפסקת צהריים), §7.
 - **"Brain overload" as an MVP special outcome?** A whole-brain runaway
   (> 4,000 active neurons) is a real signal of the simulated brain,
   unlike Fled (GF never fires on its own). Arousal is capped below it in
   POC (0.45); an MVP could allow it rarely and show it as its own
   outcome. Decide in MVP planning.
 - FlyWire data license terms for possible commercial use.
-- Publish the mapping table openly or let players discover it?
+- ~~Publish the mapping table?~~ — resolved 2026-10-25: **never
+  published**; group-level only (§2.3).
+- 2B stack (§11): keep the 2A stack on a server or move to the table.
+
+## 14. Phase 2A — Local UI POC
+
+Runs on the workstation only (FastAPI + static HTML page + SQLite, §11).
+There are no cases, links, tokens or deadlines: one person types both
+sides on one screen. Each **hearing** is one stored row.
+
+1. **Input screen.** An optional **topic** (what the argument is about)
+   is shown on the verdict only and is **never fed to the fly**. Each
+   side has a **name** and an **argument**. The argument rules are as in
+   §3 / §4.1: at least 10 Hebrew letters after normalization, at most
+   280 chars; the server checks the same rule.
+2. **Mood.** A random hearing seed (stored) gives the mood (§5, simulated
+   wait) and drives the simulation. The user never chooses it.
+   "Arousal" is shown as **irritability** (עצבנות).
+3. **Waiting screen (~7 s).** The order is presentation only: the two
+   tastings run in parallel.
+   1. The drawn mood, as one story line.
+   2. "Tasting side A's argument".
+   3. "Tasting side B's argument".
+   4. "Deliberating", which loops until the result arrives.
+   Something always moves, so it never looks stuck.
+4. **Verdict screen.** Courtroom in front: a judge fly, Hebrew legal
+   wording, the §7 headline with the topic, and an appetite meter per
+   side. The fly art is a placeholder (emoji or simple SVG) until the
+   real art arrives.
+5. **Appeal.** One per hearing. It reruns the same arguments with a new
+   random seed, which gives a new mood (and a new noise draw). If the
+   winner changes, it shows "הערעור התקבל!"; otherwise "הערעור נדחה.
+   הפסק סופי". The appeal hearing is stored with `appeal_of` = the
+   original hearing and has no appeal button. Re-entering the same text
+   to get around the limit is accepted in 2A.
+6. **"What happened in the brain?"** A button opens the lab view. It is
+   fetched on demand from `GET /hearing/{id}/brain`. The summary is
+   stored per hearing when the hearing runs; it is never recomputed and
+   never holds raw spikes. It contains:
+   - MN9 rate over time for each tasting (50 ms bins);
+   - activation per taste **group** (never per letter);
+   - the mood values, seed, `sim_version` and platform.
+   Line shown: "140K neurons of a real fly brain, no AI."
+7. **Retention.** Hearings (appeals included) are deleted after 7 days by
+   a cleanup that ships with the API, so it carries over to a server.
+8. **Out of scope:** server/hosting, WhatsApp sharing and link previews,
+   appeal-bypass prevention, production timing (all 2B).
