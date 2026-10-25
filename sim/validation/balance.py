@@ -7,7 +7,9 @@ word list (data/raw/opus_he_freq: word counts only, no utterances were downloade
 on the letter and mark counts and the length (borer_sim.taste), not on word order.
 Pair i = arguments 2i, 2i+1; case seed CASE0 + i is also the simulation seed (as in the
 product); mood = mood_calib.product_mood(case seed). Seed consistency: pairs < N_CONSIST
-x N_SEEDS case seeds (CASE0 + i + SEED_STEP k). Pass rules: tests/test_balance.py.
+x N_SEEDS case seeds (CASE0 + i + SEED_STEP k). Input quality: densest band over all
+tastings; Spearman rho of per-argument MN9 (mean over its seeds) with length and the
+ד/ב/ש count, as taste_criteria. Pass rules: tests/test_balance.py.
 time: TIME_N hearings of the main run, two tastings in parallel (2 processes x 1 thread),
 checked against the run's records (same metrics and outcome), plus peak RSS.
 """
@@ -16,7 +18,7 @@ import json
 import resource
 import statistics
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
 from functools import cache
 
 import numpy as np
@@ -25,8 +27,9 @@ from borer_sim import mood, readout, taste
 from borer_sim.params import TASTING_MS
 from validation.mood_calib import product_mood, record_hearing
 from validation.mood_probe import extra
-from validation.runner import RUNAWAY, connectome_model, load, run_jobs, timed_hearings
+from validation.runner import PLATFORM, RUNAWAY, connectome_model, load, run_jobs, timed_hearings
 from validation.sugar_mn9 import OUT
+from validation.taste_criteria import densest_band, honey, spearman
 
 CORPUS = "data/raw/opus_he_freq/he.freq.gz"
 N_PAIRS, N_CONSIST, N_SEEDS, TIME_N = 1000, 50, 10, 20
@@ -92,6 +95,19 @@ def hearings() -> dict[tuple[int, int], dict]:
     return out
 
 
+def input_quality(res: dict) -> dict:
+    """Densest 10%-of-range band of tasting MN9; rho of per-argument MN9 with length, ד/ב/ש."""
+    per = defaultdict(list)
+    for key, m in res.items():
+        i, _, side = key.split("|")
+        per[2 * int(i) + (side == "b")].append(sum(m["MN9"]))
+    args = arguments()
+    mean = [float(np.mean(per[j])) for j in range(len(args))]
+    return {"band": densest_band([x for v in per.values() for x in v])[0],
+            "rho_len": spearman(mean, [len(a) for a in args]),
+            "rho_honey": spearman(mean, [honey(a) for a in args])}
+
+
 def summary() -> dict:
     hs, res = hearings(), load(FILE)
     main = [hs[i, 0] for i in range(N_PAIRS)]
@@ -114,7 +130,7 @@ def summary() -> dict:
             "consistent": consistent, "runaway": float(np.mean([a > RUNAWAY for a in active])),
             "tastings": len(active), "longer_wins": float(np.mean(longer)), "longer_n": len(longer),
             "gap_pct": np.percentile([h["gap"] for h in main], [10, 25, 50, 75, 90]).round(3).tolist(),
-            "gf_tastings": sum(r["gf_spikes"] > 0 for r in res.values())}
+            "gf_tastings": sum(r["gf_spikes"] > 0 for r in res.values())} | input_quality(res)
 
 
 def timing():
@@ -132,7 +148,7 @@ def timing():
         same += all(h[k] == hs[i, 0][k] for k in ("A", "B", "gap", "direction_flips",
                                                   "decision_time_ms", "winner", "outcome"))
     row = {"median_s": round(statistics.median(times), 2), "times_s": [round(t, 2) for t in times],
-           "records_match": f"{same}/{TIME_N}",
+           "records_match": f"{same}/{TIME_N}", "platform": PLATFORM,
            "peak_rss_gb": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6, 2),
            "peak_rss_child_gb": round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1e6, 2)}
     (OUT / TIME_FILE).write_text(json.dumps(row) + "\n")

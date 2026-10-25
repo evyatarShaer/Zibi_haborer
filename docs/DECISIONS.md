@@ -1087,3 +1087,35 @@ target.
 **Impacts:** TASKS P1-9 done, P1-10 closed as not needed; CLAUDE.md
 status + long-run rule. Data (gitignored): `balance_1500ms.jsonl`,
 `balance_time.json`, `balance.log`.
+
+---
+
+## 2026-10-25 — Platform once per run; input quality at 0.8.0 (P1-11)
+
+**Context:** TASKS P1-9 asked for `platform` "with every run", but
+result rows never stored it. The input-quality checks (MN9 band, ρ)
+were last measured at 0.6.0 on THIRD.
+
+**Decision:**
+- The requirement now reads "platform recorded once per run in
+  DECISIONS.md". From now on, `runner` writes a `platform` field
+  (`runner.PLATFORM`: OS, Python, torch) into every result row and into
+  `balance_time.json`. Existing files are not backfilled.
+- Input quality at 0.8.0 is computed from the saved balance tastings
+  (`balance.input_quality`, no new sim runs) and tested in
+  `tests/test_balance.py`: densest 10% band 24.3% (≤ 50%), ρ(MN9,
+  length) −0.07, ρ(MN9, ד/ב/ש) +0.01 (|ρ| < 0.5). Per-argument MN9 =
+  mean over that argument's seeds. `taste_criteria.honey` is shared by
+  both checks.
+- All timing is from the workstation (DECISIONS.md 2026-10-25 platform).
+  Production-host timing is deferred to the deployment phase.
+
+**Why:** a per-row field is cheap from now on; the old rows' platform is
+known and recorded once.
+
+**Alternatives considered:** backfilling old rows (rewrites data for no
+new information).
+
+**Impacts:** `validation.runner`, `validation.balance`,
+`validation.taste_criteria`, `tests/test_balance.py`, TASKS P1-9/P1-11,
+POC_REPORT.md.

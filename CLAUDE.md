@@ -129,7 +129,7 @@ scripts/       repo checks (file length, clean tree)
 - **Done:** P1-9 balance (2026-10-25): 1,000 random pairs; all SPEC §12
   criteria pass; hearing 6.7 s median, peak RSS ~2 GB + 1.1 GB/child. See
   DECISIONS.md 2026-10-25. P1-10 closed as not needed.
-- **Not started:** P1-11 final report, P1-12 phase gate.
+- **Done:** P1-11 POC_REPORT.md complete (2026-10-25). **Next:** P1-12 phase gate.
   Production-host timing not measured (workstation only).
 - **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
   (probe + scoring), `taste_criteria` (pass rules), `taste_spam` (spam

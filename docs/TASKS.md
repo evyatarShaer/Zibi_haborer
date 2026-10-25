@@ -79,9 +79,10 @@ performance budget.
   random pairs, side A wins 45–55%), seed consistency (≥ 90% of
   non-trivial pairs keep their winner in ≥ 75% of seeds) and outcome
   mix (Win ≥ 50%, each special outcome ≤ 15%), exactly as in the exit
-  criteria above. Measure hearing time and peak RAM. Record `platform`
-  with every run.
-  *Done 2026-10-25 (SIM_VERSION 0.8.0), `tests/test_balance.py` 6/6: side
+  criteria above. Measure hearing time and peak RAM. Platform recorded
+  once per run in DECISIONS.md (amended 2026-10-25; result rows carry
+  a `platform` field from then on, no backfill).
+  *Done 2026-10-25 (SIM_VERSION 0.8.0), `tests/test_balance.py` 8/8: side
   A 46.3% (415/897); seed consistency 32/35 = 91.4%; mix win 89.7%,
   dithered 8.2%, food 1.7%, tie 0.4%, froze 0; runaway 0.38%; longer
   wins 44.7%; hearing median 6.69 s, 20/20 match the records; peak RSS
@@ -91,8 +92,10 @@ performance budget.
   *Not needed 2026-10-25: N = 6 matched the full brain but gave no
   speed-up, and full-brain hearings take 6.7 s (budget 15 s).
   `borer_sim.subcircuit` is kept but not adopted.*
-- [ ] **P1-11 — docs/POC_REPORT.md.** All numbers + decisions made during
-  POC.
+- [x] **P1-11 — docs/POC_REPORT.md.** All numbers + decisions made during
+  POC. *Done 2026-10-25: P1-9, P1-10, timing scope and summary sections;
+  input quality re-measured at 0.8.0 on the balance data (band 24.3%,
+  ρ length −0.07, ρ ד/ב/ש +0.01).*
 - [ ] **P1-12 — Run `phase-gate` skill.** Confirm every exit criterion.
 
 ## Epic: Phase 2 — MVP

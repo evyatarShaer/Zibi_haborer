@@ -40,6 +40,14 @@ def test_runaway_below_2_percent(summary):
     assert summary["runaway"] < 0.02
 
 
+def test_mn9_range_continuous(summary):
+    assert summary["band"] <= 0.50
+
+
+def test_no_length_or_honey_bias(summary):
+    assert abs(summary["rho_len"]) < 0.5 and abs(summary["rho_honey"]) < 0.5
+
+
 def test_longer_wins_40_60(summary):
     assert 0.40 <= summary["longer_wins"] <= 0.60
 

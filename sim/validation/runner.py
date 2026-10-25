@@ -2,12 +2,14 @@
 
 Workers are forked after the model is built, so they share its memory.
 Results append to a JSONL file; finished job keys are skipped on rerun.
-Each record also logs its start time ("t0", ISO) and wall-clock ("wall_s").
+Each record also logs its start time ("t0", ISO), wall-clock ("wall_s") and "platform"
+(from 2026-10-25; older records have none, the run's platform is in DECISIONS.md).
 Metrics always see rates in Hz (counts / seconds), whatever the duration.
 """
 import json
 import multiprocessing as mp
 import os
+import platform
 import time
 from datetime import datetime
 from functools import cache
@@ -26,6 +28,7 @@ from validation.sugar_mn9 import OUT
 WORKERS = int(os.environ.get("BORER_WORKERS", 3))
 THREADS = int(os.environ.get("BORER_THREADS", 2))
 RUNAWAY = 4000  # a run with more active neurons is a runaway (whole-brain cascade)
+PLATFORM = f"{platform.platform()} | {platform.python_version()} | torch {torch.__version__}"
 
 _model = None
 _metric = None
@@ -112,7 +115,8 @@ def run_jobs(jobs: dict, out: Path, duration_ms: float, model: Model | None = No
         with mp.get_context("fork").Pool(workers) as pool, open(out, "a") as f:
             for i, (key, m, t0, wall) in enumerate(pool.imap_unordered(_work, todo, chunksize=1), 1):
                 done[key] = m
-                f.write(json.dumps({"key": key, "m": m, "t0": t0, "wall_s": wall}) + "\n")
+                f.write(json.dumps({"key": key, "m": m, "t0": t0, "wall_s": wall,
+                                    "platform": PLATFORM}) + "\n")
                 f.flush()
                 if i % 50 == 0 or i == len(todo):
                     print(f"  {out.name}: {i}/{len(todo)} new", flush=True)

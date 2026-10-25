@@ -1,6 +1,7 @@
 # POC report (Phase 1)
 
-Numbers and decisions from the POC, per task. Filled in as tasks finish.
+Numbers and decisions from the POC, per task. Complete as of 2026-10-25
+(SIM_VERSION 0.8.0); see the summary at the end.
 
 ## P1-3 — Baseline validation (Shiu et al. 2024)
 
@@ -1112,3 +1113,109 @@ Fled: GF fired in 0/1,200 tastings → outcome dropped.
 
 Not yet run: balance + seed consistency + outcome mix on 1,000 random
 pairs (P1-9), production-host timing, peak RSS.
+
+## P1-9 — Balance, seed consistency, outcome mix (SIM_VERSION 0.8.0)
+
+Run 2026-10-24 22:11 → 2026-10-25 14:04 (detached unit `balance`, log
+`balance.log`). Method: DECISIONS.md 2026-10-24 (P1-9). There was one
+reboot at 02:57 after 625 tastings; the run resumed from the saved keys.
+An 08:56:27 attempt crashed at import and wrote nothing. The final file
+has 2,900 rows with 2,900 unique keys, no duplicates or partial rows.
+Arguments: 2,000 seeded word sequences drawn by OpenSubtitles 2018 word
+frequency, 30–200 chars, not OLD/NEW/THIRD. 1,000 pairs, plus pairs 0–49
+× 10 case seeds; mood from the case seed, as in the product.
+`tests/test_balance.py`: 8/8 passed.
+
+| Criterion (SPEC §12) | Rule | Result |
+|---|---|---|
+| balance | side A wins 45–55% of decided hearings | 415/897 = **46.3%** |
+| seed consistency | ≥ 90% of non-trivial pairs keep their winner in ≥ 75% of seeds | 35/50 non-trivial; **32/35 = 91.4%** (the other 3 at 0.7) |
+| outcome mix | Win ≥ 50%; each special ≤ 15% | win **89.7%**, dithered 8.2%, food 1.7%, tie 0.4%, froze 0 |
+| MN9 range continuous | ≤ 50% of tastings in any 10%-of-range band | **24.3%** |
+| ρ(MN9, length) | \|ρ\| < 0.5 | **−0.07** |
+| ρ(MN9, ד/ב/ש count) | \|ρ\| < 0.5 | **+0.01** |
+| longer wins (all 1,000 pairs) | 40–60% | 399/892 = **44.7%** |
+| runaway | < 2% of tastings | 11/2,900 = **0.38%** |
+| hearing time | ≤ 15 s | median **6.69 s** (6.15–7.60), 20 hearings |
+| RAM | fits in 12 GB | peak RSS parent **1.98 GB**, largest child **1.14 GB** (≤ ~4.3 GB total) |
+
+Per-argument MN9 for ρ is the mean over the argument's seeds: one seed
+for most arguments, ten for pairs 0–49. The band is taken over all
+2,900 tastings. Gap P10/25/50/75/90: 0.05/0.12/0.27/0.46/0.62. GF fired
+in 0/2,900 tastings.
+
+**Determinism / product path.** The `time` step reruns 20 hearings the
+way the product does: two tastings in parallel, 2 processes × 1 thread,
+`runner.timed_hearings`. All 20 matched the runner's records exactly on
+every metric and outcome (A, B, gap, flips, decision time, winner,
+outcome). The records came from a different path: 3 workers × 2 threads,
+other processes, another day. Same-input determinism is also covered by
+the unit tests.
+
+**Watch.** Side A at 46.3% is about 2.2 SE below 50% (p ≈ 0.03). The
+sides are exchangeable by construction, so this is most likely chance.
+Longer-wins at 44.7% is about 3.2 SE below 50%: a mild shorter-wins
+bias at 0.8.0. Both pass. Re-check both whenever the mapping changes.
+
+**Host.** Tastings took ~8 s each when the host was awake. They took
+140–200 s (median) in the 00–02 h and 11–12 h stretches, when Windows
+Modern Standby throttled the VM (~8× lower throughput). Long runs need
+the screen on and the lid open.
+
+## P1-10 — Subcircuit: not needed
+
+The full-brain hearing takes 6.69 s (1.5 s tastings, 2 processes × 1
+thread) against a 15 s budget, so no reduction is needed. The subcircuit
+was built and validated anyway (taste probe v3 §3, SIM_VERSION 0.3.0).
+Only N = 6 hops (120,645 of 138,639 neurons) reproduced the full brain:
+10/10 arguments within ±5%, 50/50 runs bit-identical. It gave no
+speed-up (17.91 s vs 16.65 s at 2 s tastings). Smaller N lost exactness:
+one differing spike turns a run into an independent noise draw.
+`borer_sim.subcircuit` stays in the code, unadopted. The adopted
+speed-up is the two tastings running in parallel.
+
+## Timing scope
+
+**All timing in this report is from the development workstation:** WSL2
+6.18.54.1 on Windows, i5-12450H (12 logical CPUs to the VM), 10 GB VM, Python
+3.12.15, torch 2.14.1+cpu. **Production-host timing has not been
+measured; it is deferred to the deployment phase.** The hearing-time
+criterion is met on the workstation with 2.2× headroom (6.69 s vs 15 s).
+Records written from 2026-10-25 carry a `platform` field. Earlier runs
+record their platform once, in DECISIONS.md.
+
+## Summary — Phase 1 results
+
+Final model: SIM_VERSION 0.8.0. FlyWire v783 whole brain (138,639
+neurons), PyTorch LIF matching Shiu et al. 2024 / Brian2. Each argument
+is tasted alone for 1.5 s ("taste of words", table v4 + spam fix).
+Verdict = higher MN9 rate. Mood (hunger gain, arousal ≤ 0.45 → noise
+≤ 4.5 Hz) comes from the case seed.
+
+| Task | Result |
+|---|---|
+| P1-1 environment | WSL2 + Python 3.12 + `uv`; project in the WSL filesystem (~25× faster than `/mnt/c`) |
+| P1-2 data | FlyWire v783 downloaded and verified (DATA_SOURCES.md); CC BY-NC 4.0, non-commercial |
+| P1-3 Shiu baseline | sugar → MN9 reproduced, 7/7 checks |
+| P1-4 flywire-data skill | written |
+| P1-5 PyTorch LIF | matches Brian2, 13/13 checks (refractory write fixed) |
+| P1-6 taste input | smell of words dropped (no side signal); taste table v4, 1.5 s tastings, spam/silence suite; 0.6.0 |
+| P1-7 mood | hunger gain, arousal noise, capped at 0.45 (0.8.0) |
+| P1-8 readout/outcomes | gap 5%, froze 6 Hz, food 0.8, flips 8 (pre-registered calibration); Fled dropped (GF never fires) |
+| P1-9 balance | every SPEC §12 criterion passes (table above) |
+| P1-10 subcircuit | not needed; only N = 6 validates, no speed-up |
+
+**SPEC §12 exit criteria at 0.8.0:** balance 46.3% · seed consistency
+91.4% · win 89.7% (largest special: dithered 8.2%) · densest band 24.3%
+· ρ length −0.07, ρ ד/ב/ש +0.01 · longer wins 44.7% · runaway 0.38% ·
+hearing 6.69 s · peak RSS ~2 GB (+1.1 GB per tasting process). All pass.
+
+**Main decisions** (DECISIONS.md): taste replaces smell; 1.5 s tastings;
+verdict on MN9 rate; swap test replaced by seed consistency; Fled
+dropped; arousal capped; parallel tastings instead of a subcircuit;
+non-commercial use only (FlyWire licence).
+
+**Open for MVP:** production-host timing; "Brain overload" as an outcome;
+rename "Went for food"; real-utterance arguments (the balance set is
+word-frequency salad); watch the side-A and shorter-wins drift; FlyWire
+licence for any commercial use.

@@ -27,6 +27,11 @@ def spearman(x, y):
     return float(np.corrcoef(rx, ry)[0, 1])
 
 
+def honey(text: str) -> int:
+    """Count of ד/ב/ש in the normalized text."""
+    return sum(taste.normalize(text).count(c) for c in "דבש")
+
+
 def densest_band(rates) -> tuple[float, float]:
     """Largest share of rates within any window BAND x (max - min) wide, and its start."""
     r = np.sort(np.asarray(rates, dtype=float))
@@ -86,14 +91,13 @@ def criteria(tot, ARGUMENTS, PAIRS) -> dict:
             consistent.append(max(wins.values(), default=0) / len(seeds))
     act = [v[2] for d in tot.values() for v in d.values()]
     m = [mean[i] for i in range(len(ARGUMENTS))]
-    honey = [sum(taste.normalize(a).count(c) for c in "דבש") for a in ARGUMENTS]
     exc = [np.mean([taste.TABLE[c][1][0] == "E" for c in taste.normalize(a) if c in taste.LETTERS])
            for a in ARGUMENTS]
     longer = {label: longer_wins(tot, seeds, ARGUMENTS, pl) for label, pl in
               (("probe pairs", PAIRS), ("all pairs", list(combinations(range(len(ARGUMENTS)), 2))))}
     c = {"mean": mean, "seeds": seeds, "consistent": consistent, "gaps": gaps,
          "band": densest_band([v[0] for d in tot.values() for v in d.values()]),
-         "rho_len": spearman(m, [len(a) for a in ARGUMENTS]), "rho_honey": spearman(m, honey),
+         "rho_len": spearman(m, [len(a) for a in ARGUMENTS]), "rho_honey": spearman(m, [honey(a) for a in ARGUMENTS]),
          "rho_exc": spearman(m, exc), "outcomes": dict(outcomes), "active": act,
          "runaway": float(np.mean([a > RUNAWAY for a in act])), "longer": longer}
     n = sum(outcomes.values())
