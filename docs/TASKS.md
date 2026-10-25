@@ -168,7 +168,7 @@ from env, with no workstation paths in code.
   - `fail_running()` marks hearings orphaned by a restart.
   - `cleanup_loop` purges at start and then on a timer. It is wired
     into the app's startup in P2A-3.
-- [ ] **P2A-3 — FastAPI API.** The model loads once at startup.
+- [x] **P2A-3 — FastAPI API.** The model loads once at startup.
   - `POST /hearing` (topic?, names, arguments) checks the argument rules
     (≥ 10 Hebrew letters, ≤ 280 chars, names required), draws a random
     seed, starts the hearing in the background and returns `id`.
@@ -185,6 +185,18 @@ from env, with no workstation paths in code.
     table data.
   - One real end-to-end hearing finishes in ≤ 15 s (POST → decided)
     on the workstation.
+  *Done 2026-10-25 (SIM_VERSION 0.8.2):* `api/tests/test_app.py` +
+  `test_store.py` 33 passed (30 runs in a row); `test_live.py` passed with
+  `-W error::DeprecationWarning`.
+  - Startup 3.2 s. Submit → decided 6.74 / 8.13 / 7.43 s.
+  - The stored result equals a fresh rerun from its seed.
+  - Process tree RSS 3.82 GB.
+  - Model and pool load once, in the lifespan ("forkserver" workers,
+    no fork warning).
+  - One hearing runs at a time, with up to 3 waiting (status
+    `queued`). More → 503 with "הזבוב עסוק…".
+  - The purge loop is started in the lifespan.
+  - Binds 0.0.0.0:8000, started with `scripts/run_local.sh`.
 - [ ] **P2A-4 — Input screen.** Hebrew RTL, mobile-first, no framework:
   topic (optional, labelled as not tasted), two sides with name and
   argument. A live 10-letter counter uses the same normalization as §4.1

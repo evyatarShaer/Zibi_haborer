@@ -85,8 +85,8 @@ sim/           Phase 1 lives here (Python)
   src/borer_sim/
   tests/
 api/           Phase 2A local API (own uv project; tests: cd api && uv run pytest)
-web/           empty placeholder (Phase 2)
-scripts/       repo checks (file length, clean tree)
+web/           Phase 2A static page (Hebrew RTL, no framework), served by the API
+scripts/       repo checks (file length, clean tree); run_local.sh = 2A server on 0.0.0.0:8000
 .githooks/     git hooks (pre-commit → file-length check)
 .mcp.json      GitHub MCP server config
 .claude/settings.json  hooks (file-length after edits, clean tree on stop)
@@ -105,7 +105,7 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — in progress** (SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`); 2B (MVP) after it. Details:
+**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — in progress** (SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`; P2A-3 done, `borer_api.app`, SIM_VERSION 0.8.2); 2B (MVP) after it. Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9

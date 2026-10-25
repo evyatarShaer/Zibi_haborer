@@ -343,7 +343,11 @@ sides on one screen. Each **hearing** is one stored row.
      fed by one letter);
    - the mood values, seed, `sim_version` and platform.
    Line shown: "140K neurons of a real fly brain, no AI."
-7. **Retention.** Hearings (appeals included) are deleted after 7 days by
+7. **One courtroom.** One hearing runs at a time, and up to 3 more
+   wait (status `queued`, visible on `GET /hearing/{id}`). Beyond that
+   the API answers 503 with "הזבוב עסוק בתיקים אחרים כרגע. נסו שוב בעוד
+   דקה".
+8. **Retention.** Hearings (appeals included) are deleted after 7 days by
    a cleanup that ships with the API, so it carries over to a server.
-8. **Out of scope:** server/hosting, WhatsApp sharing and link previews,
+9. **Out of scope:** server/hosting, WhatsApp sharing and link previews,
    appeal-bypass prevention, production timing (all 2B).
