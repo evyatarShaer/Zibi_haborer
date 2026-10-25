@@ -1418,3 +1418,41 @@ patch for refactors); per-GRN-group activation (reveals the table).
 `params.MOOD`, `version`; `validation.runner`, `mood_calib`, `balance`;
 tests `test_hearing.py` (new), `test_mood.py`, `test_determinism.py`;
 SPEC §14.6 ("taste group" = taste class).
+
+---
+
+## 2026-10-25 — Known leak: taste-class output; 0.8.1 and classes kept
+
+**Context:** P2A-1 review. SIM_VERSION 0.8.1 and the taste-class brain
+view were both approved.
+
+**Decision:** Both are kept. The brain view still leaks a coarse
+letter → class map. A single-letter-repeat argument (e.g. "שששש…")
+raises the mean rate of that letter's taste class. Spam coverage scaling
+(SPEC §4.6) weakens the signal but does not remove it, so ~22 such
+arguments recover which class each letter feeds. That doesn't give the
+exact GRN group, but it does give the class.
+
+This is accepted for 2A, which runs on the workstation only. It **must
+be revisited before anything is public** (2B Epic). Options:
+- show the summary only for arguments that pass a coverage bar;
+- add per-class noise;
+- show only total GRN activity;
+- drop the per-class view.
+
+**Impacts:** TASKS 2B Epic; SPEC §2.3 / §14.6.
+
+---
+
+## 2026-10-25 — sim-change skill step 3 matches SPEC §12
+
+**Decision:** Step 3 of `.claude/skills/sim-change` now lists the SPEC
+§12 criteria: balance, seed consistency, outcome mix without Fled,
+input quality, runaway. The swap test and the left-antenna win rate are
+removed; the swap test was replaced by seed consistency on 2026-10-19,
+and there is no antenna input under taste of words. For a patch it
+requires `balance time` 20/20; for a minor/major bump, a full rerun.
+Step 2 now also names `test_hearing.py` (the product hearing test moved
+there in P2A-1) and drops `giant_fiber_fired`.
+
+**Impacts:** `.claude/skills/sim-change/SKILL.md`.

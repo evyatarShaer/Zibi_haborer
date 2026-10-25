@@ -246,6 +246,11 @@ timing; "Brain overload" outcome decision; real-utterance arguments;
 watch side-A (46.3%) and shorter-wins (44.7%) drift; FlyWire licence
 (non-commercial).
 
+**Must revisit before anything is public:** the brain view's
+taste-class output still leaks a coarse letter → class map. An argument
+that repeats one letter lights up that letter's class (DECISIONS.md
+2026-10-25, class-level leak).
+
 Not yet planned (after the 2A gate).
 
 ## Epic: Phase 3
