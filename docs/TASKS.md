@@ -270,9 +270,15 @@ from env, with no workstation paths in code.
     `taste.classes()`).
   - Mood, seed, SIM_VERSION, platform; the "no AI" line.
   - Tests: GET brain never calls the sim; the view has no GRN-group names.
-- [ ] **P2A-9 — Phase 2A gate.** Walk through every exit criterion,
+- [x] **P2A-9 — Phase 2A gate.** Walk through every exit criterion,
   including a determinism rerun of all stored hearings, then run the
   `phase-gate` skill.
+  *Passed 2026-10-25, tag `phase-2a-done` (POC_REPORT.md Phase 2A,
+  DECISIONS.md 2026-10-25 — Phase 2A gate passed):*
+  - `borer_api.recheck`: 6/6 stored hearings bit-identical.
+  - sim 98 passed, api 59 passed.
+  - Every outcome through the full flow in headless Chrome at 360 px.
+  - Submit → decided max 14.46 s on battery.
 
 ## Epic: Phase 2B — MVP (shareable / server)
 
@@ -302,7 +308,16 @@ taste-class output still leaks a coarse letter → class map. An argument
 that repeats one letter lights up that letter's class (DECISIONS.md
 2026-10-25, class-level leak).
 
-Not yet planned (after the 2A gate).
+**Also open from the 2A gate** (POC_REPORT.md Phase 2A): the owner's
+Hebrew copy and real fly art; a real-brain play-test that lands on each
+non-win outcome; the Froze meter showing 100% appetite; timing headroom
+(14.46 s on battery).
+
+### Tasks
+
+Not yet broken down. First step: the stack decision (§11) and hosting,
+since the two-device flow, the card page and production timing all
+depend on them.
 
 ## Epic: Phase 3
 

@@ -1628,3 +1628,18 @@ http2` (TCP 443).
 answered 200 from WSL.
 
 **Impacts:** `scripts/tunnel.sh`, CLAUDE.md.
+
+## 2026-10-25 — Phase 2A gate passed
+
+Every SPEC §12 2A exit criterion passes at SIM_VERSION 0.8.2 (evidence
+in POC_REPORT.md, Phase 2A). The owner play-tested the whole flow on a
+phone (P2A-4…8). Every outcome (Win, Dithered, Tie, Froze, Lunch break)
+went through input → waiting → verdict → appeal → brain view in headless
+Chrome at 360 px, driven over CDP with a scripted sim. The 6 stored
+hearings rerun bit-identically (`borer_api.recheck`, new). Submit →
+decided took ≤ 14.46 s, measured on battery; on AC it was 6.7–8.1 s.
+The letter-table and 7-day cleanup tests pass. Suites: sim 98, api 59
+passed. Open for 2B: the SPEC §12 2B list, the class-level leak in the
+brain view (before anything is public), the owner's copy and art, a
+real-brain play-test of the non-win outcomes, the Froze meter wording,
+and timing headroom. Tag `phase-2a-done`.

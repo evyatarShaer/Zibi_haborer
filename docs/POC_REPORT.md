@@ -1,4 +1,4 @@
-# POC report (Phase 1)
+# POC report (Phase 1, Phase 2A)
 
 Numbers and decisions from the POC, per task. Complete as of 2026-10-25
 (SIM_VERSION 0.8.0); see the summary at the end.
@@ -1219,3 +1219,68 @@ non-commercial use only (FlyWire licence).
 rename "Went for food"; real-utterance arguments (the balance set is
 word-frequency salad); watch the side-A and shorter-wins drift; FlyWire
 licence for any commercial use.
+
+---
+
+## Phase 2A — Local UI POC gate (P2A-9, SIM_VERSION 0.8.2, 2026-10-25)
+
+Workstation: WSL2 (Ubuntu), 10 GB / 12 logical CPUs, Python 3.12.15,
+torch 2.14.1+cpu. The gate ran **on battery** (`BAT1 Discharging`), which
+slows hearings by ~1.6× compared with the play-test hour on AC.
+
+### Exit criteria (SPEC §12)
+
+| Criterion | Evidence | Result |
+|---|---|---|
+| Whole flow end to end at mobile width (RTL), every outcome | Real sim: the owner played input → waiting → verdict → appeal → brain view on a phone through the tunnel (P2A-4…8); the 6 stored hearings are all Win (3 originals + 3 appeals). Every outcome: headless Chrome 155 at 360 px (CDP), the real app and page with a scripted sim (fixed outcome per call), full flow × 5 outcomes, below | pass |
+| Determinism: every stored hearing reruns bit-identically | `python -m borer_api.recheck`: **6/6 bit-identical** (metrics, outcome, winner, mood, brain summary, platform); 2 of them appeals | pass |
+| Submit → verdict ≤ 15 s; waiting never looks stuck | `test_live.py` POST → decided: on AC (P2A-3) 6.74 / 8.13 / 7.43 s; on battery (this gate) 14.46 / 13.03 / 12.28, 13.56 / 10.81 / 11.49 and, with the server stopped, 13.55 / 11.89 / 11.52 s; **max 14.46 s**. Stored sim time of the 6 play-test hearings 7.2–8.5 s. Waiting: `test_slow_host_loops_cleanly` (sim delayed to 40 s); story 7.1–7.3 s in Chrome | pass (thin margin on battery) |
+| No response or page exposes the letter → GRN table (automated) | `test_app.py::test_responses_allowlisted_no_table_data`, `test_web_lab.py::test_lab_shows_no_letters_or_groups` | pass |
+| Cleanup deletes hearings older than 7 days (test) | `test_store.py::test_purge_removes_exactly_rows_older_than_7_days`, `test_expired_reads_as_gone_before_purge`, `test_cleanup_loop_purges_at_start_and_stops`, `test_app.py::test_purge_loop_runs_in_lifespan` | pass |
+
+**Test suites:** sim `98 passed` (43.7 s); api `59 passed` (74.0 s,
+including the real-brain `test_live.py`).
+
+### Every outcome in a mobile-width browser
+
+Each run: fill topic (every other run) + two sides → submit (enabled) →
+waiting story → verdict → "ערעור" → appeal result → "מה קרה במוח?".
+No horizontal overflow at 360 px on any screen. The brain view drew
+2 MN9 curves, 10 taste-class rows and the "no AI" line every time.
+
+| Outcome | Headline | Topic line | Appeal → result | Appeal button on appeal |
+|---|---|---|---|---|
+| Win | פסק הדין: הצדק עם דנה | התיק: פיצה | Win B → הערעור התקבל! | none |
+| Dithered | אחרי התלבטות קשה... הצדק עם יוסי | absent | Dithered B → הערעור נדחה. הפסק סופי | none |
+| Tie | תיקו. הזבוב לא השתכנע מאף אחד | התיק: פיצה | Win A → הערעור התקבל! | none |
+| Froze | הזבוב קפא. התיק הזה גדול עליו | absent | Froze → הערעור נדחה. הפסק סופי | none |
+| Lunch break | הבורר יצא להפסקת צהריים. הדיון נדחה | התיק: פיצה | Win B → הערעור התקבל! | none |
+
+The scripted sim (gate-only, not in the repo) returns fixed outcomes; it
+checks the page and API, not which outcome the brain picks. Non-win
+outcomes have not yet come from the real brain in a play-test.
+
+### Seen in passing (not gate failures)
+
+- **Froze meter:** with A = 2 Hz, B = 0 Hz the meter shows one side at
+  100% appetite under "the fly froze". The bar is relative to the
+  stronger side by design, but it reads oddly; revisit with the copy.
+- **Timing headroom:** on battery the worst hearing was 14.46 s, 0.54 s
+  under the limit. Production-host timing is a 2B item.
+
+### Open for 2B
+
+- Everything SPEC §12 lists for 2B: the two-device flow (link, tokens,
+  deadline, plain water, reminder); hosting; the verdict card page + OG
+  image + WhatsApp preview; the 10–15 s brain animation and replay;
+  sudden death; the group-level how-it-works page; moderation;
+  appeal-bypass prevention; production-host timing; the stack decision.
+- **Must fix before anything is public:** the brain view's taste-class
+  bars leak a coarse letter → class map (DECISIONS.md 2026-10-25).
+- The owner rewrites the placeholder Hebrew copy (mood line, waiting
+  lines, court subtitle); real fly art replaces the emoji.
+- Carried from Phase 1: "Brain overload" outcome; rename "Went for
+  food"; real-utterance arguments; side-A (46.3%) and shorter-wins
+  (44.7%) drift; FlyWire licence (non-commercial).
+- A real-brain play-test that lands on each non-win outcome.
+- The froze meter wording (above).
