@@ -1031,3 +1031,59 @@ order-independent so the gain is small).
 `runner.timed_hearings` (shared with `taste_sub` timing);
 `mood_calib.product_mood` / `record_hearing` (shared with `balance`).
 Results will be logged in a follow-up entry.
+
+---
+
+## 2026-10-25 — P1-9 balance results; P1-10 not needed (SIM_VERSION 0.8.0)
+
+**Context:** Results of the balance run whose method is in the 2026-10-24
+entry. 2,900 tastings, `balance_1500ms.jsonl`. The run started at
+2026-10-24 22:11 and died at the 02:57 reboot (625 rows). An attempt at
+2026-10-25 08:56:27 crashed at import (`ModuleNotFoundError: borer_sim`,
+no `PYTHONPATH`) and wrote no rows. The relaunch at 08:56:56 resumed the
+remaining 2,275 tastings and finished at 14:04. Checked: 2,900 rows, all
+valid JSON, 2,900 unique keys, no duplicates. The relaunch ran only
+`run`, so `time` ran separately afterwards on an idle machine.
+Platform: WSL2 6.18.54.1, i5-12450H, Python 3.12.15, torch 2.14.1+cpu.
+
+**Decision:** P1-9 passes. `tests/test_balance.py`: 6/6 passed.
+
+| criterion | result | target |
+|---|---|---|
+| side A wins | 415/897 decided = 46.3% | 45–55% |
+| seed consistency | 32/35 non-trivial pairs = 91.4% keep their winner in ≥ 75% of seeds (the other 3 at 70%) | ≥ 90% |
+| outcome mix (1,000 hearings) | win 89.7%, dithered 8.2%, food 1.7%, tie 0.4%, froze 0 | win ≥ 50%, each special ≤ 15% |
+| runaway | 11/2,900 tastings = 0.38% | < 2% |
+| longer argument wins | 44.7% (n = 892) | 40–60% |
+| hearing time (product path, 2 proc × 1 thread) | median 6.69 s (6.15–7.60), 20/20 equal to the records | ≤ 15 s |
+| peak RSS | parent 1.98 GB, largest child 1.14 GB (≤ ~4.3 GB total) | 12 GB |
+
+Gap P10/25/50/75/90: 0.05/0.12/0.27/0.46/0.62. GF fired in 0/2,900
+tastings.
+
+**Watch (passes, but not centred):** side A at 46.3% is about 2.2 SE
+below 50% (one test, p ≈ 0.03). The sides are exchangeable by
+construction (same seed, random texts), so this is most likely chance.
+Longer-wins at 44.7% is about 3.2 SE below 50%, so there is a mild
+shorter-wins bias at 0.8.0 (THIRD measured the bias in the opposite
+direction before the spam fix). Neither blocks the gate. Re-check both
+whenever the mapping changes.
+
+**P1-10 (subcircuit): not needed.** Full-brain hearings take 6.7 s
+against a 15 s budget. The subcircuit matched the full brain only at
+N = 6 and gave no speed-up, so `borer_sim.subcircuit` stays unadopted.
+
+**Lesson (ops):** run long jobs with the screen on and the lid open.
+Windows Modern Standby slows the WSL VM about 8×. In this run, tastings
+took ~8 s each when the host was awake. In the 00–02 h and 11–12 h
+stretches the median was 140–200 s per tasting, and throughput fell
+from ~700–900 to 46–130 tastings/h.
+
+**Why:** every SPEC §12 P1-9 criterion has a measured value inside its
+target.
+
+**Alternatives considered:** —
+
+**Impacts:** TASKS P1-9 done, P1-10 closed as not needed; CLAUDE.md
+status + long-run rule. Data (gitignored): `balance_1500ms.jsonl`,
+`balance_time.json`, `balance.log`.

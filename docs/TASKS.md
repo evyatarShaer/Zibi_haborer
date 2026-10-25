@@ -74,17 +74,23 @@ performance budget.
   OLD+NEW hearings by a rule fixed before running: froze 2 → 6 Hz, flips
   3 → 8; mix Win 96.2%, dithered 3.2%, tie 0.3%, froze 0.2%, food 0.2%.
   Fled dropped: GF fired in 0/1,200 tastings — DECISIONS.md 2026-10-24.*
-- [ ] **P1-9 — Determinism + balance tests.** *In progress 2026-10-24
-  (SIM_VERSION 0.8.0): `validation.balance` (detached run) +
-  `tests/test_balance.py`; method in DECISIONS.md 2026-10-24 (P1-9).* Determinism: same input
+- [x] **P1-9 — Determinism + balance tests.** Determinism: same input
   twice → identical metrics. `test_balance.py`: balance (1,000 seeded
   random pairs, side A wins 45–55%), seed consistency (≥ 90% of
   non-trivial pairs keep their winner in ≥ 75% of seeds) and outcome
   mix (Win ≥ 50%, each special outcome ≤ 15%), exactly as in the exit
   criteria above. Measure hearing time and peak RAM. Record `platform`
   with every run.
-- [ ] **P1-10 — Subcircuit (if needed).** Only if full-brain runs blow
+  *Done 2026-10-25 (SIM_VERSION 0.8.0), `tests/test_balance.py` 6/6: side
+  A 46.3% (415/897); seed consistency 32/35 = 91.4%; mix win 89.7%,
+  dithered 8.2%, food 1.7%, tie 0.4%, froze 0; runaway 0.38%; longer
+  wins 44.7%; hearing median 6.69 s, 20/20 match the records; peak RSS
+  1.98 GB + 1.14 GB per child. Platform in DECISIONS.md 2026-10-25.*
+- [x] **P1-10 — Subcircuit (if needed).** Only if full-brain runs blow
   the budget. Compare against full-brain results.
+  *Not needed 2026-10-25: N = 6 matched the full brain but gave no
+  speed-up, and full-brain hearings take 6.7 s (budget 15 s).
+  `borer_sim.subcircuit` is kept but not adopted.*
 - [ ] **P1-11 — docs/POC_REPORT.md.** All numbers + decisions made during
   POC.
 - [ ] **P1-12 — Run `phase-gate` skill.** Confirm every exit criterion.

@@ -42,7 +42,9 @@ fly's choice is the verdict — the humor is the point.
   `scripts/detach.sh <unit> <log> <cmd...>` (a `systemd-run --user`
   service), logging a progress counter to the log. Check with
   `systemctl --user status <unit>` and `tail <log>`; stop with
-  `systemctl --user stop <unit>`. **Never** use `setsid nohup ... &` or
+  `systemctl --user stop <unit>`. Keep the screen on and the lid open
+  during long runs: Windows Modern Standby slows WSL ~8× (balance run,
+  DECISIONS.md 2026-10-25). **Never** use `setsid nohup ... &` or
   tmux for this: under WSL they stay in the terminal's `/init` session
   (cgroup `/non-systemd`) and die when Claude Code exits (taste_chain5,
   2026-10-22). Resumable jobs (`runner.run_jobs` skips saved keys) are
@@ -116,7 +118,7 @@ scripts/       repo checks (file length, clean tree)
   no-Hebrew baseline, r_base 2 Hz; spam/silence suite + OLD+NEW + THIRD
   pass (longer-wins measured over all pairs, changed after THIRD; see
   DECISIONS.md 2026-10-22, SIM_VERSION 0.6.0).
-- **P1-10 subcircuit — built, not adopted** (`borer_sim.subcircuit`):
+- **P1-10 subcircuit — not needed; built, not adopted** (`borer_sim.subcircuit`):
   only N = 6 matches the full brain, with no speed-up. Parallel tastings
   (2 processes × 1 thread) are the adopted speed-up.
 - **Done:** P1-7 mood (`borer_sim.mood`: hunger gain, arousal ≤ 0.45
@@ -124,11 +126,11 @@ scripts/       repo checks (file length, clean tree)
   only in `params.OUTCOME`: gap 5%, froze 6 Hz, food 0.8, flips 8;
   calibrated by `validation.mood_calib`). **Fled dropped** (GF never
   fires). See DECISIONS.md 2026-10-24.
-- **In progress:** P1-9 — `validation.balance` (1,000 random pairs,
-  detached run `balance`, log `sim/data/processed/validation/balance.log`)
-  + `tests/test_balance.py` (skips until the run is complete).
+- **Done:** P1-9 balance (2026-10-25): 1,000 random pairs; all SPEC §12
+  criteria pass; hearing 6.7 s median, peak RSS ~2 GB + 1.1 GB/child. See
+  DECISIONS.md 2026-10-25. P1-10 closed as not needed.
 - **Not started:** P1-11 final report, P1-12 phase gate.
-  Production-host timing not measured.
+  Production-host timing not measured (workstation only).
 - **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
   (probe + scoring), `taste_criteria` (pass rules), `taste_spam` (spam
   suite + r_base sweep), `taste_sub`, `taste_valence`, `taste_length`,
