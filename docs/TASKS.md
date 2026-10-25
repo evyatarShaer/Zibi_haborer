@@ -232,7 +232,7 @@ from env, with no workstation paths in code.
   *Done 2026-10-25: built in `web/` (`api/tests/test_web.py`); the owner
   play-tested it on a phone through the tunnel. The placeholder Hebrew
   copy stays until the owner rewrites it.*
-- [ ] **P2A-7 — Appeal.** `POST /hearing/{id}/appeal`: one per hearing;
+- [x] **P2A-7 — Appeal.** `POST /hearing/{id}/appeal`: one per hearing;
   same texts and names, new random seed, stored with `appeal_of`. The
   result screen shows "הערעור התקבל!" if the winner changed, otherwise
   "הערעור נדחה. הפסק סופי". The appeal hearing shows no appeal button.
@@ -241,7 +241,7 @@ from env, with no workstation paths in code.
     refused.
   - The comparison uses the outcome winner (a non-win outcome counts as
     "no winner").
-  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):*
+  *Done 2026-10-25: built, then play-tested by the owner on a phone through the tunnel:*
   - API: `app.py` `POST /hearing/{id}/appeal` (201 / 404 / 409 for an
     undecided hearing, a second appeal or an appeal of an appeal / 503
     when the court is full, retryable). `GET /hearing/{id}` adds
@@ -250,7 +250,7 @@ from env, with no workstation paths in code.
     לאולם" + the new mood), then the result line above the headline. The
     original links to its appeal.
   - Tests: `api/tests/test_appeal.py`, `test_web_lab.py`.
-- [ ] **P2A-8 — Brain view.** The lab view is fetched on demand:
+- [x] **P2A-8 — Brain view.** The lab view is fetched on demand:
   - MN9 rate over time, both tastings on one chart;
   - group-level taste activation bars;
   - mood, seed, SIM_VERSION, platform;
@@ -259,7 +259,7 @@ from env, with no workstation paths in code.
   - Renders from stored data only, with no sim call (test: the sim is
     not touched on GET).
   - No letter appears in the view.
-  *Built 2026-10-25, awaiting the owner's play-test (tick only after it):*
+  *Done 2026-10-25: built, then play-tested by the owner on a phone through the tunnel:*
   - `web/js/lab.js` (pure model) + `brain.js` (view): fetched on the
     first tap only, then toggles.
   - MN9 chart: inline SVG, side B dashed as well as colored, with a

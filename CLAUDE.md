@@ -121,7 +121,7 @@ scripts/       repo checks (file length, clean tree); run_local.sh (2A server), 
 
 ## Current status
 
-**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — in progress** (SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`; P2A-3 done, `borer_api.app`, SIM_VERSION 0.8.2; P2A-4…6 done, `web/`, play-tested 2026-10-25); 2B (MVP) after it. Details:
+**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — in progress** (SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`; P2A-3 done, `borer_api.app`, SIM_VERSION 0.8.2; P2A-4…8 done, `web/`, play-tested 2026-10-25); 2B (MVP) after it. Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
