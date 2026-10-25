@@ -1608,3 +1608,23 @@ tested in a real browser; that is the play-test.
 
 **Impacts:** `web/`; `api/tests/test_web.py`; TASKS P2A-4..6 (built,
 not ticked).
+
+## 2026-10-25 — Quick tunnel over HTTP/2: QUIC is blocked
+
+**Context:** On the owner's network, quick tunnels registered a URL but
+every request answered 530. The log showed `Failed to dial a quic
+connection … timeout`: UDP 7844 (QUIC) is blocked.
+
+**Decision:** `scripts/tunnel.sh` runs `cloudflared tunnel --protocol
+http2` (TCP 443).
+- The log is truncated on each start. The script waits for the first
+  "Registered tunnel connection" line, then reads the URL from the
+  metrics endpoint `http://127.0.0.1:20241/quicktunnel` (not from the
+  log, which can carry a URL before the tunnel is usable).
+- On timeout it prints the log's last lines; `scripts/tunnel.sh log`
+  shows the tail at any time.
+
+**Evidence:** first run: registered over http2 (fra15) in 5 s; the URL
+answered 200 from WSL.
+
+**Impacts:** `scripts/tunnel.sh`, CLAUDE.md.

@@ -56,7 +56,13 @@ fly's choice is the verdict — the humor is the point.
   `systemctl --user restart haborer`). Phone: `scripts/tunnel.sh`
   (Cloudflare quick tunnel, unit `haborer-tunnel`; prints a new
   `https://*.trycloudflare.com` URL on every start; stop with
-  `systemctl --user stop haborer-tunnel`). **LAN access does not work:**
+  `systemctl --user stop haborer-tunnel`). The tunnel runs with
+  `--protocol http2`: **QUIC (UDP 7844) is blocked on the owner's
+  network**, so QUIC quick tunnels registered a URL but answered 530.
+  The script prints the URL only after the first "Registered tunnel
+  connection" line, from the metrics `/quicktunnel` endpoint
+  (127.0.0.1:20241); log in `api/data/tunnel.log`, tail with
+  `scripts/tunnel.sh log`. **LAN access does not work:**
   phones timed out on `http://<Wi-Fi IP>:8000` even with a Hyper-V
   firewall rule for TCP 8000 (WSL mirrored mode). The rule was removed;
   don't retry it (DECISIONS.md 2026-10-25). Anyone with the tunnel URL
