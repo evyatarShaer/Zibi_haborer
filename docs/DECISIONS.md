@@ -1456,3 +1456,73 @@ Step 2 now also names `test_hearing.py` (the product hearing test moved
 there in P2A-1) and drops `giant_fiber_fired`.
 
 **Impacts:** `.claude/skills/sim-change/SKILL.md`.
+
+---
+
+## 2026-10-25 — P2A-3: local API; forkserver workers; one courtroom (SIM_VERSION 0.8.2)
+
+**Context:** P2A-3 requirements:
+- load the model/pool once, at startup;
+- remove the fork-in-a-threaded-process DeprecationWarning;
+- run one hearing at a time, with a small queue;
+- purge in the lifespan;
+- be reachable from phones on the same Wi-Fi.
+
+**Decision:**
+- **Workers:** `hearing.workers(method="forkserver")`. Each of the two
+  workers builds its own whole-brain model (`Pool` initializer), so the
+  threaded API process is never forked. The parent holds no model.
+  Validation scripts keep "fork", which shares one model with
+  single-threaded scripts. The lifespan warms both workers with a 100 ms
+  hearing.
+  - Determinism: a forkserver hearing equals a fork hearing
+    (`sim/tests/test_hearing.py`), and a stored API hearing equals a
+    fresh rerun from its seed (`api/tests/test_live.py`).
+- **SIM_VERSION 0.8.1 → 0.8.2** (patch, identical output): start-method
+  option, plus `borer_sim.argument` (the 10-letter rule, shared by the
+  API and `validation.balance`; it was inline in balance). `balance time`
+  matches 20/20, median 7.1 s; sim suite 98 passed.
+- **One courtroom:** one worker thread runs hearings in order; a
+  `queue.Queue(maxsize=3)` holds the waiting ones (status `queued`).
+  A 4th waiting request → 503 "הזבוב עסוק בתיקים אחרים כרגע. נסו שוב
+  בעוד דקה", and its row is dropped. Unfinished rows fail at the next
+  startup. An error fails that hearing only, never the worker.
+- **Store bug found by the queue tests:** `Store._run` returned a cursor
+  and rows were fetched after the lock was released. Threads sharing the
+  one SQLite connection could then read the wrong rows (a false 404, and
+  once a dead court thread). Rows are now fetched under the lock
+  (`_one`), with a concurrency test.
+- **Mood at creation:** hunger and arousal are stored when the hearing
+  is created (`mood.product(seed)`), so the waiting screen can tell the
+  mood story before the verdict.
+- **Input limits** (Hebrew messages, 422):
+  - names 1–30 chars, topic ≤ 80;
+  - arguments ≤ 280 chars (`TASTE["max_chars"]`) and ≥ 10 Hebrew
+    letters.
+- **API environment:** `api/` is its own uv project, with torch / numpy
+  / pandas / pyarrow pinned to `sim/uv.lock` so hearings match the
+  validated results. `borer_sim` comes via `PYTHONPATH=../sim/src`.
+  `httpx2` replaces `httpx` for the test client (Starlette deprecation).
+- **Network:** uvicorn binds 0.0.0.0:8000 (`BORER_HOST`, `BORER_PORT`),
+  started by `scripts/run_local.sh`.
+  - WSL runs in mirrored mode. Its Hyper-V firewall blocks inbound by
+    default, so phones need a Hyper-V rule for TCP 8000.
+  - The Wi-Fi profile is Public, so the rule is scoped to the local
+    subnet.
+
+**Numbers (workstation):**
+- startup 3.2 s;
+- submit → decided 6.74 / 8.13 / 7.43 s (3 live hearings);
+- process tree RSS 3.82 GB (parent + 2 workers);
+- API tests: 33 passed in each of 30 runs; the live test passed with
+  DeprecationWarnings as errors.
+
+**Alternatives considered:** "spawn" (same isolation, slower worker
+start); keep "fork" and silence the warning (a real deadlock risk in a
+threaded server); a DB-backed queue (the queue is per process by design
+in 2A).
+
+**Impacts:** `borer_sim.hearing`, `argument`, `version`;
+`validation.balance`; `api/` (app, court, validate, views, store,
+tests); `web/index.html` (placeholder); `scripts/run_local.sh`; SPEC
+§14.7.

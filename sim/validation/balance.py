@@ -23,7 +23,7 @@ from functools import cache
 
 import numpy as np
 
-from borer_sim import mood, readout, taste
+from borer_sim import argument, mood, readout, taste
 from borer_sim.params import TASTING_MS
 from validation.mood_calib import record_hearing
 from validation.mood_probe import extra
@@ -34,7 +34,7 @@ from validation.taste_criteria import densest_band, honey, spearman
 CORPUS = "data/raw/opus_he_freq/he.freq.gz"
 N_PAIRS, N_CONSIST, N_SEEDS, TIME_N = 1000, 50, 10, 20
 CASE0, SEED_STEP, ARG_SEED, VOCAB = 20_000, 1_000_000, 0x62616C, 100_000
-MIN_CHARS, MAX_CHARS, MIN_HEBREW = 30, 200, 10
+MIN_CHARS, MAX_CHARS = 30, 200
 FILE, TIME_FILE = "balance_1500ms.jsonl", "balance_time.json"
 NONTRIVIAL = 0.10  # mean gap of a pair (SPEC §12)
 
@@ -60,8 +60,7 @@ def arguments() -> tuple[str, ...]:
             if len(nxt) > target:
                 break
             text = nxt
-        hebrew = sum(c in taste.LETTERS for c in taste.normalize(text))
-        if len(text) >= MIN_CHARS and hebrew >= MIN_HEBREW:
+        if len(text) >= MIN_CHARS and argument.hebrew_letters(text) >= argument.MIN_LETTERS:
             out.append(text)
     return tuple(out)
 

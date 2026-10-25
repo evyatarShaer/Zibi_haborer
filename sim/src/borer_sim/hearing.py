@@ -1,8 +1,10 @@
 """Product hearing (SPEC §6, §14): two arguments + a hearing seed → verdict + brain summary.
 
 The seed gives the mood (mood.product) and drives both tastings. The tastings run in
-parallel, 2 processes × 1 thread, in workers forked after the model is built (they
-share its memory). The brain summary is group-level only, never per letter (SPEC §2.3).
+parallel, 2 processes × 1 thread. Workers are either forked after the model is built
+(they share its memory; fine for a single-threaded script) or started by "forkserver",
+each building its own whole-brain model (safe in a threaded server such as the API).
+The brain summary is group-level only, never per letter (SPEC §2.3).
 """
 import multiprocessing as mp
 import platform
@@ -26,11 +28,19 @@ def _tasting(job) -> Result:
     return _model.run(drives, ms, seed, noise_hz)
 
 
-def workers(model: Model):
-    """Pool of the two tasting processes, forked with `model`; use as a context manager."""
+def _load() -> None:
     global _model
-    _model = model
-    return mp.get_context("fork").Pool(2)
+    _model = Model.from_connectome()
+
+
+def workers(model: Model | None = None, method: str = "fork"):
+    """Pool of the two tasting processes; use as a context manager. "fork" shares `model`;
+    any other start method builds the whole-brain model in each worker."""
+    global _model
+    if method == "fork":
+        _model = model
+        return mp.get_context("fork").Pool(2)
+    return mp.get_context(method).Pool(2, initializer=_load)
 
 
 def taste_both(pool, drives_a, drives_b, seed: int, noise_hz: float,

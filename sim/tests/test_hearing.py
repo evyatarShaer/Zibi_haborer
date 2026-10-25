@@ -18,6 +18,13 @@ def runs():
         return [hearing.run(pool, *ARGS, seed, MS) for seed in (783, 783, 784)]
 
 
+def test_forkserver_workers_match_fork(runs):
+    """The API's start method (own model per worker) gives the same hearing as fork."""
+    with hearing.workers(method="forkserver") as pool:
+        r = hearing.run(pool, *ARGS, 783, MS)
+    assert _strip(r) == _strip(runs[0])
+
+
 def _strip(r):
     return {k: v for k, v in r.items() if k != "duration_ms"}
 
