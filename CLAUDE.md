@@ -105,7 +105,7 @@ scripts/       repo checks (file length, clean tree)
 
 ## Current status
 
-**Phase 1 (POC) — in progress** (SIM_VERSION 0.8.0, 2026-10-24). Details:
+**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2 (MVP) — not yet planned.** Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9
@@ -129,7 +129,7 @@ scripts/       repo checks (file length, clean tree)
 - **Done:** P1-9 balance (2026-10-25): 1,000 random pairs; all SPEC §12
   criteria pass; hearing 6.7 s median, peak RSS ~2 GB + 1.1 GB/child. See
   DECISIONS.md 2026-10-25. P1-10 closed as not needed.
-- **Done:** P1-11 POC_REPORT.md complete (2026-10-25). **Next:** P1-12 phase gate.
+- **Done:** P1-11 POC_REPORT.md complete; P1-12 phase gate passed (2026-10-25).
   Production-host timing not measured (workstation only).
 - **Validation code** (`sim/validation/`): `taste_probe` / `taste_report`
   (probe + scoring), `taste_criteria` (pass rules), `taste_spam` (spam

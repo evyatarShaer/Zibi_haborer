@@ -96,11 +96,26 @@ performance budget.
   POC. *Done 2026-10-25: P1-9, P1-10, timing scope and summary sections;
   input quality re-measured at 0.8.0 on the balance data (band 24.3%,
   ρ length −0.07, ρ ד/ב/ש +0.01).*
-- [ ] **P1-12 — Run `phase-gate` skill.** Confirm every exit criterion.
+- [x] **P1-12 — Run `phase-gate` skill.** Confirm every exit criterion.
+  *Passed 2026-10-25, tag `phase-1-done` (DECISIONS.md 2026-10-25 —
+  Phase 1 gate passed).*
 
 ## Epic: Phase 2 — MVP
 
-Not yet planned. Will be filled after Phase 1 passes the gate.
+**Goal** (SPEC §12): full flow, verdict card, OG preview, animation, all
+tie types, sudden death, how-it-works page.
+
+**Exit criteria** (from `SPEC.md §12`):
+- 20 real cases in friends' groups, ≥ half shared onward.
+
+**Carried over from Phase 1** (POC_REPORT.md summary): production-host
+timing (deployment); "Brain overload" outcome decision; rename "Went for
+food"; real-utterance arguments; watch side-A (46.3%) and shorter-wins
+(44.7%) drift; FlyWire licence (non-commercial).
+
+### Tasks
+
+Not yet planned (next session: break the MVP scope into P2-n tasks).
 
 ## Epic: Phase 3
 

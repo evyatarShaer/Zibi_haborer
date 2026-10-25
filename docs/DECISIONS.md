@@ -1119,3 +1119,20 @@ new information).
 **Impacts:** `validation.runner`, `validation.balance`,
 `validation.taste_criteria`, `tests/test_balance.py`, TASKS P1-9/P1-11,
 POC_REPORT.md.
+
+---
+
+## 2026-10-25 — Phase 1 gate passed
+
+Phase 1 (POC) passes every SPEC §12 exit criterion at SIM_VERSION 0.8.0.
+Evidence is in `tests/test_balance.py` (8/8; full suite 93 passed) and
+POC_REPORT.md P1-9. Balance: side A wins 46.3% (415/897). Seed
+consistency: 91.4% (32/35 non-trivial pairs). Outcome mix: win 89.7%,
+largest special outcome dithered 8.2%. Input quality: densest band 24.3%,
+ρ(MN9, length) −0.07, ρ(MN9, ד/ב/ש) +0.01, longer argument wins 44.7%,
+runaway 0.38%. Hearing: median 6.69 s, max 7.60 s, 20/20 identical to the
+records. Peak RSS: 1.98 GB + 1.14 GB per tasting process. No criterion
+was changed for the gate. All timing is from the workstation; production
+timing is deferred to deployment. Side A and longer-wins pass but sit
+below 50% (2.2 / 3.2 SE) and are carried into Phase 2 as watch items.
+Tagged `phase-1-done`; Phase 2 Epic opened in TASKS.md.
