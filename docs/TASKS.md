@@ -185,12 +185,14 @@ from env, with no workstation paths in code.
   - A failed hearing shows a Hebrew error with a retry.
   - Shown on screen: about 7 s at the measured speed.
 - [ ] **P2A-6 — Verdict screen.** Courtroom front with a placeholder
-  judge fly (emoji/SVG). Headline per outcome (SPEC §7) with the topic;
+  judge fly (emoji/SVG). Topic line "התיק: {topic}" above the headline
+  (hidden when there is no topic); headline per outcome (SPEC §7);
   appetite meter per side; "what happened in the brain?" button; appeal
   button (original hearings only).
   *Accept:* each of the 5 outcomes renders correctly from fixture data
-  (Win, Dithered with a name, Tie, Froze, Lunch break; with and without
-  a topic).
+  (Win, Dithered with a name, Tie, Froze, Lunch break). With a topic,
+  the line "התיק: {topic}" appears above the headline; without one, the
+  line is absent (not an empty line).
 - [ ] **P2A-7 — Appeal.** `POST /hearing/{id}/appeal`: one per hearing;
   same texts and names, new random seed, stored with `appeal_of`. The
   result screen shows "הערעור התקבל!" if the winner changed, otherwise

@@ -1348,3 +1348,15 @@ private).
 **Impacts:** SPEC §2.3, §4.2, §12 (Phase 3), §13. The repo was public
 from 2026-10-19 to 2026-10-25 with 0 forks and 0 stars; anything cached
 in that time cannot be taken back.
+
+---
+
+## 2026-10-25 — Topic line; new-seed appeal confirmed
+
+**Decision:** The topic is shown on its own line above the verdict
+headline, "התיק: {topic}", and the line is hidden when there is no
+topic. This replaces "topic in the headline" (Verdict copy entry,
+2026-10-25). The appeal's new seed, which changes both mood and noise,
+is confirmed.
+
+**Impacts:** SPEC §7, §14.4, §14.5; TASKS P2A-6.

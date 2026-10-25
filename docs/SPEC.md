@@ -171,7 +171,8 @@ tastings with product mood; only in a noise-saturated, runaway brain).
 Headlines decided 2026-10-25 (DECISIONS.md). "Went for food" is renamed
 to **lunch break** in all user-facing text; the code key stays `food`.
 Dithered names the side with the higher MN9 rate (`winner`), even though
-the gap is < 5%. The topic, if given, appears in the headline. A Win
+the gap is < 5%. The topic, if given, is shown on a separate line
+above the headline: "התיק: {topic}" (§14.4). A Win
 also shows an appetite meter per side (A vs B MN9 rate).
 
 Track outcome frequencies globally; show rarity on the card.
@@ -321,11 +322,13 @@ sides on one screen. Each **hearing** is one stored row.
    4. "Deliberating", which loops until the result arrives.
    Something always moves, so it never looks stuck.
 4. **Verdict screen.** Courtroom in front: a judge fly, Hebrew legal
-   wording, the §7 headline with the topic, and an appetite meter per
-   side. The fly art is a placeholder (emoji or simple SVG) until the
+   wording, the §7 headline, and an appetite meter per side. The topic
+   sits on its own line above the headline, "התיק: {topic}", and the
+   line is hidden when there is no topic. The fly art is a placeholder (emoji or simple SVG) until the
    real art arrives.
 5. **Appeal.** One per hearing. It reruns the same arguments with a new
-   random seed, which gives a new mood (and a new noise draw). If the
+   random seed, which gives a new mood (and a new noise draw, by design,
+   approved 2026-10-25). If the
    winner changes, it shows "הערעור התקבל!"; otherwise "הערעור נדחה.
    הפסק סופי". The appeal hearing is stored with `appeal_of` = the
    original hearing and has no appeal button. Re-entering the same text
