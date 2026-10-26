@@ -1985,10 +1985,71 @@ tastings (the spam suite's silence texts) predate mood noise, so I ran
 **Balance (skill step 3):** a minor bump needs a full `validation.balance
 run` + `time` at 0.9.0. Launched detached on 2026-10-26; the 0.8.x
 records were moved to `balance_1500ms_v080.jsonl` / `balance_time_v080.json`.
-The numbers are added here when it finishes. `test_balance` must not be
-read before then (it re-scores whatever file is present).
+Results: next entry (2026-10-26, P2B-4 balance results).
 
 **Impacts:** `sim/src/borer_sim/{params,mood,hearing,taste,version}.py`,
 `sim/tests/test_{mood,hearing}.py`, `api/src/borer_api/{app,views}.py`,
 `api/tests`, `web/js/{lab,brain,copy}.js`, `web/css/lab.css`; SPEC §5;
 TASKS P2B-4.
+
+---
+
+## 2026-10-26 — P2B-4 balance results (SIM_VERSION 0.9.0)
+
+**Context:** The skill's balance check for the 0.9.0 bump (previous
+entry). Same method as P1-9 (DECISIONS.md 2026-10-24): 1,000 pairs,
+2,900 tastings, wait ~ Exp(2 h) from the seed (`mood.product`), now with
+hunger 0.25 / h. Run 2026-10-26 09:32 → 11:50 (detached unit
+`balance090`), one pass, no restarts. Checked: 2,900 rows, 2,900 unique
+keys, one platform. Median tasting 8.3 s wall, max 18 s (no starved
+stretch). `time` ran right after on the same machine.
+Platform: WSL2 6.18.54.1, i5-12450H, Python 3.12.15, torch 2.14.1+cpu.
+
+**Decision:** 0.9.0 passes the balance check; P2B-4 is done.
+`tests/test_balance.py` 8/8; full sim suite 101 passed.
+
+| criterion | 0.8.x (P1-9) | 0.9.0 | target |
+|---|---|---|---|
+| side A wins | 415/897 = 46.3% | 405/867 = 46.7% | 45–55% |
+| seed consistency (≥ 75% of seeds) | 32/35 = 91.4% | 31/33 = 93.9% (other 2 at 70%) | ≥ 90% |
+| win | 89.7% | 86.7% | ≥ 50% |
+| dithered | 8.2% | 7.2% | ≤ 15% |
+| lunch break (`food`) | 1.7% | 5.7% | ≤ 15% |
+| froze | 0 | 0 | ≤ 15% |
+| tie (not special) | 0.4% | 0.4% | — |
+| runaway | 11/2,900 = 0.38% | 12/2,900 = 0.41% | < 2% |
+| longer argument wins | 44.7% (n = 892) | 45.1% (n = 862) | 40–60% |
+| densest 10% MN9 band | 24.3% | 23.3% | ≤ 50% |
+| ρ(MN9, length) / ρ(MN9, ד/ב/ש) | −0.07 / +0.01 | −0.04 / +0.03 | \|ρ\| < 0.5 |
+| hearing time (2 proc × 1 thread) | median 6.69 s (6.15–7.60); 7.10 s on the last 0.8.x rerun | median 7.32 s (6.33–9.08) | ≤ 15 s |
+| timing hearings equal to the records | 20/20 | 20/20 | 20/20 |
+| peak RSS | parent 1.98 GB, child 1.14 GB | parent 1.98 GB, child 1.14 GB | 12 GB |
+
+Gap P10/25/50/75/90: 0.05/0.12/0.27/0.46/0.62 → 0.04/0.10/0.23/0.40/0.60.
+GF fired in 0/2,900 tastings (unchanged).
+
+**Reading:**
+- The only material change is the lunch break, 1.7% → 5.7%. It is
+  expected from the faster hunger: under Exp(2 h) about a third of the
+  waits pass the 1.6 h needed for hunger > 0.8 (22% sit at the 3 h cap).
+  It is above P2B-1's 3.6% for uniform 0–3 h because Exp(2 h) puts more
+  mass at the cap. The cases come from win (−3.0 pt) and dithered
+  (−1.0 pt). Real 2B waits are unknown; this distribution is a stress
+  case for the validation run, not a forecast.
+- Hunger amplifies the exciting letters on both sides alike, so gaps
+  shrink slightly (median 0.27 → 0.23). Decided hearings drop 897 → 867.
+- Side A (46.7%) and longer-wins (45.1%) stay where 0.8.0 had them,
+  still in range; the watch from 2026-10-25 carries over unchanged.
+- Hearing time +0.6 s median vs P1-9 (+0.2 s vs the last 0.8.x
+  rerun), within run-to-run noise on this host; RSS unchanged.
+
+**Why:** every SPEC §12 P1-9 criterion has a measured value inside its
+target at 0.9.0.
+
+**Alternatives considered:** —
+
+**Impacts:** TASKS P2B-4 done; SPEC §5 (measured lunch-break share);
+CLAUDE.md status. Data (gitignored): `balance_1500ms.jsonl`,
+`balance_time.json`, `balance.log` (0.9.0); 0.8.x kept as
+`balance_1500ms_v080.jsonl`, `balance_time_v080.json`,
+`balance_v080.log`.

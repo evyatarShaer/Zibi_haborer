@@ -359,7 +359,7 @@ the owner's Hebrew copy and fly art.
   - The agreement of ARM verdicts with the x86 records (balance timing
     set) is reported (not required to be equal: §2.2 is per platform).
   - If > 15 s: stop and decide (fallback: worker on the home PC).
-- [ ] **P2B-4 — `borer_sim` for 2B** (`sim-change` skill; version bump).
+- [x] **P2B-4 — `borer_sim` for 2B** (`sim-change` skill; version bump).
   - The product hearing takes the real wait: `mood.from_case(seed,
     wait_h)`. The 2A simulated wait stays only for 2A tests and
     validation.
@@ -373,12 +373,14 @@ the owner's Hebrew copy and fly art.
   - The water hearing runs ≤ 15 s and is deterministic (test).
   - The summary has no taste-class field (test).
   - The balance check per the skill; full sim suite green.
-  *Built 2026-10-26 (SIM_VERSION 0.9.0); tick after the balance rerun
-  passes:*
+  *Done 2026-10-26 (SIM_VERSION 0.9.0):*
   - Tests: sim 101, api 58 passed.
   - Water hearings 7.5–8.4 s.
   - The 2A page's taste bars removed with it.
-  - Balance rerun running detached (DECISIONS.md 2026-10-26, P2B-4).
+  - Balance rerun: `test_balance` 8/8. Side A 46.7%, consistency 93.9%,
+    win 86.7%, dithered 7.2%, lunch break 5.7% (was 1.7%), runaway
+    0.41%, longer-wins 45.1%. Median 7.32 s, 20/20 records match, RSS
+    1.98 + 1.14 GB (DECISIONS.md 2026-10-26, P2B-4 balance results).
 - [ ] **P2B-5 — Case storage.** SQLite schema per SPEC §10:
   - `case`, `hearing` (n 0–2, `appealed_by`), `report` and `counter`;
   - token hashes;

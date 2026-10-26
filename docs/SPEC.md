@@ -144,7 +144,7 @@ ignites a whole-brain runaway with a fixed, side-blind output.
   seed, ≈ Exp(2 h), capped at the 3 h deadline, and hunger follows the
   rule above. The balance run (`validation.balance`) uses this
   distribution: at 0.1 / h P1-9 measured lunch break ≈ 1.7%; at
-  0.25 / h it is re-measured for 0.9.0. The user never chooses the
+  0.25 / h (0.9.0) it is 5.7%. The user never chooses the
   mood.
 - Same seed and same mood for both tastings of a hearing. Measured on
   OLD+NEW (600 hearings): mood changes the verdict in 10.5% of hearings,
