@@ -167,3 +167,11 @@ def public_card(cid: str, request: Request):
     if case is None or case["hidden_at"] is not None:
         return views.closed()
     return views.public(case, hearings)
+
+
+@router.post("/c/{cid}/report")
+def report(cid: str, request: Request):
+    """The public card's report button: the case is hidden at once (SPEC §15.5)."""
+    if not request.app.state.store.report(cid):
+        return views.closed()
+    return {"hidden": True}

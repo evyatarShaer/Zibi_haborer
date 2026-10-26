@@ -432,7 +432,7 @@ the owner's Hebrew copy and fly art.
     The 2A page in `web/` still calls `/hearing`, so it does not work
     until P2B-8.
   - Choices and open points: DECISIONS.md 2026-10-26 (P2B-6).
-- [ ] **P2B-7 — Moderation.**
+- [x] **P2B-7 — Moderation.**
   - A Hebrew offensive-word filter on the topic, names and arguments,
     after §4.1 normalization. The owner supplies the list. A match gives
     a soft block with a fly-themed message.
@@ -444,6 +444,13 @@ the owner's Hebrew copy and fly art.
   - A report hides the whole case immediately: the public card and both
     personal pages show "case closed".
   - Delete and restore work. No AI anywhere.
+  *Done 2026-10-26:* `borer_api.words` (filter), `reports` (report,
+  restore, delete), `admin`, `POST /api/c/{id}/report`.
+  - `tests/test_moderation.py`; api suite 89 passed.
+  - The list is `api/moderation/words.txt` (git-ignored; 6 placeholder
+    entries until the owner's list). `words.example.txt` (in git) holds
+    the format and is the fallback, with a warning.
+  - Matching rules and limits: DECISIONS.md 2026-10-26 (P2B-7).
 - [ ] **P2B-8 — Pages: case flow.** Hebrew RTL, mobile-first, the 2A
   modules reused:
   - A's open-case screen + "send to the other side" (`wa.me`);

@@ -2179,3 +2179,53 @@ to its hearings and reports; `counter` has no case reference.
 **Impacts:** `api/src/borer_api/{tokens,court,cases,db,views}.py`;
 `api/tests/{test_tokens,test_case_api,test_case_links}.py`, `conftest.py`;
 TASKS P2B-2; CLAUDE.md.
+
+---
+
+## 2026-10-26 — P2B-7: moderation (word filter, report, admin)
+
+**What was built (no AI anywhere):**
+- **Word filter** (`borer_api.words`). Checked on the topic, both names,
+  A's argument at case open and B's argument at submit. A match is a
+  soft block: 422 for that field only, with "הזבוב לא מוכן לטעום מילים
+  כאלה. נסחו את זה אחרת" (placeholder copy). Nothing is stored.
+- **Report:** `POST /api/c/{case id}/report` records a report row and
+  hides the case at once. The public card, both personal pages and the
+  brain view then answer the generic "case closed" 404. A hidden case
+  gets no no-show hearing until it is restored.
+- **Admin:** `python -m borer_api.admin list|delete <id>|restore <id>
+  [--db]`.
+  - `list` shows reported or hidden cases with their texts, so the owner
+    can judge them.
+  - `restore` clears `hidden_at` and keeps the report rows.
+  - `delete` removes the case with its hearings and reports.
+
+**Matching rules (choices; owner to confirm):**
+- Text and entries go through §4.1 normalization (niqqud stripped,
+  final letters regular, Unicode NFKD). Only Hebrew words are compared.
+- An entry matches **whole words**, with up to 3 of the prefixes ו ה ב כ
+  ל מ ש in front of its first word ("והמטומטם" matches "מטומטם").
+- **Inflections are separate entries**: no suffix stemming. Stemming
+  would block innocent words.
+- A multi-word entry matches its words in a row.
+- **Known limits:**
+  - Spaced-out or dotted letters ("ז.ו.נ.ה") are not caught.
+  - Neither are Latin look-alikes or spellings that differ from the
+    entry (vowelled "חסר" spelling, e.g. מְטֻמְטָם without ו).
+  - A word whose first letters happen to be prefixes can be blocked
+    wrongly (e.g. an entry "זונה" also blocks "מזונה").
+  - The owner's list decides how much this matters.
+
+**List files:**
+- `api/moderation/words.txt` (git-ignored; `BORER_WORDS` overrides the
+  path) holds 6 placeholder entries until the owner's list arrives.
+- `words.example.txt` (in git) documents the format. It is used as the
+  fallback, with a logged warning, when the live list is missing, e.g.
+  on a fresh clone or a new server. P2B-2 must copy the real list to the
+  server.
+
+**Not done here:** the `reports` counter (P2B-11) and the report button
+on the page (P2B-8/10).
+
+**Impacts:** `api/src/borer_api/{words,reports,admin,validate,routes,cases}.py`,
+`api/moderation/`, `.gitignore`; TASKS P2B-7.

@@ -14,6 +14,7 @@ import time
 
 from borer_api import tokens
 from borer_api.db import Db
+from borer_api.reports import Reports
 from borer_sim import mood
 from borer_sim.params import MOOD
 
@@ -34,7 +35,7 @@ class Busy(Exception):
     """The court already holds its maximum of hearings (one running + the waiting line)."""
 
 
-class Store(Db):
+class Store(Reports, Db):
     def __init__(self, path: str, clock=time.time, max_active: int | None = None):
         """max_active: hearings queued + running at most (None = no limit)."""
         super().__init__(path, clock)

@@ -1,0 +1,13 @@
+# HaBorer offensive-word list (SPEC §15.5) — the format, with sample entries.
+# The live list is api/moderation/words.txt (git-ignored; the owner supplies it).
+# Without it the API falls back to this file and logs a warning.
+#
+# One entry per line; lines starting with # and blank lines are ignored.
+# Entries and texts are compared after §4.1 normalization: niqqud stripped, final
+# letters made regular, so "כוס אמא" also matches "כּוֹס אִמָּא" and finals need no copy.
+# An entry matches whole words only. The prefixes ו ה ב כ ל מ ש (up to 3 together)
+# are allowed in front of its first word: "מניאק" also blocks "והמניאק".
+# Inflections are separate entries (plural, feminine, possessive).
+# A multi-word entry matches those words in a row.
+מניאק
+כוס אמק

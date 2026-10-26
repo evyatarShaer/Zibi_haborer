@@ -60,3 +60,6 @@ secrets/
 # ───── Local API database (Phase 2A) ─────
 *.sqlite3
 api/data/
+
+# ───── Moderation word list (owner-supplied; words.example.txt is in git) ─────
+api/moderation/words.txt
