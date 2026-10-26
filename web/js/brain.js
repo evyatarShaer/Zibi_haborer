@@ -35,14 +35,6 @@ function mn9Chart(m, names) {
 const legend = (names) => el("div", { class: "legend" },
   names.map((n, s) => el("span", {}, el("i", { class: `swatch lab-${SIDES[s]}` }), n)));
 
-function tasteBars(m, names) {
-  return el("div", { class: "taste" }, legend(names), m.taste.map((r) => el("div", { class: "taste-row" },
-    el("span", { class: "taste-label" }, r.label),
-    SIDES.map((k, s) => el("div", { class: "taste-bar", title: `${names[s]} ${LAB.hz(r.hz[s])}` },
-      el("div", { class: `fill lab-${k}`, style: `width: ${r.width[s]}%` }),
-      el("span", {}, LAB.hz(r.hz[s])))))));
-}
-
 function facts(m) {
   const row = (k, v) => [el("dt", {}, k), el("dd", {}, v)];
   return el("dl", { class: "facts" }, row(LAB.hunger, m.mood.hunger), row(LAB.irritability, m.mood.arousal),
@@ -54,7 +46,6 @@ export function labView(b, h) {
   return el("section", { class: "card lab" },
     el("h3", {}, LAB.title), el("p", { class: "no-ai" }, LAB.noAi),
     el("h4", {}, LAB.mn9), el("p", { class: "hint" }, LAB.mn9Hint), mn9Chart(m, names),
-    el("h4", {}, LAB.taste), el("p", { class: "hint" }, LAB.tasteHint), tasteBars(m, names),
     el("h4", {}, LAB.judge), facts(m));
 }
 

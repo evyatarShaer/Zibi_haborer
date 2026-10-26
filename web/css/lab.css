@@ -1,4 +1,4 @@
-/* Verdict extras and the lab view (P2A-7/8): appeal result, MN9 chart, taste bars. */
+/* Verdict extras and the lab view (P2A-7/8): appeal result, MN9 chart. */
 .appeal-result {
   text-align: center; font-weight: 800; font-size: 1.15rem; margin: 0 0 4px;
   padding: 8px; border-radius: 10px; background: var(--paper); color: var(--wood);
@@ -25,13 +25,6 @@
 .chart .cursor { stroke: var(--muted); stroke-width: 1; }
 .readout { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); min-height: 1.3em; }
 
-.taste-row { display: grid; grid-template-columns: 7.5em 1fr; gap: 2px 8px; margin-top: 8px; font-size: 0.85rem; }
-.taste-label { grid-row: span 2; align-self: center; }
-.taste-bar { display: flex; align-items: center; gap: 6px; height: 14px; }
-.taste-bar .fill { height: 8px; border-radius: 4px; min-width: 2px; }
-.taste-bar .fill.lab-a { background: var(--side-a); }
-.taste-bar .fill.lab-b { background: var(--side-b); opacity: 0.85; }
-.taste-bar span { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
 
 .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 8px 0 0; font-size: 0.9rem; }
 .facts dt { color: var(--muted); }

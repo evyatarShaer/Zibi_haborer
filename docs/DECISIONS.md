@@ -1911,3 +1911,84 @@ These are covered in TASKS P2B-2 and P2B-3.
 
 **Impacts:** SPEC §3, §5, §8, §9, §10, §11, §13, §15; TASKS P2B-1,
 P2B-4, P2B-5, P2B-6, P2B-7, P2B-9.
+
+## 2026-10-26 — Lunch-break growth rate 0.25 / h; no-shows brain-decided
+
+**Context:** P2B-1 options (POC_REPORT.md P2B-1): 0.20 / 0.25 / 0.30 per
+hour. Water drives MN9 almost not at all (median 0 Hz, max 10 Hz), so a
+no-show never ends in a lunch break, at any rate.
+
+**Decision (owner):**
+- Hunger grows **0.25 / h** of real wait (start U(0, 0.4), threshold
+  0.8 unchanged). A lunch break is possible only after 1.6 h: ~0.9% of
+  cases for ~Exp(1 h) answers and ~3.6% for uniform 0–3 h, 77–93% of
+  them from waits ≥ 2 h.
+- **No-shows stay brain-decided**, with no special rule. A wins by
+  forfeit almost always, and "הזבוב העדיף מים" stays a rare event
+  (~0.2% of no-shows).
+
+**Alternatives considered:** 0.20 / h (under 1% unless players are
+slow); 0.30 / h (a third of lunch breaks before 2 h); a no-show lunch
+rule (a spec change).
+
+**Impacts:** `params.MOOD["hunger_per_hour"]` (SIM_VERSION 0.9.0, next
+entry); SPEC §5, §13; TASKS P2B-1 (done), P2B-4.
+
+---
+
+## 2026-10-26 — The 60-tasting water run in P2B-1 is accepted
+
+**Context:** P2B-1 was to use saved data only. The saved water-like
+tastings (the spam suite's silence texts) predate mood noise, so I ran
+60 plain-water tastings at product noise (1.7 min,
+`validation.lunch_rate water`).
+
+**Decision (owner):** fine; a short run like this is not a "long run".
+
+**Impacts:** `sim/validation/lunch_rate.py`, POC_REPORT.md P2B-1.
+
+---
+
+## 2026-10-26 — P2B-4: real-wait hunger, plain water, no taste classes (SIM_VERSION 0.9.0)
+
+**What changed (sim-change skill, minor bump 0.8.2 → 0.9.0):**
+- `params.MOOD`: `hunger_per_hour` 0.1 → **0.25** and a new
+  `deadline_h` 3.0. `mood.from_case` counts no wait past the deadline
+  (a no-show = 3 h). This also caps 2A's simulated Exp(2 h) wait, so
+  `mood.product` changes too.
+- `hearing.run(pool, text_a, text_b, seed, ms, wait_h=None)`:
+  - `wait_h` is the real wait (2B, `mood.from_case`); None keeps 2A's
+    draw.
+  - `text_b=None` is **plain water**: `hearing.WATER = ""`, the
+    baseline rate on every letter group; hunger does not touch it.
+  - An appeal passes its own seed with the case's wait (fresh start,
+    SPEC §15.4).
+- The brain summary drops `taste_hz`; `taste.classes()` is deleted
+  (unused).
+- The API sends only an allowlist of brain fields (`views.brain`), so
+  rows stored under 0.8.x never send their taste classes. The 2A page
+  lost its taste bars, labels and CSS (part of P2B-9's brain view,
+  pulled forward so the running app keeps working).
+
+**Determinism:** `test_determinism.py` + `test_hearing.py` green.
+- Same seed twice is bit-identical (2A path).
+- Same seed + `wait_h` twice is bit-identical, and its mood equals
+  `mood.from_case(seed, wait)`.
+- A water hearing twice is bit-identical.
+- The summary has exactly `bin_ms, mn9_hz, mood, seed, sim_version,
+  platform`.
+- Suites: sim 101 passed, api 58 passed.
+
+**Performance:** full-length water hearings (1.5 s, forkserver) took
+7.47 / 8.44 / 8.26 s. A won all three (MN9 97–129 Hz vs 0 Hz).
+
+**Balance (skill step 3):** a minor bump needs a full `validation.balance
+run` + `time` at 0.9.0. Launched detached on 2026-10-26; the 0.8.x
+records were moved to `balance_1500ms_v080.jsonl` / `balance_time_v080.json`.
+The numbers are added here when it finishes. `test_balance` must not be
+read before then (it re-scores whatever file is present).
+
+**Impacts:** `sim/src/borer_sim/{params,mood,hearing,taste,version}.py`,
+`sim/tests/test_{mood,hearing}.py`, `api/src/borer_api/{app,views}.py`,
+`api/tests`, `web/js/{lab,brain,copy}.js`, `web/css/lab.css`; SPEC §5;
+TASKS P2B-4.

@@ -15,7 +15,10 @@ ARGS = ("פיצה עם אננס זה פשוט טעים ונקודה.", "הסדר
 @pytest.fixture(scope="module")
 def runs():
     with hearing.workers(Model.from_connectome()) as pool:
-        return [hearing.run(pool, *ARGS, seed, MS) for seed in (783, 783, 784)]
+        runs = [hearing.run(pool, *ARGS, seed, MS) for seed in (783, 783, 784)]
+        waited = [hearing.run(pool, *ARGS, 783, MS, wait_h=2.5) for _ in range(2)]
+        water = [hearing.run(pool, ARGS[0], None, 785, MS, wait_h=3.0) for _ in range(2)]
+        return runs + waited + water
 
 
 def test_forkserver_workers_match_fork(runs):
@@ -30,7 +33,7 @@ def _strip(r):
 
 
 def test_same_seed_bit_identical(runs):
-    a, b, _ = runs
+    a, b = runs[:2]
     assert mood.product(783).noise_hz > 0  # mood and noise are part of what must repeat
     assert _strip(a) == _strip(b)
     assert a["metrics"]["outcome"] in readout.OUTCOMES
@@ -40,6 +43,20 @@ def test_different_seed_differs(runs):
     assert _strip(runs[0]) != _strip(runs[2])
 
 
+def test_real_wait_sets_hunger_bit_identical(runs):
+    """2B: the real wait gives the mood (from_case), repeatably; it differs from 2A's draw."""
+    w1, w2 = runs[3:5]
+    assert _strip(w1) == _strip(w2) and w1["mood"] == vars(mood.from_case(783, 2.5))
+    assert w1["mood"] != runs[0]["mood"]
+
+
+def test_plain_water_side_b(runs):
+    """A no-show: B tastes plain water (baseline only), deterministic; A wins it easily."""
+    w1, w2 = runs[5:7]
+    assert _strip(w1) == _strip(w2)
+    assert w1["metrics"]["B"] < w1["metrics"]["A"]
+
+
 def test_brain_summary_consistent_with_metrics(runs):
     r = runs[0]
     b, bin_s = r["brain"], r["brain"]["bin_ms"] / 1000
@@ -47,7 +64,7 @@ def test_brain_summary_consistent_with_metrics(runs):
     for side, rates in zip("AB", b["mn9_hz"]):
         assert len(rates) == MS // b["bin_ms"]
         assert sum(rates) * bin_s / (MS / 1000) == pytest.approx(r["metrics"][side])
-    assert all(set(t) == set(taste.classes()) for t in b["taste_hz"])
+    assert set(b) == {"bin_ms", "mn9_hz", "mood", "seed", "sim_version", "platform"}  # no taste
 
 
 def test_no_letter_level_data(runs):

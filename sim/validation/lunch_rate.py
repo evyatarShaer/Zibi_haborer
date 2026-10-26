@@ -4,6 +4,8 @@ Run from sim/:  PYTHONPATH=src:. uv run python -m validation.lunch_rate water|re
 water: N_WATER plain-water tastings (no Hebrew letters = baseline GRN rates) at product
 noise; hunger does not touch water (it scales only the MN9-exciting letter groups), so
 one tasting per seed covers every growth rate. A short run (~2 min), not a long one.
+Ran at SIM_VERSION 0.8.2 on the 0.8.x balance records (now balance_1500ms_v080.jsonl,
+simulated at 0.1 / h); results in POC_REPORT P2B-1. Rerun from commit 3e85192.
 report: hunger = U(0, 0.4) + rate x wait (cap 1), wait capped at the 3 h deadline.
 Responders: the P1-9 records' outcome mix per 0.1-wide hunger bin (the hunger each
 record was simulated with), mixed by each wait pattern's hunger distribution.

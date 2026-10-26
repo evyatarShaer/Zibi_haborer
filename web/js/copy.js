@@ -55,7 +55,7 @@ export function headline(h) {
   }[h.outcome];
 }
 
-// The lab view (SPEC §14.6). Taste classes are GRN sub-classes, never letters or groups.
+// The lab view (SPEC §15.7): MN9 curves and the run's identity; no taste classes.
 export const LAB = {
   title: "מה קרה במוח?",
   noAi: "140 אלף נוירונים של מוח זבוב אמיתי. בלי AI.",
@@ -64,8 +64,6 @@ export const LAB = {
   at: (s, parts) => `${s.toFixed(2)} ש׳ · ${parts.join(" · ")}`,
   hz: (x) => `${Math.round(x)} הרץ`,
   seconds: "ש׳",
-  taste: "מה הזבוב טעם",
-  tasteHint: "פעילות ממוצעת של חיישני הטעם לפי סוג (הרץ)",
   judge: "מצב השופט",
   hunger: "רעב",
   irritability: "עצבנות",
@@ -73,15 +71,4 @@ export const LAB = {
   version: "גרסת סימולציה",
   platform: "מחשב",
   error: "לא הצלחנו לפתוח את המוח. נסו שוב",
-};
-
-export const CLASSES = {
-  sugar: "מתוק", "sugar/low_salt": "מתוק / מעט מלח", bitter: "מר", water: "מים",
-  glutamate: "אוממי (גלוטמט)", "high_salt/heavy_metal": "מלוח מאוד / מתכתי",
-  putative_attractive: "כנראה מושך", putative_aversive: "כנראה דוחה", "taste peg": "יתדות טעם",
-  SA_VTV_pro_meso_meta: "חיישני רגליים",
-  accessory_pharyngeal_nerve_sensory_group1: "לוע (עזר) 1",
-  accessory_pharyngeal_nerve_sensory_group2: "לוע (עזר) 2",
-  pharyngeal_nerve_sensory_group1: "לוע 1", pharyngeal_nerve_sensory_group2: "לוע 2",
-  pharyngeal_nerve_sensory_group3: "לוע 3",
 };

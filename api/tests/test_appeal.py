@@ -80,5 +80,6 @@ def test_brain_is_stored_data_without_a_sim_call(client, sim):
     hid = decided(client)["id"]
     calls = len(sim.calls)
     for _ in range(3):
-        assert client.get(f"/hearing/{hid}/brain").json() == BRAIN
+        assert client.get(f"/hearing/{hid}/brain").json() == {k: v for k, v in BRAIN.items()
+                                                              if k != "taste_hz"}
     assert len(sim.calls) == calls

@@ -39,7 +39,8 @@ TASTE = {
 # Fly mood (SPEC §5): an added layer, seeded per case, identical for both tastings.
 MOOD = {
     "hunger_base_max": 0.4,  # hunger at case open ~ U(0, this); waiting adds the rest
-    "hunger_per_hour": 0.1,  # + per hour from case open until both submitted (cap 1)
+    "hunger_per_hour": 0.25, # + per hour from case open until B submits (cap 1); P2B-1 pick
+    "deadline_h": 3.0,       # B's deadline (SPEC §3): no wait counts beyond it (no-show = 3 h)
     "wait_mean_h": 2.0,      # hearing without a wait (SPEC §5, §14): wait ~ Exp(this) h from the seed
     "hunger_gain": 0.5,      # MN9-exciting groups' drive above baseline x (1 + gain * hunger)
     "arousal_max": 0.45,     # arousal ~ U(0, this): no runaway below 0.48 (DECISIONS.md 2026-10-24)

@@ -311,7 +311,7 @@ the owner's Hebrew copy and fly art.
 
 ### Tasks (build order)
 
-- [ ] **P2B-1 — Lunch-break growth rate (analysis only).** From the
+- [x] **P2B-1 — Lunch-break growth rate (analysis only).** From the
   saved P1-9 records (`balance_1500ms.jsonl`), with no new long run, find
   the hunger growth rate per hour. Keep the U(0, 0.4) start and the 0.8
   threshold.
@@ -328,9 +328,9 @@ the owner's Hebrew copy and fly art.
     cover hunger only up to the range P1-9 drew.
   - A POC_REPORT section. The owner picks the rate; DECISIONS entry;
     used in P2B-4.
-  *Options reported 2026-10-26 (POC_REPORT.md P2B-1), awaiting the owner's
-  pick:* 0.20 / 0.25 / 0.30 per hour. No-shows never give a lunch break
-  (water MN9 ≈ 0 Hz).
+  *Done 2026-10-26 (POC_REPORT.md P2B-1):* the owner picked **0.25 / h**.
+  No-shows stay brain-decided: water MN9 ≈ 0 Hz, so A wins by forfeit.
+  "הזבוב העדיף מים" stays rare.
 - [ ] **P2B-2 — Host setup.** The owner creates the Oracle Cloud
   account; the signup asks for a card, and only Always Free resources
   are used. Then:
@@ -373,6 +373,12 @@ the owner's Hebrew copy and fly art.
   - The water hearing runs ≤ 15 s and is deterministic (test).
   - The summary has no taste-class field (test).
   - The balance check per the skill; full sim suite green.
+  *Built 2026-10-26 (SIM_VERSION 0.9.0); tick after the balance rerun
+  passes:*
+  - Tests: sim 101, api 58 passed.
+  - Water hearings 7.5–8.4 s.
+  - The 2A page's taste bars removed with it.
+  - Balance rerun running detached (DECISIONS.md 2026-10-26, P2B-4).
 - [ ] **P2B-5 — Case storage.** SQLite schema per SPEC §10:
   - `case`, `hearing` (n 0–2, `appealed_by`), `report` and `counter`;
   - token hashes;

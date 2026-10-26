@@ -119,13 +119,16 @@ ignites a whole-brain runaway with a fixed, side-blind output.
 > We say this publicly: it's an *added* layer, not from the connectome.
 
 - `hunger` ∈ [0, 1] — a base draw U(0, 0.4) from the hearing seed,
-  plus **+0.1 / hour of real wait** (Phase 2B: case open → B submits;
-  3 h for a no-show), capped at 1. It is shown in the UI ("the fly has
-  been hungry for 3 hours"). The growth rate for 2B is chosen in P2B-1:
-  the lunch break (hunger > 0.8) should happen mainly near the 3 h
-  deadline and in no-shows, in ~1–3% of all cases (DECISIONS.md
-  2026-10-26). At 0.1 / h, hunger stays ≤ 0.7, so the lunch break could
-  never happen.
+  plus **+0.25 / hour of real wait** (SIM_VERSION 0.9.0, P2B-1 pick).
+  - The wait runs from case open until B submits. No wait counts past
+    the 3 h deadline, so a no-show counts 3 h.
+  - Hunger is capped at 1 and shown in the UI ("the fly has been hungry
+    for 3 hours").
+  - The lunch break (hunger > 0.8) is possible only after 1.6 h of
+    waiting: ~1–3% of cases for typical-to-slow players (POC_REPORT
+    P2B-1).
+  - A no-show never gets one: water barely drives MN9, so A wins by
+    forfeit (DECISIONS.md 2026-10-26).
 - `arousal` ∈ [0, 0.45] — seeded from case id (uniform; capped at 0.45
   because runaways appeared only from 0.48, DECISIONS.md 2026-10-24).
   Sets background noise →
@@ -137,9 +140,12 @@ ignites a whole-brain runaway with a fixed, side-blind output.
 - Arousal increases background spike noise (random-sign 2 mV kicks to
   every neuron at arousal × 10 Hz, so ≤ 4.5 Hz; 20 Hz ignites runaways).
 - **Hearing without a waiting time** (Phase 2A only, both sides typed
-  at once; 2B uses the real wait): the wait is drawn from the hearing seed, ≈ Exp(2 h), and
-  hunger follows the rule above. This is the distribution P1-9
-  validated ("went for food" ≈ 1.7%). The user never chooses the mood.
+  at once; 2B uses the real wait): the wait is drawn from the hearing
+  seed, ≈ Exp(2 h), capped at the 3 h deadline, and hunger follows the
+  rule above. The balance run (`validation.balance`) uses this
+  distribution: at 0.1 / h P1-9 measured lunch break ≈ 1.7%; at
+  0.25 / h it is re-measured for 0.9.0. The user never chooses the
+  mood.
 - Same seed and same mood for both tastings of a hearing. Measured on
   OLD+NEW (600 hearings): mood changes the verdict in 10.5% of hearings,
   flips the winner in 3.2% of decided ones (DECISIONS.md 2026-10-24).
@@ -363,10 +369,8 @@ determinism check are 2B tasks.
   Always Free ARM + Caddy + a free subdomain.
 - ~~Class-level leak in the brain view~~ — resolved 2026-10-25: the
   taste-class bars are removed (§15.7).
-- **Lunch break growth rate (P2B-1).** Keep the U(0, 0.4) start and
-  the 0.8 threshold. P2B-1 reports growth-rate options; the owner picks
-  one. The target: ~1–3% of all cases, mainly near the deadline and in
-  no-shows.
+- ~~Lunch break growth rate~~ — resolved 2026-10-26: **0.25 / h**
+  (P2B-1). No-shows stay brain-decided, with no special rule.
 - ~~Appeal hunger~~ — resolved 2026-10-26: the case's own wait, with a
   fresh random start.
 - ~~No-show display and appeal~~ — resolved 2026-10-26: "הזבוב העדיף

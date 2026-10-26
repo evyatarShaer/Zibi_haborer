@@ -13,7 +13,7 @@ from borer_sim import mood
 
 OK = {"topic": "פיצה", "name_a": "דנה", "name_b": "יוסי",
       "text_a": "פיצה עם אננס זה פשוט טעים", "text_b": "אננס על פיצה זה פשע נגד האנושות"}
-BRAIN = {"bin_ms": 50, "mn9_hz": [[1.0, 2.0], [3.0, 4.0]], "taste_hz": [{"sugar": 5.0}] * 2,
+BRAIN = {"bin_ms": 50, "mn9_hz": [[1.0, 2.0], [3.0, 4.0]], "taste_hz": [{"sugar": 5.0}] * 2,  # a 0.8.x row
          "mood": {}, "seed": 1, "sim_version": "0.8.2", "platform": "test"}
 
 

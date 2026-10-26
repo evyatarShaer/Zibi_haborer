@@ -18,9 +18,18 @@ def test_seeded_and_in_range():
 def test_hunger_rises_while_waiting_capped():
     base = mood.from_case(7)
     later = mood.from_case(7, wait_hours=3)
-    assert later.hunger == pytest.approx(base.hunger + 3 * params.MOOD["hunger_per_hour"])
+    assert later.hunger == pytest.approx(min(1.0, base.hunger + 3 * params.MOOD["hunger_per_hour"]))
     assert later.arousal == base.arousal
-    assert mood.from_case(7, wait_hours=100).hunger == 1.0
+    assert mood.from_case(7, wait_hours=100) == later  # no wait counts past the deadline
+
+
+def test_lunch_break_only_for_slow_answers():
+    """0.25 / h (P2B-1): hunger passes 0.8 only after 1.6 h, and always at the deadline when
+    the start is above 0.05."""
+    bar = params.OUTCOME["food_hunger"]
+    assert all(mood.from_case(s, 1.6).hunger <= bar for s in range(500))
+    late = [mood.from_case(s, 3.0) for s in range(500)]
+    assert all(m.hunger > bar for s, m in enumerate(late) if mood.from_case(s).hunger > 0.05)
 
 
 def test_product_mood_simulated_wait():

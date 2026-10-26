@@ -100,7 +100,7 @@ def test_responses_allowlisted_no_table_data(client):
                       "mood", "can_appeal", "appeal_id", "outcome", "winner", "winner_name",
                       "appetite"}
     brain = client.get(f"/hearing/{hid}/brain").json()
-    assert set(brain) == {"bin_ms", "mn9_hz", "taste_hz", "mood", "seed", "sim_version", "platform"}
+    assert set(brain) == {"bin_ms", "mn9_hz", "mood", "seed", "sim_version", "platform"}
     text = json.dumps([h, brain], ensure_ascii=False)
     groups = {name.split(":")[1].split("/")[0] for name, _ in taste.TABLE.values()}
     assert not any(g in text for g in groups) and "metrics" not in text

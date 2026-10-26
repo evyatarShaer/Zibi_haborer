@@ -1,11 +1,9 @@
 // The lab view's numbers (SPEC §14.6, P2A-8), pure so Node can test them: the two MN9
-// curves as SVG polylines, taste-class bars, the judge's mood and the run's identity.
+// curves as SVG polylines, the judge's mood and the run's identity (no taste classes,
+// SPEC §15.7).
 // Everything comes from the stored brain summary; nothing here asks the simulation.
-import { CLASSES } from "./copy.js";
-
 export const CHART = { w: 320, h: 170, left: 34, right: 8, top: 10, bottom: 24 };
-const SMOOTH = 5;        // bins in the display-only moving average (5 × 50 ms)
-const MIN_TASTE_HZ = 0.5; // classes quieter than this on both sides are left out
+const SMOOTH = 5; // bins in the display-only moving average (5 × 50 ms)
 
 // Centered moving average; the ends average what they have.
 export function smooth(xs, k = SMOOTH) {
@@ -42,22 +40,11 @@ function chart(curves, binS) {
   };
 }
 
-function tasteRows(perSide) {
-  const keys = Object.keys(perSide[0]);
-  const top = Math.max(...keys.map((k) => Math.max(perSide[0][k], perSide[1][k])), 1e-9);
-  return keys
-    .map((k) => ({ key: k, label: CLASSES[k] || k, hz: [perSide[0][k], perSide[1][k]] }))
-    .filter((r) => Math.max(...r.hz) >= MIN_TASTE_HZ)
-    .sort((a, b) => Math.max(...b.hz) - Math.max(...a.hz))
-    .map((r) => ({ ...r, width: r.hz.map((v) => Math.round((100 * v) / top)) }));
-}
-
 export function labModel(b) {
   const curves = b.mn9_hz.map((c) => smooth(c));
   return {
     curves,
     chart: chart(curves, b.bin_ms / 1000),
-    taste: tasteRows(b.taste_hz),
     mood: { hunger: b.mood.hunger.toFixed(2), arousal: b.mood.arousal.toFixed(2) },
     seed: String(b.seed), simVersion: b.sim_version, platform: b.platform,
   };

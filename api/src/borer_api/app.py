@@ -117,7 +117,7 @@ def create_app(runner=None, db_path: str = DB, purge_every_s: float = 3600) -> F
             return views.not_found()
         if h["status"] != "decided":
             return JSONResponse({"error": views.NOT_DECIDED}, status_code=409)
-        return h["brain"]
+        return views.brain(h["brain"])
 
     app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
     return app

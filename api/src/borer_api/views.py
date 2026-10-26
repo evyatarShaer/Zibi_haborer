@@ -7,6 +7,9 @@ NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
 APPEALED = "כבר הוגש ערעור בתיק הזה"
 APPEAL_OF_APPEAL = "אי אפשר לערער על ערעור. הפסק סופי"
 BASE = ("id", "status", "topic", "name_a", "name_b", "text_a", "text_b", "appeal_of")
+# The lab view's fields (SPEC §15.7): MN9 curves and the run's identity, no taste classes
+# (rows stored before SIM_VERSION 0.9.0 still hold them; they are never sent).
+BRAIN = ("bin_ms", "mn9_hz", "mood", "seed", "sim_version", "platform")
 
 
 def not_found() -> JSONResponse:
@@ -22,6 +25,10 @@ def appeal_refused(h: dict, appeal: dict | None) -> str | None:
     if h["status"] != "decided":
         return NOT_DECIDED
     return None
+
+
+def brain(b: dict) -> dict:
+    return {k: b[k] for k in BRAIN}
 
 
 def hearing(h: dict, appeal: dict | None, original: dict | None) -> dict:
