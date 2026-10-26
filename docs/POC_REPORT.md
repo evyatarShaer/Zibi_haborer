@@ -1284,3 +1284,77 @@ outcomes have not yet come from the real brain in a play-test.
   (44.7%) drift; FlyWire licence (non-commercial).
 - A real-brain play-test that lands on each non-win outcome.
 - The froze meter wording (above).
+
+---
+
+## P2B-1 — Lunch-break growth rate under real waits (2026-10-26, SIM_VERSION 0.8.2)
+
+`validation/lunch_rate.py`:
+- `water`: 60 plain-water tastings at product noise, 1.7 min; the only
+  new simulation.
+- `report`: the analysis.
+
+The model: hunger = U(0, 0.4) + rate × wait (capped at 1); the wait is
+capped at the 3 h deadline. Lunch break = not froze, gap < 5% and
+hunger > 0.8. The start and the threshold are unchanged.
+
+**Method.**
+- **Responders:** the 1,450 P1-9 hearings, binned by the hunger each was
+  simulated with (0.1 wide). Each wait pattern's hunger distribution
+  (Monte Carlo, 200k cases) mixes those bins' outcome shares.
+- **No-shows:** every P1-9 side-A tasting against every water tasting
+  (hungry A: records with hunger > 0.8).
+
+**Inputs measured:**
+- **Responders' close rate rises with hunger:** 0.10–0.14 for hunger
+  0.1–0.7, then 0.21 (0.7), 0.17 (0.8, n = 41) and 0.21 (0.9, n = 70).
+  Above the threshold, about **1 in 5** hungry cases is close enough
+  for a lunch break.
+- **Water drives MN9 almost not at all:** median 0 Hz, p90 5.3 Hz, max
+  10 Hz.
+  - A hungry A beats water in **100%** of pairings.
+  - A non-hungry A: win 98.8%, froze 1.2%, tie 0.1%. Water wins
+    **0.2%**.
+  - **A no-show therefore never ends in a lunch break**, at any rate.
+    "הזבוב העדיף מים" will be very rare (~0.2% of no-shows).
+
+**Lunch-break share of all cases**, with an extra 10% of cases where B
+never answers. The exponential tails past 3 h add more no-shows: 10%,
+10%, 14% and 10% in total for the four patterns. "Late" is the share of
+lunch breaks from waits ≥ 2 h or no-shows.
+
+| rate / h | lunch possible from | B in minutes | ~Exp(30 min) | ~Exp(1 h) | uniform 0–3 h |
+|---|---|---|---|---|---|
+| 0.10 | 4.0 h | 0.0% | 0.0% | 0.0% | 0.0% |
+| 0.14 | 2.9 h | 0.0% | 0.0% | 0.0% | 0.0% |
+| 0.15 | 2.7 h | 0.0% | 0.0% | 0.0% | 0.1% (100% late) |
+| 0.17 | 2.4 h | 0.0% | 0.0% | 0.1% (100% late) | 0.5% (100% late) |
+| 0.20 | 2.0 h | 0.0% | 0.0% | 0.3% (100% late) | 1.4% (100% late) |
+| 0.25 | 1.6 h | 0.0% | 0.2% (77% late) | 0.9% (87% late) | 3.6% (93% late) |
+| 0.30 | 1.3 h | 0.0% | 0.4% (56% late) | 1.7% (73% late) | 6.0% (85% late) |
+
+The lunch break comes only from late responders, because no-shows
+contribute none. A higher no-show share therefore lowers it slightly
+(e.g. 0.25 / uniform: 3.9% at 0 extra, 3.6% at 10%, 3.2% at 20%).
+Elsewhere in the mix: the lunch break takes its cases from dithered and
+tie; win stays at 86–92% and froze ≤ 0.3%. Full table: `python -m
+validation.lunch_rate report`.
+
+**Options for the owner:**
+
+| Rate / h | Lunch break possible from | ~Exp(1 h) | uniform 0–3 h | Comment |
+|---|---|---|---|---|
+| 0.20 | 2.0 h | 0.3% | 1.4% | only truly late answers; under 1% unless players are slow |
+| **0.25** | 1.6 h | 0.9% | 3.6% | ~1–3% for typical-to-slow players; 77–93% of them late |
+| 0.30 | 1.3 h | 1.7% | 6.0% | reaches 1% sooner; a third of them before 2 h |
+
+**Limits:**
+- Real wait times are unknown. The result swings with them: no rate
+  gives a lunch break to B answering within minutes, because it needs a
+  wait of at least 0.4 / rate.
+- The responder estimate uses the P1-9 argument pairs (word-frequency
+  text), not real utterances.
+- High-hunger bins are small (n = 41 / 70).
+- The no-show estimate pairs tastings across seeds.
+- A lunch break for no-shows would need a different rule (water never
+  gives a gap < 5%). That would be a spec change, not a rate.

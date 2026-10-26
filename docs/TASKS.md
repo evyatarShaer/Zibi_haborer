@@ -328,6 +328,9 @@ the owner's Hebrew copy and fly art.
     cover hunger only up to the range P1-9 drew.
   - A POC_REPORT section. The owner picks the rate; DECISIONS entry;
     used in P2B-4.
+  *Options reported 2026-10-26 (POC_REPORT.md P2B-1), awaiting the owner's
+  pick:* 0.20 / 0.25 / 0.30 per hour. No-shows never give a lunch break
+  (water MN9 ≈ 0 Hz).
 - [ ] **P2B-2 — Host setup.** The owner creates the Oracle Cloud
   account; the signup asks for a card, and only Always Free resources
   are used. Then:
