@@ -397,7 +397,7 @@ the owner's Hebrew copy and fly art.
   `tests/test_cases*.py` 16 passed; api suite 74 passed. The 2A store
   keeps serving the 2A app until P2B-6 swaps it (new DB file). Schema
   additions beyond §10: DECISIONS.md 2026-10-26 (P2B-5).
-- [ ] **P2B-6 — Case API.**
+- [x] **P2B-6 — Case API.**
   - A opens a case and gets their link. B submits through B's link.
   - A deadline sweep in the process runs the plain-water hearing at 3 h.
   - The nudge becomes available at 1 h.
@@ -421,6 +421,15 @@ the owner's Hebrew copy and fly art.
     HTML GET) is bound as B. Others get "התיק כבר בטיפול". A's device is
     never bound as B. Tested: a crawler-style GET does not claim B.
   - 20 new cases per day per IP (hashed); the 21st is refused (test).
+  *Done 2026-10-26:* `borer_api.routes` (under `/api`), `views`,
+  `court` (works from the DB; deadline sweep), `app`.
+  - Tests: `test_case_api/appeal/links.py`; api suite 60 passed. The real
+    brain behind the API took 6.6–7.2 s from submit to verdict
+    (`test_live`).
+  - The 2A `/hearing` API, its store and tests are deleted (owner OK).
+    The 2A page in `web/` still calls `/hearing`, so it does not work
+    until P2B-8.
+  - Choices and open points: DECISIONS.md 2026-10-26 (P2B-6).
 - [ ] **P2B-7 — Moderation.**
   - A Hebrew offensive-word filter on the topic, names and arguments,
     after §4.1 normalization. The owner supplies the list. A match gives

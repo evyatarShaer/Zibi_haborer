@@ -5,8 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from borer_api.app import create_app
-from borer_sim import data
 from borer_api.cases import Store
+from borer_sim import data
 from casekit import Clock
 from fake import FakeSim
 
@@ -26,8 +26,10 @@ def sim():
 
 
 @pytest.fixture
-def client(tmp_path, sim):
-    with TestClient(create_app(sim, str(tmp_path / "h.sqlite3"))) as c:
+def client(tmp_path, sim, clock):
+    """The app with `sim` and the settable `clock`; the deadline sweep runs every 20 ms."""
+    with TestClient(create_app(sim, str(tmp_path / "c.sqlite3"), sweep_every_s=0.02,
+                               clock=clock)) as c:
         yield c
 
 

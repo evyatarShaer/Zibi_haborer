@@ -38,7 +38,7 @@ def test_counters_per_utc_day(store, clock):
 
 
 def test_cleanup_loop_purges_at_start_and_stops(store, clock):
-    c = opened(store)
+    opened(store)
     clock.t += RETENTION_S + 1
     stop = threading.Event()
     t = threading.Thread(target=cleanup_loop, args=(store, stop, 0.01))

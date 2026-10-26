@@ -2083,3 +2083,58 @@ to its hearings and reports; `counter` has no case reference.
 - A new DB file (`cases.sqlite3`, P2B-6); the 2A file is not migrated.
 
 **Impacts:** TASKS P2B-5; P2B-6 builds the API on it.
+
+---
+
+## 2026-10-26 — P2B-6: case API; choices where the spec is silent (owner to confirm)
+
+**What was built:**
+- Endpoints under `/api`:
+  - `POST /case`;
+  - `GET /a/{token}`;
+  - `POST /b/{token}/open`, `GET /b/{token}`, `POST /b/{token}/submit`;
+  - `POST /{a|b}/{token}/appeal` and `GET /{a|b}/{token}/brain/{n}`;
+  - `GET /c/{case id}` (the public card's data).
+- Personal links are `/a/{token}` and `/b/{token}`; the public card is
+  `/c/{case id}`. The HTML for these paths comes in P2B-8 / P2B-10.
+- The court now takes queued hearings from the DB, not from memory.
+  - The store refuses a hearing with Busy (503) while 1 runs and 3
+    wait.
+  - A busy B submit leaves the case waiting, so B can retry.
+  - The deadline sweep runs at startup and every 30 s. When the court
+    is full, it retries on the next sweep.
+- Every closed answer (wrong token, wrong side, expired, hidden) is the
+  same 404 body.
+- The 2A `/hearing` API, `borer_api.store` and its tests are deleted
+  (owner OK). The 2A page does not work until P2B-8.
+
+**Choices (placeholders until the owner decides):**
+- **Hebrew copy** for new messages: "התיק נסגר. אפשר לפתוח תיק חדש"
+  (closed), A's own device on B's link, the rate limit, B too late or
+  already submitted, and the appeal refusals (`views.py`). The owner's
+  copy replaces them.
+- **A's device on B's link** gets a 409 "this is the other side's
+  link" and is not bound. The spec only says it is never bound.
+- **A always gets B's link** while the case waits, so a reload does not
+  lose the "send" button. The nudge is a flag (`nudge`) that turns true
+  at 1 h. Hiding B's link itself before 1 h would break "send to the
+  other side" after a reload.
+- **Device cookie:** `borer_device`, HttpOnly, SameSite=Lax, 30 days,
+  not `Secure`, because the local server is plain HTTP. Set `Secure` on
+  the HTTPS host (P2B-2)?
+- **Public card data** has no appetite meters, mood or brain: only the
+  topic, names and the verdict history. §9 says no arguments and no
+  brain view; whether the meters belong on the card is open (P2B-10).
+- **A failed hearing** (the simulation raised) stays `failed`. The case
+  stays in `hearing`, with no retry and no further appeals. There is no
+  rule for this yet. A hearing interrupted by a restart is rerun (P2B-5
+  entry).
+- **The appeal window** is open while `now ≤ decided_at + 3 h` of the
+  latest hearing. The winning side may appeal too: the spec gives each
+  side one appeal, regardless of who won.
+- **IP for the rate limit:** `request.client.host`. Behind Caddy,
+  uvicorn's default `proxy_headers` trusts `X-Forwarded-For` from
+  127.0.0.1, so P2B-2 must keep Caddy on the same host.
+
+**Impacts:** `api/src/borer_api/{app,court,routes,views,validate,recheck}.py`;
+`api/tests`; TASKS P2B-6; P2B-8 builds the pages on these endpoints.

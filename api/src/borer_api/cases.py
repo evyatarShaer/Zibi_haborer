@@ -25,6 +25,10 @@ class Closed(Exception):
     """The case is gone or not in a state for this step (e.g. B wrote after the deadline)."""
 
 
+class Limited(Exception):
+    """This IP already opened its maximum of cases today."""
+
+
 class Busy(Exception):
     """The court already holds its maximum of hearings (one running + the waiting line)."""
 
@@ -35,16 +39,23 @@ class Store(Db):
         super().__init__(path, clock)
         self.max_active = max_active
 
-    def open(self, topic: str | None, name_a: str, name_b: str, text_a: str,
-             ip: str, device: str | None = None) -> dict:
-        """A new waiting case; returns {"id", "token_a", "token_b"} (only hashes are kept)."""
+    def open(self, topic: str | None, name_a: str, name_b: str, text_a: str, ip: str,
+             device: str | None = None, per_day: int | None = None) -> dict:
+        """A new waiting case; returns {"id", "token_a", "token_b"} (only hashes are kept).
+        Limited if `ip` already opened `per_day` cases today."""
         cid, token_a, now = secrets.token_urlsafe(9), tokens.new(), self.clock()
-        self._run('INSERT INTO "case" (id, created_at, deadline_at, topic, name_a, name_b, '
-                  "text_a, token_a_hash, token_b_hash, a_device_hash, ip_hash, day) "
-                  "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                  (cid, now, now + DEADLINE_S, topic, name_a, name_b, text_a,
-                   tokens.digest(token_a), tokens.digest(tokens.side_b(token_a)),
-                   device and tokens.digest(device), tokens.ip(ip), self.day()))
+        ip_hash = tokens.ip(ip)
+        with self._tx():
+            if per_day is not None and self._one(
+                    'SELECT COUNT(*) AS n FROM "case" WHERE ip_hash = ? AND day = ?',
+                    (ip_hash, self.day()))["n"] >= per_day:
+                raise Limited
+            self._run('INSERT INTO "case" (id, created_at, deadline_at, topic, name_a, name_b, '
+                      "text_a, token_a_hash, token_b_hash, a_device_hash, ip_hash, day) "
+                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                      (cid, now, now + DEADLINE_S, topic, name_a, name_b, text_a,
+                       tokens.digest(token_a), tokens.digest(tokens.side_b(token_a)),
+                       device and tokens.digest(device), ip_hash, self.day()))
         return {"id": cid, "token_a": token_a, "token_b": tokens.side_b(token_a)}
 
     def case(self, cid: str) -> dict | None:
@@ -58,8 +69,22 @@ class Store(Db):
                       "AND created_at >= ?", (h, h, self.oldest_kept()))
         return (c, "A" if c["token_a_hash"] == h else "B") if c else None
 
+    def claim_b(self, cid: str, device: str) -> str | None:
+        """Bind B's link to the first device that opens it through the page (SPEC §15.1).
+        Returns "B" for the bound device, "A" for A's device (never bound), else None."""
+        d = tokens.digest(device)
+        self._run('UPDATE "case" SET b_device_hash = ? WHERE id = ? AND b_device_hash IS NULL '
+                  "AND a_device_hash IS NOT ?", (d, cid, d))
+        c = self.case(cid) or {}
+        return "A" if c.get("a_device_hash") == d else "B" if c.get("b_device_hash") == d else None
+
     def hearings(self, cid: str) -> list[dict]:
         return self._all("SELECT * FROM hearing WHERE case_id = ? ORDER BY n", (cid,))
+
+    def snapshot(self, cid: str) -> tuple[dict | None, list[dict]]:
+        """The case and its hearings, read together (never between a hearing's two writes)."""
+        with self._lock:
+            return self.case(cid), self.hearings(cid)
 
     def submit_b(self, cid: str, text_b: str, seed: int) -> int:
         """B's argument before the deadline; files the verdict hearing (n 0)."""
@@ -87,9 +112,9 @@ class Store(Db):
             return self._file(c, n, side, seed)
 
     def due(self) -> list[str]:
-        """Waiting cases whose deadline has passed (the no-show sweep)."""
+        """Waiting, visible cases whose deadline has passed (the no-show sweep)."""
         rows = self._all("SELECT id FROM \"case\" WHERE status = 'waiting' AND deadline_at <= ? "
-                         "AND created_at >= ? ORDER BY deadline_at",
+                         "AND hidden_at IS NULL AND created_at >= ? ORDER BY deadline_at",
                          (self.clock(), self.oldest_kept()))
         return [r["id"] for r in rows]
 

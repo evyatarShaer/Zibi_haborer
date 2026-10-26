@@ -1,13 +1,14 @@
-"""Determinism check (SPEC §12, 2A exit): rerun every decided hearing in the DB from its
-stored seed and texts; metrics, outcome, winner, mood and brain summary must be
-bit-identical. Read-only on the DB, so the server can keep running.
+"""Determinism check (SPEC §12): rerun every decided hearing in the DB from its stored
+seed, wait and its case's texts (text_b NULL = plain water); metrics, outcome, winner,
+mood and brain summary must be bit-identical. Read-only on the DB, so the server can keep running.
 Run: cd api && PYTHONPATH=src:../sim/src uv run python -m borer_api.recheck [db]"""
 import json
 import sqlite3
 import sys
 
 from borer_api.app import DB
-from borer_api.store import WINS, _decode
+from borer_api.cases import WINS
+from borer_api.db import decode
 from borer_sim import hearing
 from borer_sim.version import SIM_VERSION
 
@@ -15,8 +16,10 @@ from borer_sim.version import SIM_VERSION
 def stored_hearings(path: str) -> list[dict]:
     db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     db.row_factory = sqlite3.Row
-    rows = db.execute("SELECT * FROM hearing WHERE status = 'decided' ORDER BY created_at")
-    return [_decode(r) for r in rows]
+    rows = db.execute("SELECT h.*, c.text_a, c.text_b FROM hearing h "
+                      "JOIN \"case\" c ON c.id = h.case_id "
+                      "WHERE h.status = 'decided' ORDER BY h.created_at, h.id")
+    return [decode(r) for r in rows]
 
 
 def mismatches(row: dict, rerun: dict) -> list[str]:
@@ -38,10 +41,11 @@ def main(path: str) -> int:
     bad = 0
     with hearing.workers(method="forkserver") as pool:
         for r in rows:
-            diff = mismatches(r, hearing.run(pool, r["text_a"], r["text_b"], r["seed"]))
+            rerun = hearing.run(pool, r["text_a"], r["text_b"], r["seed"], wait_h=r["wait_h"])
+            diff = mismatches(r, rerun)
             bad += bool(diff)
-            print(f"{r['id']} seed {r['seed']} {r['outcome']}/{r['winner']} "
-                  f"appeal_of={r['appeal_of']}: {'MISMATCH ' + str(diff) if diff else 'identical'}",
+            print(f"{r['case_id']}/{r['n']} seed {r['seed']} {r['outcome']}/{r['winner']}: "
+                  f"{'MISMATCH ' + str(diff) if diff else 'identical'}",
                   flush=True)
     print(f"{len(rows) - bad}/{len(rows)} bit-identical (SIM_VERSION {SIM_VERSION})")
     return 1 if bad or not rows else 0
