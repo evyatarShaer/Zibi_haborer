@@ -344,6 +344,8 @@ the owner's Hebrew copy and fly art.
   *Accept:*
   - `https://<sub>.duckdns.org` serves the app after a reboot.
   - The certificate renews automatically (Caddy).
+  - The device cookie (`borer_device`) is sent with `Secure` on the
+    HTTPS host (review 2026-10-26).
   - No paid resource exists in the tenancy (checked in the console).
   - Risk noted: Oracle may reclaim idle Always Free VMs; check the
     current rule and keep a note in DECISIONS.

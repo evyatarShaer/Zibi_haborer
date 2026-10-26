@@ -1,8 +1,14 @@
 """Tests marked `needs_data` are skipped when the v783 raw files are absent.
 `sim` / `client`: the app on a temp DB with a fake simulation (fake.py).
-`clock` / `store`: a case store on a temp DB with a settable clock (casekit.py)."""
+`clock` / `store`: a case store on a temp DB with a settable clock (casekit.py).
+The server secret (tokens.py) is a temp file, never api/data/secret.key."""
+import os
+import tempfile
+
 import pytest
 from fastapi.testclient import TestClient
+
+os.environ["BORER_SECRET"] = os.path.join(tempfile.mkdtemp(), "secret.key")  # before borer_api
 
 from borer_api.app import create_app
 from borer_api.cases import Store

@@ -7,7 +7,8 @@ from borer_api import routes, views
 from borer_sim import taste
 from fake import OK, TEXT_B
 
-PERSONAL = {"id", "status", "topic", "name_a", "name_b", "no_show", "hearings", "you", "text_a",
+PUBLIC = {"id", "status", "topic", "name_a", "name_b", "no_show", "error_message", "hearings"}
+PERSONAL = PUBLIC | {"you", "text_a",
             "text_b", "deadline_in_s", "can_appeal", "appeal_closes_in_s"}
 HEARING = {"n", "appealed_by", "status", "wait_h", "mood", "outcome", "winner", "winner_name",
            "appetite"}
@@ -58,7 +59,7 @@ def test_responses_allowlisted(client):
     b, a = decided(client, case)
     assert set(a) == PERSONAL and set(a["hearings"][0]) == HEARING
     pub = client.get(f"/api/c/{case['case_id']}").json()
-    assert set(pub) == {"id", "status", "topic", "name_a", "name_b", "no_show", "hearings"}
+    assert set(pub) == PUBLIC
     assert set(pub["hearings"][0]) == {"n", "appealed_by", "status", "outcome", "winner",
                                        "winner_name"}
     brain = client.get(f"/api/a/{case['a']}/brain/0").json()

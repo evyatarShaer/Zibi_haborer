@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS "case" (
     ip_hash        TEXT NOT NULL,
     day            TEXT NOT NULL,
     status         TEXT NOT NULL DEFAULT 'waiting'
-                   CHECK (status IN ('waiting', 'hearing', 'decided', 'no_show')),
+                   CHECK (status IN ('waiting', 'hearing', 'decided', 'no_show', 'error')),
     hidden_at      REAL,
     shared_at      REAL
 );

@@ -16,6 +16,7 @@ APPEALED = "כבר ערערת בתיק הזה"
 FINAL = "הפסק סופי. אין עוד ערעורים בתיק הזה"
 APPEAL_LATE = "עברו 3 שעות מפסק הדין. הפסק סופי"
 NO_SHOW_ONLY_A = "רק הצד שהתייצב לדיון יכול לערער"
+FAILED = "משהו השתבש במוח של הזבוב והתיק לא נשמע. אפשר לפתוח תיק חדש"
 
 NUDGE_AFTER_S = 3600          # A's "nudge again" button (SPEC §3.2)
 APPEAL_WINDOW_S = 3 * 3600    # appeals within 3 h of the latest verdict (§15.4)
@@ -71,7 +72,8 @@ def history(case: dict, hearings: list[dict], public: bool = False) -> list[dict
 
 def _common(case: dict, hearings: list[dict], public: bool) -> dict:
     return {k: case[k] for k in ("id", "status", "topic", "name_a", "name_b")} | {
-        "no_show": case["status"] != "waiting" and case["text_b"] is None,
+        "no_show": case["status"] not in ("waiting", "error") and case["text_b"] is None,
+        "error_message": FAILED if case["status"] == "error" else None,
         "hearings": history(case, hearings, public)}
 
 

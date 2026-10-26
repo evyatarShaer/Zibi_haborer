@@ -2138,3 +2138,44 @@ to its hearings and reports; `counter` has no case reference.
 
 **Impacts:** `api/src/borer_api/{app,court,routes,views,validate,recheck}.py`;
 `api/tests`; TASKS P2B-6; P2B-8 builds the pages on these endpoints.
+
+---
+
+## 2026-10-26 — Review of the P2B-5/6 choices (owner)
+
+**Confirmed as built:**
+- the extra columns `a_device_hash` and `hearing.decided_at`;
+- A always sees B's link while the case waits; the nudge is a flag;
+- A's device on B's link gets "this is the other side's link";
+- the placeholder Hebrew copy;
+- no appetite meters on the public card's data;
+- the winning side may appeal too.
+
+**Changed:**
+- **B's link** is derived **one-way with a server-side secret**:
+  HMAC(secret, A's token). B's link can't be turned back into A's token,
+  and nobody without the secret can compute it from A's.
+- **Server secret file:** `api/data/secret.key` (`BORER_SECRET`), 32
+  random bytes, created on first run with mode 0600 and git-ignored.
+  - Separate keys are derived from it for B's links and for IP hashes.
+  - A restart no longer resets the daily rate limit.
+  - Losing the file breaks only the "send to B" link of open cases.
+  - Days stay UTC dates, and the forwarded-header rule stays (Caddy on
+    the same host).
+- **A failed hearing** is rerun automatically, up to 2 more times from
+  the same seed (`court.ATTEMPTS = 3`).
+  - If every run fails, the hearing is `failed` and the case moves to a
+    new status `error`.
+  - The pages get `error_message` ("משהו השתבש במוח של הזבוב והתיק לא
+    נשמע. אפשר לפתוח תיק חדש"); P2B-8 adds the "open a new case" button.
+  - An appeal that fails all three runs also ends the case in `error`.
+  - Tests: 2 failures then decided; 3 failures then error (3 identical
+    calls).
+- **P2B-2 acceptance** gains "the device cookie is `Secure`".
+- **CLAUDE.md:** how to run the 2A version from the `phase-2a-done` tag in
+  its own worktree (`../Zibi_haborer_2a`), port 8001, own DB. Tried
+  2026-10-26: a hearing was decided.
+
+**Impacts:** `api/src/borer_api/{tokens,court,cases,db,views}.py`;
+`api/tests/{test_tokens,test_case_api,test_case_links}.py`, `conftest.py`;
+TASKS P2B-2; CLAUDE.md.

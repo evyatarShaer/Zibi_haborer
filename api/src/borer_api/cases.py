@@ -2,7 +2,8 @@
 the court's work list.
 
 Case status: waiting (for B) → hearing (one queued or running) → decided, or no_show when
-B never wrote (text_b NULL = plain water). An appeal sends it back to hearing. Each
+B never wrote (text_b NULL = plain water). An appeal sends it back to hearing. A hearing
+the simulation could not run (after the court's retries) ends the case in error. Each
 hearing gets its mood when it is filed: the case's wait (case open → B submits, the 3 h
 deadline for a no-show) with the hearing's own seed. The DB itself allows at most 3
 hearings per case and one appeal per side. Cases past retention read as gone.
@@ -164,7 +165,11 @@ class Store(Db):
                       "WHERE id = (SELECT case_id FROM hearing WHERE id = ?)", (hid,))
 
     def fail(self, hid: int) -> None:
-        self._run("UPDATE hearing SET status = 'failed' WHERE id = ?", (hid,))
+        """The hearing could not be run: it is failed and its case ends in error."""
+        with self._tx():
+            self._run("UPDATE hearing SET status = 'failed' WHERE id = ?", (hid,))
+            self._run("UPDATE \"case\" SET status = 'error' "
+                      "WHERE id = (SELECT case_id FROM hearing WHERE id = ?)", (hid,))
 
     def requeue(self) -> int:
         """At startup: a hearing that was running when the process died runs again."""

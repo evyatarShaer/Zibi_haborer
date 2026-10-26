@@ -119,7 +119,7 @@ def test_one_courtroom_then_busy_and_b_can_retry(client, sim):
         settled(client, f"/api/a/{c['a']}", 0)
 
 
-def test_failed_simulation_and_resume_after_restart(tmp_path):
+def test_resume_after_restart(tmp_path):
     db, sim = str(tmp_path / "c.sqlite3"), FakeSim()
     sim.gate.clear()
     with TestClient(create_app(sim, db)) as c:
@@ -130,12 +130,38 @@ def test_failed_simulation_and_resume_after_restart(tmp_path):
         assert settled(c, f"/api/a/{case['a']}", 0)["status"] == "decided"
     sim.gate.set()
 
-    def boom(*args):
-        raise RuntimeError("sim crashed")
-    with TestClient(create_app(boom, str(tmp_path / "d.sqlite3"))) as c:
+
+class Flaky(FakeSim):
+    """Raises on its first `fails` runs."""
+
+    def __init__(self, fails):
+        super().__init__()
+        self.fails = fails
+
+    def __call__(self, *args):
+        if self.fails:
+            self.fails -= 1
+            self.calls.append(args)
+            raise RuntimeError("sim crashed")
+        return super().__call__(*args)
+
+
+@pytest.mark.parametrize("fails, status", [(2, "decided"), (3, "error")])
+def test_failed_run_retried_twice_from_the_same_seed(tmp_path, fails, status):
+    sim = Flaky(fails)
+    with TestClient(create_app(sim, str(tmp_path / "c.sqlite3"))) as c:
         case = open_case(c)
-        as_b(c, case).post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})
-        wait_for(c, f"/api/a/{case['a']}", lambda v: v["hearings"][0]["status"] == "failed")
+        b = as_b(c, case)
+        b.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})
+        a = wait_for(c, f"/api/a/{case['a']}", lambda v: v["status"] == status)
+        assert len(sim.calls) == court.ATTEMPTS and len(set(sim.calls)) == 1
+        if status == "error":
+            assert a["hearings"][0]["status"] == "failed" and a["error_message"] == views.FAILED
+            assert not a["can_appeal"] and not a["no_show"]
+            pub = c.get(f"/api/c/{case['case_id']}").json()
+            assert (pub["status"], pub["error_message"]) == ("error", views.FAILED)
+        else:
+            assert a["error_message"] is None
 
 
 @pytest.mark.parametrize("field, value", [

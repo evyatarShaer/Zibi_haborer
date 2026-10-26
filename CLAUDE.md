@@ -67,6 +67,16 @@ fly's choice is the verdict — the humor is the point.
   firewall rule for TCP 8000 (WSL mirrored mode). The rule was removed;
   don't retry it (DECISIONS.md 2026-10-25). Anyone with the tunnel URL
   can use the app while it runs.
+- **Running the 2A version (one-screen page) next to 2B.** `main` has no
+  `/hearing` API any more. Use a worktree at the tag, on its own port and
+  its own DB (`api/data/` inside the worktree):
+  `git worktree add --detach ../Zibi_haborer_2a phase-2a-done`, then
+  `ln -s ~/projects/Zibi_haborer/sim/data/raw ../Zibi_haborer_2a/sim/data/raw`
+  (the FlyWire files are git-ignored) and `cd ../Zibi_haborer_2a/api && uv sync`.
+  Run it with `scripts/detach.sh haborer2a data/server.log env BORER_PORT=8001
+  ../scripts/run_local.sh` from that `api/` dir; stop it with
+  `systemctl --user stop haborer2a`. The worktree exists (made 2026-10-26).
+  Never commit from it.
 - **Large data files never go into git.** `sim/data/raw/` and
   `sim/data/processed/` are gitignored.
 - **Stop and ask before:** downloading anything over ~1 GB; deleting

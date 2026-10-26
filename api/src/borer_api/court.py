@@ -2,7 +2,8 @@
 
 A hearing is filed by the case store, which refuses a new one with Busy while one runs
 and MAX_WAITING more wait. The worker thread takes the oldest queued hearing: queued →
-running → decided, or failed if the simulation raised. Queued hearings live in the DB, so
+running → decided. If the simulation raises, it is run again from the same seed, up to
+ATTEMPTS runs in all; then the hearing is failed and its case ends in error. Queued hearings live in the DB, so
 after a restart they simply run (a running one is re-queued first, cases.Store.requeue).
 The deadline sweep files the plain-water hearing of every case B left unanswered.
 """
@@ -13,6 +14,7 @@ import threading
 from borer_api.cases import Busy, Closed
 
 MAX_WAITING = 3
+ATTEMPTS = 3  # the first run + 2 retries (DECISIONS.md 2026-10-26, review of P2B-5/6)
 MAX_ACTIVE = 1 + MAX_WAITING
 BUSY = "הזבוב עסוק בתיקים אחרים כרגע. נסו שוב בעוד דקה"
 
@@ -49,13 +51,18 @@ class Court:
         """One hearing; any error fails this hearing only, never the worker thread."""
         try:
             self.store.start(h["id"])
-            self.store.finish(h["id"], self.runner(h["text_a"], h["text_b"], h["seed"], h["wait_h"]))
-        except Exception:
-            log.exception("hearing %s failed", h["id"])
-            try:
+            for attempt in range(1, ATTEMPTS + 1):
+                try:
+                    result = self.runner(h["text_a"], h["text_b"], h["seed"], h["wait_h"])
+                    break
+                except Exception:
+                    log.exception("hearing %s: run %d of %d failed", h["id"], attempt, ATTEMPTS)
+            else:
                 self.store.fail(h["id"])
-            except Exception:
-                log.exception("could not mark hearing %s failed", h["id"])
+                return
+            self.store.finish(h["id"], result)
+        except Exception:
+            log.exception("could not store hearing %s", h["id"])
 
     def sweep(self) -> int:
         """File the no-show hearing of each case past its deadline; returns how many.
