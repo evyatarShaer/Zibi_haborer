@@ -302,9 +302,8 @@ running on a free server.
   bit-identical determinism.
 
 **Decided 2026-10-25:** DECISIONS.md, the eleven 2B planning entries.
-**Open questions** that tasks below must settle: SPEC §13 (lunch break
-under real waits, appeal hunger, no-show display and appeal, report
-scope, B's link in a group, brain view on the public card, rate limit).
+**Open:** the lunch-break growth rate (P2B-1; the owner picks). The
+other open items were resolved on 2026-10-26 (DECISIONS.md).
 
 **Carried over:** real-utterance arguments; watch the side-A (46.3%)
 and shorter-wins (44.7%) drift; FlyWire licence (non-commercial). Also
@@ -312,18 +311,23 @@ the owner's Hebrew copy and fly art.
 
 ### Tasks (build order)
 
-- [ ] **P2B-1 — Outcome mix under real waits (analysis only).** Reweight
-  the saved P1-9 records (`balance_1500ms.jsonl`, 1,000 pairs × seeds,
-  with their hunger) to realistic wait distributions. No new long run.
-  The distributions: B answers within minutes, ~Exp(30 min), ~Exp(1 h),
-  uniform 0–3 h, and a no-show share at exactly 3 h.
+- [ ] **P2B-1 — Lunch-break growth rate (analysis only).** From the
+  saved P1-9 records (`balance_1500ms.jsonl`), with no new long run, find
+  the hunger growth rate per hour. Keep the U(0, 0.4) start and the 0.8
+  threshold.
+  - Realistic wait patterns: B answers within minutes; ~Exp(30 min);
+    ~Exp(1 h); uniform 0–3 h. Each pattern also has a no-show share
+    (full 3 h).
+  - Target: the lunch break in ~1–3% of all cases, mainly near the
+    deadline and in no-shows.
   *Accept:*
-  - A table per distribution: win / dithered / tie / froze / food rate,
-    and side-A share.
-  - The food rate re-checked. The hunger ceiling (0.4 + 0.3 = 0.7 < 0.8)
-    predicts 0%; confirm it.
-  - POC_REPORT section + DECISIONS entry. The owner decides the lunch
-    break question (SPEC §13) before P2B-4.
+  - A table of candidate rates: lunch-break rate per pattern; the share
+    of lunch breaks with wait ≥ 2 h or a no-show; the earliest wait at
+    which one is possible; the effect on win / dithered / tie / froze.
+  - The method's limits stated: hunger also changes MN9, and the records
+    cover hunger only up to the range P1-9 drew.
+  - A POC_REPORT section. The owner picks the rate; DECISIONS entry;
+    used in P2B-4.
 - [ ] **P2B-2 — Host setup.** The owner creates the Oracle Cloud
   account; the signup asks for a card, and only Always Free resources
   are used. Then:
@@ -359,7 +363,8 @@ the owner's Hebrew copy and fly art.
   - Plain water as side B: baseline GRN rates only (the no-Hebrew
     baseline).
   - The brain summary drops `taste_hz`.
-  - Any hunger-rule change decided in P2B-1.
+  - The hunger growth rate picked in P2B-1. An appeal's hunger is the
+    case's own wait with a fresh U(0, 0.4) start from the appeal's seed.
   *Accept:*
   - Same seed + wait twice gives bit-identical results (test).
   - The water hearing runs ≤ 15 s and is deterministic (test).
@@ -395,8 +400,11 @@ the owner's Hebrew copy and fly art.
     - "accepted" uses the previous verdict's winner.
   - The allowlist test from 2A extended (no letter or table data, no
     arguments on public endpoints).
-  - Open questions settled first: appeal hunger; no-show display and
-    appeal; B's link in a group.
+  - Only A may appeal a no-show.
+  - The first device to open B's link (via a page API call, never the
+    HTML GET) is bound as B. Others get "התיק כבר בטיפול". A's device is
+    never bound as B. Tested: a crawler-style GET does not claim B.
+  - 20 new cases per day per IP (hashed); the 21st is refused (test).
 - [ ] **P2B-7 — Moderation.**
   - A Hebrew offensive-word filter on the topic, names and arguments,
     after §4.1 normalization. The owner supplies the list. A match gives
@@ -406,8 +414,8 @@ the owner's Hebrew copy and fly art.
   *Accept:*
   - Tests: listed words are blocked after normalization (final letters,
     niqqud); clean text passes.
-  - A report hides the public card (and the personal pages, if decided)
-    immediately.
+  - A report hides the whole case immediately: the public card and both
+    personal pages show "case closed".
   - Delete and restore work. No AI anywhere.
 - [ ] **P2B-8 — Pages: case flow.** Hebrew RTL, mobile-first, the 2A
   modules reused:
@@ -429,9 +437,11 @@ the owner's Hebrew copy and fly art.
   - The appetite meters fill from the stored MN9 bins during the story
     (cumulative rate), live and on replay; hidden on Froze.
   - The brain view without taste bars (MN9 curves, mood, seed,
-    `SIM_VERSION`, platform).
-  - A general how-it-works page with the FlyWire (Dorkenwald et al.
-    2024; Schlegel et al. 2024) and Shiu et al. 2024 credit.
+    `SIM_VERSION`, platform), on personal pages only.
+  - The no-show headlines: "הזבוב העדיף מים" when water wins, otherwise
+    "הצד השני לא התייצב לדיון".
+  - A general how-it-works page with the credits in SPEC §15.7 (FlyWire
+    citation table, checked 2026-10-26; Shiu et al. 2024).
   *Accept:*
   - The meter's end value equals the stored A/B share (test).
   - Froze shows no meters.

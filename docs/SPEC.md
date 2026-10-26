@@ -45,7 +45,9 @@ and has a **personal link** (§15.1).
    "send to the other side" button. The button opens WhatsApp with B's
    link, which has a teaser preview (§9).
 2. **B's turn.** B opens their link and sees the topic and the names,
-   **never A's argument**, then writes their own. B has **3 hours** from
+   **never A's argument**, then writes their own. The first device to
+   open B's link becomes B; any later device sees "התיק כבר בטיפול"
+   (§15.1). B has **3 hours** from
    case open. A's link shows that the court is waiting for B. **After
    1 hour** A gets a "nudge again" button, which opens WhatsApp with a
    ready message and B's link. There are no push notifications.
@@ -119,8 +121,11 @@ ignites a whole-brain runaway with a fixed, side-blind output.
 - `hunger` ∈ [0, 1] — a base draw U(0, 0.4) from the hearing seed,
   plus **+0.1 / hour of real wait** (Phase 2B: case open → B submits;
   3 h for a no-show), capped at 1. It is shown in the UI ("the fly has
-  been hungry for 3 hours"). With the 3 h deadline, hunger is at most
-  0.7, below the lunch-break threshold of 0.8 (open, §13).
+  been hungry for 3 hours"). The growth rate for 2B is chosen in P2B-1:
+  the lunch break (hunger > 0.8) should happen mainly near the 3 h
+  deadline and in no-shows, in ~1–3% of all cases (DECISIONS.md
+  2026-10-26). At 0.1 / h, hunger stays ≤ 0.7, so the lunch break could
+  never happen.
 - `arousal` ∈ [0, 0.45] — seeded from case id (uniform; capped at 0.45
   because runaways appeared only from 0.48, DECISIONS.md 2026-10-24).
   Sets background noise →
@@ -203,9 +208,11 @@ Rarity on the card is not in 2B (§13).
 - **Deadline (3 h from case open).** A's argument is tasted against
   **plain water** (baseline GRN rates only, the same input as a text
   with no Hebrew letters). The simulation runs normally, with hunger
-  from the full 3 h wait (§5). The headline is **"הצד השני לא התייצב
-  לדיון"**. Open (§13): how the computed result is shown, since A can
-  lose to water, and whether a no-show case can be appealed.
+  from the full 3 h wait (§5).
+  - Headline: **"הזבוב העדיף מים"** when water wins (Win or Dithered
+    for side B).
+  - Otherwise **"הצד השני לא התייצב לדיון"**.
+  - Only A may appeal a no-show (§15.4).
 - **Public defender** — Phase 3, not MVP. Anyone with the link can write
   for B after half the window elapses.
 
@@ -215,12 +222,12 @@ Three views of a case (§15.1):
 
 - **Personal page** (A's or B's link): the story (live or replay), the
   verdict, both arguments, the history, the appeal button while
-  allowed, "send the verdict", the brain view (§15.7) and a small "this
-  link is personal" note.
+  allowed, "send the verdict", the brain view (§15.7; parties only) and
+  a small "this link is personal" note.
 - **Public share card** (page + 1200×630 OG image): topic, names, the
   final verdict and the history (verdict → appeal accepted → appeal
-  rejected). **No arguments**, on the page or in the image. Buttons: new
-  case, report (§15.5).
+  rejected). **No arguments** and **no brain view**, on the page or in
+  the image. Buttons: new case, report (§15.5).
 - **Teaser** (the preview of B's link): only the fly and the topic, with
   no verdict, so nothing is spoiled.
 
@@ -237,7 +244,8 @@ Phase 2B, SQLite (§11). The 2A `hearing` table (§14) grows into:
 - **case:** `id`, `created_at`, `deadline_at` (created + 3 h), `topic`,
   `name_a`, `name_b`, `text_a`, `text_b` (null until B submits; null for
   a no-show = plain water), `b_submitted_at`, `token_a_hash`,
-  `token_b_hash`, `status` (`waiting`|`hearing`|`decided`|`no_show`),
+  `token_b_hash`, `b_device_hash` (the first device to open B's link),
+  `ip_hash` + day (rate limit), `status` (`waiting`|`hearing`|`decided`|`no_show`),
   `hidden_at` (set by a report or the admin), `shared_at` (first "send
   the verdict" tap; it also bumps the `case_shared` counter once).
 - **hearing:** `id`, `case_id`, `n` (0 = verdict, 1–2 = appeals; ≤ 3 per
@@ -275,7 +283,7 @@ the 2A stack (§14), moved to a server.
 | Host           | Oracle Cloud Always Free ARM (Ampere A1), Always Free resources only               |
 | HTTPS          | Caddy (automatic Let's Encrypt certificates)                                       |
 | Domain         | A free subdomain (e.g. DuckDNS) for now                                            |
-| Moderation     | Hebrew offensive-word filter + report button + admin command (§15.5), no AI        |
+| Moderation     | Hebrew offensive-word filter + 20 new cases/day per IP + report + admin (§15.5)    |
 
 Determinism stays per platform (§2.2): verdicts on the ARM host need not
 match the x86 workstation bit for bit. Production-host timing and an ARM
@@ -355,26 +363,20 @@ determinism check are 2B tasks.
   Always Free ARM + Caddy + a free subdomain.
 - ~~Class-level leak in the brain view~~ — resolved 2026-10-25: the
   taste-class bars are removed (§15.7).
-- **Lunch break under real waits.** Hunger = U(0, 0.4) + 0.1/h of wait
-  (`params.MOOD`). A 3 h deadline caps it at 0.7, **below the 0.8
-  threshold**, so a lunch break cannot happen in 2B. Decide after P2B-4
-  (the outcome mix from saved data). Options: accept no lunch break, or
-  change the hunger rule or the threshold (a sim change with a version
-  bump).
-- **Appeal hunger.** An appeal gets a fresh seed (new arousal and
-  noise). Which wait sets its hunger is open. Proposed: the case's own
-  wait (case open → B submits), with a fresh base draw. The alternative
-  is case open → appeal.
-- **No-show display.** At the deadline, A can lose to plain water. Open:
-  how the computed outcome sits under "הצד השני לא התייצב לדיון", and
-  whether a no-show case can be appealed (B has no argument).
-- **Reports.** Does a report hide the personal pages too, or only the
-  public card?
-- **B's link in a group chat.** Whoever opens it first can write as B.
-  Accept this, or bind B's link to the first device that submits?
-- **Brain view on the public card**, or on personal pages only?
-- **Rate limit** (the 2026-10-19 list had 20 cases/day per IP): not in
-  the 2B decisions.
+- **Lunch break growth rate (P2B-1).** Keep the U(0, 0.4) start and
+  the 0.8 threshold. P2B-1 reports growth-rate options; the owner picks
+  one. The target: ~1–3% of all cases, mainly near the deadline and in
+  no-shows.
+- ~~Appeal hunger~~ — resolved 2026-10-26: the case's own wait, with a
+  fresh random start.
+- ~~No-show display and appeal~~ — resolved 2026-10-26: "הזבוב העדיף
+  מים" when water wins; only A may appeal (§8).
+- ~~Reports~~ — resolved 2026-10-26: a report hides everything,
+  personal pages included.
+- ~~B's link in a group~~ — resolved 2026-10-26: the first device to
+  open it becomes B; later devices see "התיק כבר בטיפול".
+- ~~Brain view on the public card~~ — resolved 2026-10-26: parties only.
+- ~~Rate limit~~ — resolved 2026-10-26: 20 new cases per day per IP.
 - **Not in 2B; maybe later:** template sentences, rarity, decision time,
   direction flips, deciding neuron and the mini brain map on the card
   (§9); analytics beyond the server-side counters.
@@ -451,19 +453,30 @@ the data model in §10.
      topic, names, the final verdict and the history, but **no
      arguments**.
    - Tokens are unguessable. Only their hashes are stored.
+   - **First opener is B.** The first device to open B's link is bound
+     to it (cookie). Any other device gets "התיק כבר בטיפול".
+     - The binding happens through the page's script (an API call), not
+       on the HTML request, so WhatsApp's preview crawler (no JS) never
+       claims B.
+     - A device already bound as A is never bound as B: A can tap B's
+       link safely.
 2. **Blind writing.** B never sees A's argument before submitting. No
    API response or page for B's token contains `text_a` while the case
    is `waiting` (test).
 3. **Mood.** Hunger follows the **real wait**, case open → B submits
    (3 h for a no-show; §5). This replaces the simulated wait of §14.2.
-   Arousal is drawn from the hearing seed, as before.
+   Arousal is drawn from the hearing seed, as before. The growth rate
+   is set in P2B-1 (§5).
 4. **Appeals.**
    - Each side may appeal **once**, within **3 hours of the latest
      verdict**.
    - Every appeal is judged on the **original arguments** with a fresh
-     seed and a fresh mood (appeal hunger: §13).
+     seed and a fresh mood. **Appeal hunger:** the case's own wait
+     (case open → B submits, 3 h for a no-show), with a fresh U(0, 0.4)
+     start drawn from the appeal's seed.
    - The **latest verdict is final**. There are at most **3 hearings per
      case** (the verdict + one appeal per side).
+   - **No-show:** only A may appeal.
    - An appeal is "accepted" if its winner differs from the previous
      verdict's winner. A non-win outcome counts as "no winner".
    - The card shows the history, e.g. verdict → appeal accepted → appeal
@@ -477,7 +490,10 @@ the data model in §10.
      fly-themed message asks the user to rephrase. The owner supplies
      the list.
    - **Report:** a button on the public card. One report **hides the
-     case immediately** (`hidden_at`).
+     whole case immediately** (`hidden_at`): the public card and both
+     personal pages show the generic "case closed" page.
+   - **Rate limit:** 20 new cases per day per IP (a hashed IP, deleted
+     with the case). Beyond that, a fly-themed message.
    - **Admin:** a command on the server lists reported cases and
      deletes or restores one.
 6. **Animation.** The ~7 s courtroom waiting story (§14.3) stays. The
@@ -485,14 +501,24 @@ the data model in §10.
    cumulative rate over the tasting. There are no neuron graphics. **On
    a Froze verdict the meters are hidden.**
 7. **Disclosure.**
-   - The brain view loses the **taste-class bars**; they are neither
+   - The brain view is for **parties only** (personal links), never on
+     the public card. It loses the **taste-class bars**; they are neither
      stored nor sent. It keeps the MN9 curves, the mood, the seed,
      `SIM_VERSION` and the platform. This closes the class-level leak
      (DECISIONS.md 2026-10-25).
    - A **"how it works"** page at a general level: FlyWire, words become
      tastes, the fly's mood, no AI. It carries the credit CC-BY-NC
-     requires: FlyWire (Dorkenwald et al. 2024; Schlegel et al. 2024)
-     and Shiu et al. 2024.
+     requires, checked on 2026-10-26 against FlyWire's citation table
+     (linked from codex.flywire.ai/about_flywire):
+     - co-cite, required: Dorkenwald et al. 2024
+       (10.1038/s41586-024-07558-y) and Schlegel et al. 2024
+       (10.1038/s41586-024-07686-5);
+     - for the parts we use: Zheng et al. 2018 (FAFB,
+       10.1016/j.cell.2018.06.019); synapses before July 2025 (v783):
+       Buhmann et al. 2021 (10.1038/s41592-021-01183-7) and Heinrich et
+       al. 2018 (10.1007/978-3-030-00934-2_36); neurotransmitters:
+       Eckstein, Bates et al. 2024 (10.1016/j.cell.2024.03.016);
+     - the model: Shiu et al. 2024 (*Nature*).
    - The letter table is never published (§2.3).
 8. **Retention.** Everything about a case (hearings, appeals, reports)
    is deleted **7 days after case open**. An expired, deleted or hidden

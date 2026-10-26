@@ -1869,3 +1869,45 @@ These are covered in TASKS P2B-2 and P2B-3.
   open list.
 
 **Impacts:** SPEC §7, §13, §15.6; TASKS 2B "carried over".
+
+## 2026-10-26 — 2B open items resolved (owner)
+
+**Context:** the SPEC §13 items left open by 2B planning (2026-10-25).
+
+**Decision:**
+- **Lunch break:** kept, but only for slow responders.
+  - P2B-1 finds a hunger growth rate (start U(0, 0.4) and the 0.8
+    threshold kept) such that the lunch break happens mainly near the
+    3 h deadline and in no-shows.
+  - Target: ~1–3% of all cases under realistic wait patterns.
+  - P2B-1 reports options; the owner picks the rate.
+- **Appeal hunger:** the case's own wait, with a fresh random start.
+- **No-show:**
+  - When water wins, the headline is "הזבוב העדיף מים".
+  - Only A may appeal a no-show.
+- **Report:** hides everything, including the personal pages.
+- **B's link opened by several people:** the first opener becomes B;
+  later openers see "התיק כבר בטיפול".
+  - Added in the spec: the binding is made by the page's script, so
+    WhatsApp's preview crawler (no JS) never claims B.
+  - A device bound as A is never bound as B.
+- **Brain view:** parties only, not on the public card.
+- **Rate limit:** 20 new cases per day per IP.
+- **Confirmed:**
+  - the share counters (a decided case counts as shared if "send the
+    verdict" was tapped);
+  - the two extra 2B exit criteria (≤ 15 s and determinism on the
+    production host);
+  - determinism per platform.
+- **FlyWire citations:** checked against FlyWire's citation table
+  (linked from codex.flywire.ai/about_flywire).
+  - "Please co-cite the Dorkenwald et al. and Schlegel et al.
+    manuscripts."
+  - Credits for the parts we use: Zheng et al. 2018 (reconstruction),
+    Buhmann et al. 2021 + Heinrich et al. 2018 (synapses before July
+    2025, i.e. v783), and Eckstein, Bates et al. 2024
+    (neurotransmitters).
+  - DOIs are in SPEC §15.7.
+
+**Impacts:** SPEC §3, §5, §8, §9, §10, §11, §13, §15; TASKS P2B-1,
+P2B-4, P2B-5, P2B-6, P2B-7, P2B-9.
