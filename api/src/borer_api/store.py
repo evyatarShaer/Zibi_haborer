@@ -11,6 +11,8 @@ import sqlite3
 import threading
 import time
 
+from borer_api.db import cleanup_loop, decode as _decode  # noqa: F401 - shared with 2B
+
 RETENTION_S = 7 * 24 * 3600
 WINS = ("win", "dithered")  # outcomes that name a side (SPEC §7)
 
@@ -114,21 +116,3 @@ class Store:
 
     def close(self) -> None:
         self._db.close()
-
-
-def _decode(row) -> dict | None:
-    if row is None:
-        return None
-    d = dict(row)
-    for k in JSON_COLUMNS:
-        if d.get(k) is not None:
-            d[k] = json.loads(d[k])
-    return d
-
-
-def cleanup_loop(store: Store, stop: threading.Event, every_s: float = 3600) -> None:
-    """Purge at once, then every `every_s` until `stop` is set (run in a thread)."""
-    while True:
-        store.purge()
-        if stop.wait(every_s):
-            return

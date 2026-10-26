@@ -1,10 +1,13 @@
 """Tests marked `needs_data` are skipped when the v783 raw files are absent.
-`sim` / `client`: the app on a temp DB with a fake simulation (fake.py)."""
+`sim` / `client`: the app on a temp DB with a fake simulation (fake.py).
+`clock` / `store`: a case store on a temp DB with a settable clock (casekit.py)."""
 import pytest
 from fastapi.testclient import TestClient
 
 from borer_api.app import create_app
 from borer_sim import data
+from borer_api.cases import Store
+from casekit import Clock
 from fake import FakeSim
 
 
@@ -26,3 +29,15 @@ def sim():
 def client(tmp_path, sim):
     with TestClient(create_app(sim, str(tmp_path / "h.sqlite3"))) as c:
         yield c
+
+
+@pytest.fixture
+def clock():
+    return Clock()
+
+
+@pytest.fixture
+def store(tmp_path, clock):
+    s = Store(str(tmp_path / "c.sqlite3"), clock)
+    yield s
+    s.close()

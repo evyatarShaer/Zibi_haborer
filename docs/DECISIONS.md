@@ -2053,3 +2053,33 @@ CLAUDE.md status. Data (gitignored): `balance_1500ms.jsonl`,
 `balance_time.json`, `balance.log` (0.9.0); 0.8.x kept as
 `balance_1500ms_v080.jsonl`, `balance_time_v080.json`,
 `balance_v080.log`.
+
+---
+
+## 2026-10-26 — P2B-5: case storage; additions beyond SPEC §10 (owner to confirm)
+
+**What was built:** `borer_api.db` (schema, counters, 7-day purge),
+`borer_api.cases` (case flow and the court's work list) and
+`borer_api.tokens`. The DB enforces at most 3 hearings per case
+(`n` 0–2, unique per case) and one appeal per side (`UNIQUE (case_id,
+appealed_by)`, with `n = 0` ⇔ no appellant). Deleting a case cascades
+to its hearings and reports; `counter` has no case reference.
+
+**Choices made where §10 is silent** (each small; flagged for the owner):
+- `case.a_device_hash`: A's device cookie at case open, so A's device
+  is never bound as B (§15.1 needs it; §10 does not list it).
+- `hearing.decided_at`: the appeal window runs "3 h from the latest
+  verdict", i.e. from when that hearing was decided.
+- B's token is derived from A's (HMAC of A's token). Neither token is
+  stored, yet A's page can always rebuild B's link for the send and
+  nudge buttons.
+- IP hashes use an HMAC key that lives only in the API process. A plain
+  hash of an IPv4 address can be reversed by trying all 2³² addresses.
+  A restart therefore resets the daily rate limit.
+- Days (rate limit, counters) are UTC dates.
+- A hearing that was running when the process died is re-queued at
+  startup and rerun from its stored seed (2A marked it failed). In 2B
+  the parties cannot simply resubmit.
+- A new DB file (`cases.sqlite3`, P2B-6); the 2A file is not migrated.
+
+**Impacts:** TASKS P2B-5; P2B-6 builds the API on it.

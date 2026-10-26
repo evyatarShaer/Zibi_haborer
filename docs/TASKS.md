@@ -381,7 +381,7 @@ the owner's Hebrew copy and fly art.
     win 86.7%, dithered 7.2%, lunch break 5.7% (was 1.7%), runaway
     0.41%, longer-wins 45.1%. Median 7.32 s, 20/20 records match, RSS
     1.98 + 1.14 GB (DECISIONS.md 2026-10-26, P2B-4 balance results).
-- [ ] **P2B-5 — Case storage.** SQLite schema per SPEC §10:
+- [x] **P2B-5 — Case storage.** SQLite schema per SPEC §10:
   - `case`, `hearing` (n 0–2, `appealed_by`), `report` and `counter`;
   - token hashes;
   - a purge 7 days after case open (counters kept);
@@ -392,6 +392,11 @@ the owner's Hebrew copy and fly art.
     per case and one appeal per side, enforced in the DB; the purge
     removes exactly the cases older than 7 days, with their children;
     counters survive the purge (injected clock).
+  *Done 2026-10-26:* `borer_api.db` (schema, counters, purge),
+  `borer_api.cases` (case flow, court work list), `borer_api.tokens`.
+  `tests/test_cases*.py` 16 passed; api suite 74 passed. The 2A store
+  keeps serving the 2A app until P2B-6 swaps it (new DB file). Schema
+  additions beyond §10: DECISIONS.md 2026-10-26 (P2B-5).
 - [ ] **P2B-6 — Case API.**
   - A opens a case and gets their link. B submits through B's link.
   - A deadline sweep in the process runs the plain-water hearing at 3 h.
