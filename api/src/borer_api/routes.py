@@ -153,6 +153,17 @@ def appeal(side: str, token: str, request: Request):
     return _view(request, case, side, token, status=201)
 
 
+@router.post("/{side}/{token}/shared")
+def shared(side: str, token: str, request: Request):
+    """The page reports a "send the verdict" tap (counted once per case, SPEC §10)."""
+    case, err = _party(request, side, token)
+    if err:
+        return err
+    if case["status"] not in ("decided", "no_show"):
+        return views.error(views.NOT_DECIDED, 409)
+    return {"first": request.app.state.store.shared(case["id"])}
+
+
 @router.get("/{side}/{token}/brain/{n}")
 def brain(side: str, token: str, n: int, request: Request):
     case, err = _party(request, side, token)

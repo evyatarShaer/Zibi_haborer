@@ -2473,3 +2473,33 @@ caches a preview per URL.
 **Impacts:** SPEC §9; TASKS P2B-2, P2B-10; `api/src/borer_api/{pages,og,
 ogimage,verdicts,views,app,cases}.py`, `api/assets/fonts`, `api/pyproject.toml`
 (pillow); `web/js/{flow,verdict,public,copy}.js`; `api/tests`.
+
+---
+
+## 2026-10-27 — P2B-11: share counters
+
+**Built:** aggregate counters per UTC day in `counter` (day, event,
+count). There is no case id or text, and they survive the 7-day purge.
+Each event is bumped in the same transaction as the event, so a rolled
+back step (e.g. a busy court) counts nothing.
+- `cases_opened`: A opens a case.
+- `cases_decided`: a case's **first** verdict, no-shows included. An
+  appeal's verdict is not a new decided case.
+- `no_shows`: the first verdict of a case B never wrote for.
+- `appeals`: an appeal filed.
+- `reports`: a report that hid a case.
+- `cases_shared`: the **first** "send the verdict" tap of a case, from
+  either side. It also sets `shared_at`. Later taps count nothing.
+
+The page reports the tap with a keepalive `POST /api/{a|b}/{token}/shared`
+as WhatsApp opens. It's refused (409) before a verdict exists.
+`python -m borer_api.admin counters` prints one row per day, a total,
+and **shared / decided**: the SPEC §12 exit measure (≥ 50%).
+
+**Choice (owner to confirm):** no-shows count as decided cases in the
+exit measure, since A gets a verdict and can share it. Excluding them
+would be `cases_shared` without no-show shares, which needs a second
+event; say if you want that.
+
+**Impacts:** `api/src/borer_api/{db,cases,reports,routes,admin}.py`,
+`web/js/{api,verdict,casepage}.js`, `api/tests`; TASKS P2B-11.

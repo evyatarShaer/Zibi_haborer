@@ -1,4 +1,5 @@
-"""Reports and the admin's moderation steps on the case store (SPEC §15.5).
+"""Reports, the admin's moderation steps and the "send the verdict" mark on the case store
+(SPEC §10, §15.5).
 
 One report hides the whole case at once (`hidden_at`): its public card and both personal
 pages answer "case closed". The admin lists reported or hidden cases, restores one
@@ -17,6 +18,17 @@ class Reports:
                 return False
             self._run("INSERT INTO report (case_id, created_at) VALUES (?, ?)", (cid, self.clock()))
             self._run('UPDATE "case" SET hidden_at = ? WHERE id = ?', (self.clock(), cid))
+            self.bump("reports")
+            return True
+
+    def shared(self, cid: str) -> bool:
+        """A "send the verdict" tap: the first one sets shared_at and counts the case once in
+        cases_shared; later taps (either side, any device) change nothing."""
+        with self._tx():
+            if self._run('UPDATE "case" SET shared_at = ? WHERE id = ? AND shared_at IS NULL',
+                         (self.clock(), cid)) != 1:
+                return False
+            self.bump("cases_shared")
             return True
 
     def reported(self) -> list[dict]:

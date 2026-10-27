@@ -2,7 +2,7 @@
 // screen flow.screen() picks. B's link is bound to a device only when B submits (any
 // browser may open it before that). The highest hearing this device has shown is
 // remembered, so a verdict it has not seen is replayed once.
-import { getBrain, getMine, postAppeal } from "./api.js";
+import { getBrain, getMine, postAppeal, postShared } from "./api.js";
 import { T } from "./copy.js";
 import { screen } from "./flow.js";
 import { noticeScreen } from "./notice.js";
@@ -36,7 +36,8 @@ export function casePage(root, side, token) {
       return storyScreen(root, view, s.n, () => { remember(seenKey(), s.n); render(); }, loadBrain(s.n));
     }
     remember(seenKey(), s.n);
-    return verdictScreen(root, view, s.n, { onAppeal, publicUrl: publicUrl(), loadBrain: loadBrain(s.n) });
+    return verdictScreen(root, view, s.n, { onAppeal, publicUrl: publicUrl(), loadBrain: loadBrain(s.n),
+      onShared: () => postShared(side, token) });
   }
 
   function render() {

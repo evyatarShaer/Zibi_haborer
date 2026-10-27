@@ -58,6 +58,7 @@ class Store(Reports, Db):
                       (cid, now, now + DEADLINE_S, topic, name_a, name_b, text_a,
                        tokens.digest(token_a), tokens.digest(tokens.side_b(token_a)),
                        device and tokens.digest(device), ip_hash, self.day()))
+            self.bump("cases_opened")
         return {"id": cid, "token_a": token_a, "token_b": tokens.side_b(token_a)}
 
     def case(self, cid: str) -> dict | None:
@@ -105,7 +106,9 @@ class Store(Reports, Db):
             c = self._live(cid, "status IN ('decided', 'no_show')")
             n = self._one("SELECT COUNT(*) AS n FROM hearing WHERE case_id = ?", (cid,))["n"]
             self._run("UPDATE \"case\" SET status = 'hearing' WHERE id = ?", (cid,))
-            return self._file(c, n, side, seed)
+            hid = self._file(c, n, side, seed)
+            self.bump("appeals")
+            return hid
 
     def due(self) -> list[str]:
         """Waiting, visible cases whose deadline has passed (the no-show sweep)."""
@@ -158,6 +161,12 @@ class Store(Reports, Db):
                        result["duration_ms"], self.clock(), hid))
             self._run(f'UPDATE "case" SET status = {SETTLED} '
                       "WHERE id = (SELECT case_id FROM hearing WHERE id = ?)", (hid,))
+            first = self._one('SELECT h.n, c.text_b FROM hearing h JOIN "case" c '
+                              "ON c.id = h.case_id WHERE h.id = ?", (hid,))
+            if first["n"] == 0:  # the case's first verdict (counters, SPEC §12)
+                self.bump("cases_decided")
+                if first["text_b"] is None:
+                    self.bump("no_shows")
 
     def fail(self, hid: int) -> None:
         """The hearing could not be run: it is failed and its case ends in error."""

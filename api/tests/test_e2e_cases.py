@@ -1,6 +1,9 @@
 """More flows in headless Chrome at 360 px (P2B-8): the 3-hearing appeal chain seen from
 both phones, a hearing that ends in error, closed links and A's own device on B's link,
-B bound to the browser that submits, and the report button. Run: uv run pytest -m chrome."""
+B bound to the browser that submits, and the report button
+(and "send the verdict" counted once). Run: uv run pytest -m chrome."""
+import time
+
 from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, TEXT_A, b_writes, get, link_in, open_case,
                     pytestmark, see_story_then)  # noqa: F401 - pytestmark
 
@@ -72,12 +75,26 @@ def test_open_in_one_browser_submit_from_another(rig):
     chrome.wait_text(HEADLINE[("win", "A")])
 
 
+def _wait_shared(store, cid: str, timeout: float = 10) -> None:
+    end = time.time() + timeout
+    while store.case(cid)["shared_at"] is None:
+        assert time.time() < end, "the share tap never reached the server"
+        time.sleep(0.1)
+    shared = {r["event"]: r["count"] for r in store.counters()}.get("cases_shared")
+    time.sleep(1)  # the second tap has landed by now
+    assert {r["event"]: r["count"] for r in store.counters()}.get("cases_shared") == shared
+
+
 def test_report_hides_the_case(rig):
     sim, _, browser = rig
     a, b, c = browser.page(), browser.page(), browser.page()
     url_a, link_b = open_case(a)
     b_writes(b, link_b)
     see_story_then(b, HEADLINE[("win", "A")])
+    b.click("a.share")  # "send the verdict" (twice): the case counts as shared once
+    b.click("a.share")
+    cid = link_in(b.attr("a.share", "href"), "c").rsplit("/", 1)[1]
+    _wait_shared(browser.store, cid)
     c.goto(link_in(b.attr("a.share", "href"), "c"))
     c.wait_text(HEADLINE[("win", "A")])
     c.click("button.report")

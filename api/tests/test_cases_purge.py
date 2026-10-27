@@ -8,7 +8,6 @@ from casekit import DAY, decided_case, opened
 def test_purge_exactly_7_days_with_children_counters_kept(store, clock):
     old = decided_case(store, clock)
     store._run("INSERT INTO report (case_id, created_at) VALUES (?, ?)", (old["id"], clock.t))
-    store.bump("cases_opened")
     clock.t += 1
     edge = opened(store)  # exactly 7 days old at purge time: kept
     clock.t += RETENTION_S
@@ -18,8 +17,8 @@ def test_purge_exactly_7_days_with_children_counters_kept(store, clock):
     assert store._all("SELECT * FROM report") == []
     clock.t += 1
     assert store.purge() == 1 and store.case(edge["id"]) is None
-    [row] = store.counters()
-    assert (row["event"], row["count"]) == ("cases_opened", 1)
+    kept = {r["event"]: r["count"] for r in store.counters()}
+    assert kept == {"cases_opened": 2, "cases_decided": 1}
 
 
 def test_expired_reads_as_gone_before_purge(store, clock):

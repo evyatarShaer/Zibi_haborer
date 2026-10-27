@@ -11,6 +11,8 @@ import time
 from contextlib import contextmanager
 
 RETENTION_S = 7 * 24 * 3600
+# Aggregate counters per UTC day (SPEC §10, §12; P2B-11): kept past the purge, no case data.
+EVENTS = ("cases_opened", "cases_decided", "no_shows", "appeals", "reports", "cases_shared")
 JSON_COLUMNS = ("metrics", "brain")
 
 SCHEMA = """
@@ -115,7 +117,8 @@ class Db:
         return time.strftime("%Y-%m-%d", time.gmtime(self.clock()))
 
     def bump(self, event: str) -> None:
-        """Add one to today's aggregate counter for `event`."""
+        """Add one to today's aggregate counter for `event` (one of EVENTS)."""
+        assert event in EVENTS, event
         self._run("INSERT INTO counter (day, event, count) VALUES (?, ?, 1) "
                   "ON CONFLICT (day, event) DO UPDATE SET count = count + 1",
                   (self.day(), event))

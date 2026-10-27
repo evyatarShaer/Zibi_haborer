@@ -69,6 +69,7 @@ def rig(tmp_path_factory):
     while not server.started:
         time.sleep(0.05)
     browser = Browser()
+    browser.store = app.state.store  # the server's store, for checks the page cannot show
     yield sim, clock, browser
     browser.close()
     server.should_exit = True

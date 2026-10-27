@@ -18,6 +18,9 @@ export const openCase = (body) => call("POST", "/api/case", body);
 export const getMine = (side, token) => call("GET", `/api/${side}/${enc(token)}`);
 export const submitB = (token, text) => call("POST", `/api/b/${enc(token)}/submit`, { text_b: text });
 export const postAppeal = (side, token) => call("POST", `/api/${side}/${enc(token)}/appeal`);
+// keepalive: the tap opens WhatsApp, and the request must survive the page losing focus.
+export const postShared = (side, token) =>
+  fetch(`/api/${side}/${enc(token)}/shared`, { method: "POST", keepalive: true }).catch(() => {});
 export const getBrain = (side, token, n) => call("GET", `/api/${side}/${enc(token)}/brain/${n}`);
 export const getPublic = (id) => call("GET", `/api/c/${enc(id)}`);
 export const postReport = (id) => call("POST", `/api/c/${enc(id)}/report`);

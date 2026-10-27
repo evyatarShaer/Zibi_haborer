@@ -529,12 +529,20 @@ the owner's Hebrew copy and fly art.
     layout against Pillow's basic layout; the golden card image.
   - `test_verdicts.py`: SPEC §7/§8 headlines, now in one place.
   - api suite: 114 passed.
-- [ ] **P2B-11 — Share counters.** Server-side aggregate counters
+- [x] **P2B-11 — Share counters.** Server-side aggregate counters
   (`cases_opened`, `cases_decided`, `cases_shared`, no-shows, appeals,
   reports) per day, kept past the 7-day purge. An admin command prints
   them.
   *Accept:* tests: one `case_shared` per case however many taps; no case
   data in the counter table.
+  *Done 2026-10-27:* `db.EVENTS` = cases_opened, cases_decided,
+  no_shows, appeals, reports, cases_shared, bumped in the same
+  transaction as their event.
+  - `POST /api/{a|b}/{token}/shared` is called by "send the verdict"
+    (keepalive fetch). `python -m borer_api.admin counters` prints the
+    days, the totals and "shared / decided".
+  - `test_counters.py` (5 tests); Chrome: two taps on the page count
+    once. api suite: 119 passed.
 - [ ] **P2B-12 — Friends beta.** Run real cases in friends' WhatsApp
   groups. Fix what breaks.
   *Accept:* 20 decided real cases; counters show the shared share.

@@ -36,8 +36,9 @@ export function meterNode(m, bar = true) {
 }
 
 // onAppeal() files the appeal and resolves to an error message, or null when filed.
-// loadBrain() resolves to the API's {status, data} for this hearing's brain summary.
-export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain }) {
+// loadBrain() resolves to the API's {status, data} for this hearing's brain summary;
+// onShared() reports a "send the verdict" tap (the server counts each case once).
+export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain, onShared }) {
   const v = verdictModel(view, n);
   const message = el("p", { class: "error", "aria-live": "polite" });
   const appeal = v.canAppeal ? el("button", { class: "secondary appeal" }, T.appeal) : null;
@@ -61,7 +62,7 @@ export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain })
     v.history ? el("p", { class: "history" }, v.history, v.final ? ` · ${T.final}` : "") : null,
     el("div", { class: "actions" },
       el("a", { class: "button wa share", href: shareVerdict(view, view.hearings[n], publicUrl),
-        target: "_blank", rel: "noopener" }, T.shareVerdict),
+        target: "_blank", rel: "noopener", onclick: onShared }, T.shareVerdict),
       appeal, v.appealLeft ? el("p", { class: "hint center" }, v.appealLeft) : null, message,
       brainToggle({ name_a: view.name_a, name_b: v.meters[1].name }, loadBrain),
       el("a", { class: "button secondary", href: "/" }, T.newCase)),
