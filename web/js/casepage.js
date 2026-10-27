@@ -6,6 +6,7 @@ import { getBrain, getMine, postAppeal } from "./api.js";
 import { T } from "./copy.js";
 import { screen } from "./flow.js";
 import { noticeScreen } from "./notice.js";
+import { publicCard } from "./public.js";
 import { waitAScreen, writeBScreen } from "./pending.js";
 import { recall, remember } from "./session.js";
 import { verdictScreen } from "./verdict.js";
@@ -67,6 +68,12 @@ export function casePage(root, side, token) {
 
   // A network error keeps the current screen and tries again on the next poll.
   function answer(r) {
+    if (r.status === 200 && r.data.public_only) {  // B's link after a no-show
+      stopped = true;
+      if (current) current.stop();
+      current = publicCard(root, r.data.public_only);
+      return;
+    }
     if (r.status === 200) return accept(r.data);
     if (r.status === 404) return end(T.closed, "closed");
     if (r.status === 403) return end(T.taken, "taken");

@@ -2382,3 +2382,42 @@ the first opener after the deadline was bound.
 **Impacts:** `web/js/{meters,how,waiting,verdict,casepage,brain,stages,app}.js`,
 `web/css/app.css`, `web/index.html`, `api/src/borer_api/app.py` (`/how`),
 `api/tests`; TASKS P2B-9.
+
+---
+
+## 2026-10-27 — No-show privacy; shorter story; Shiu et al. DOI (owner)
+
+**1. No-show privacy.**
+- After a no-show nobody is B, and B's link has **no personal page**.
+- `GET /api/b/{token}` answers `{"public_only": <public card>}`: the
+  verdict and history, no arguments, no mood, no brain.
+- The page shows that card with "open a new case" (and report).
+- B's link can't submit, appeal or open the brain view there (409).
+- A's device on B's link still gets "this is the other side's link".
+- "Only A may appeal a no-show" now holds because B has no page; the
+  separate refusal message is gone.
+- Supersedes the "consequence" in the 2026-10-27 binding entry.
+- Tests: API (`test_deadline_fires_the_water_hearing`,
+  `test_only_a_may_appeal_a_no_show`) and the Chrome test
+  `test_no_show_b_link_shows_only_the_public_card`.
+
+**2. Story length.**
+- **Live:** the reveal after the story is now **2 s** (~9 s in all). The
+  curves exist only once the hearing is decided.
+- **Replay** (decided when the story starts): A's meter fills during
+  "tasting A", B's during "tasting B", with no reveal. The replay stays
+  at 7 s.
+- The Chrome test times A's replay at under 8.5 s and sees the meters
+  during a tasting stage.
+- Node tests: `stageAt` progress, `replayFill`, and the 9 s live story.
+- SPEC §15.6.
+
+**3. Shiu et al. 2024 DOI:** **10.1038/s41586-024-07763-9**, "A
+Drosophila computational brain model reveals sensorimotor processing",
+Nature 634, 210–219, first author Shiu, Philip K. Confirmed 2026-10-27
+from the nature.com article page (citation meta tags) and the Crossref
+record via doi.org. Added to SPEC §15.7 and `/how`, so all 7 credits
+now link a DOI.
+
+**Impacts:** SPEC §15.1, §15.6, §15.7; `api/src/borer_api/{routes,views}.py`;
+`web/js/{casepage,public,waiting,meters,stages,how}.js`; `api/tests`.

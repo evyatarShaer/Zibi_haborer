@@ -33,7 +33,7 @@ export const HOW = {
     ["Buhmann et al. 2021", "synapses (v783)", "10.1038/s41592-021-01183-7"],
     ["Heinrich et al. 2018", "synapses (v783)", "10.1007/978-3-030-00934-2_36"],
     ["Eckstein, Bates et al. 2024", "neurotransmitter predictions", "10.1016/j.cell.2024.03.016"],
-    ["Shiu et al. 2024", "the whole-brain model (Nature)", null],
+    ["Shiu et al. 2024", "the whole-brain model", "10.1038/s41586-024-07763-9"],
   ],
 };
 
@@ -43,7 +43,7 @@ export function howPage(root) {
     HOW.sections.map(([title, text]) => [el("h3", {}, title), el("p", {}, text)]),
     el("h3", {}, HOW.creditsTitle), el("p", {}, HOW.creditsIntro),
     el("ul", { class: "credits", dir: "ltr" }, HOW.credits.map(([who, what, doi]) =>
-      el("li", {}, `${who}, ${what}`, doi ? [". ", el("a", { href: `https://doi.org/${doi}`,
-        target: "_blank", rel: "noopener" }, `doi:${doi}`)] : null))),
+      el("li", {}, `${who}, ${what}. `, el("a", { href: `https://doi.org/${doi}`,
+        target: "_blank", rel: "noopener" }, `doi:${doi}`)))),
     el("a", { class: "button primary", href: "/" }, T.newCase)));
 }

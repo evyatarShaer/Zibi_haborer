@@ -62,7 +62,14 @@ def _party(request: Request, side: str, token: str) -> tuple[dict | None, JSONRe
             return None, views.error(views.OWN_LINK, 409)
         if case["b_device_hash"] is not None and d != case["b_device_hash"]:
             return None, views.error(views.TAKEN, 403)
+        if _no_b(case):  # nobody wrote for B: nothing personal behind B's link
+            return None, views.error(views.LATE, 409)
     return case, None
+
+
+def _no_b(case: dict) -> bool:
+    """B never submitted and the deadline hearing was filed (a no-show)."""
+    return case["status"] != "waiting" and case["text_b"] is None
 
 
 def _view(request: Request, case: dict, side: str, token: str, status: int = 200):
@@ -99,7 +106,12 @@ def a_view(token: str, request: Request):
 @router.get("/b/{token}")
 def b_view(token: str, request: Request):
     """B's page; gives the browser its device cookie (needed to submit and come back)."""
-    _device(request)
+    device = _device(request)
+    found = _link(request, "b", token)
+    if found and _no_b(found) and tokens.digest(device) != found["a_device_hash"]:
+        # After a no-show nobody is B: the link shows only the public card (SPEC §15.1).
+        case, hearings = request.app.state.store.snapshot(found["id"])
+        return _with_device(request, JSONResponse({"public_only": views.public(case, hearings)}))
     case, err = _party(request, "b", token)
     return _with_device(request, err or _view(request, case, "b", token))
 

@@ -1,8 +1,10 @@
 """The two-link flow in headless Chrome at 360 px (P2B-8): every outcome, A's replay, the
 public card; the no-show (plain water) with A's appeal. Run: uv run pytest -m chrome."""
+import time
+
 import pytest
 
-from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, TEXT_A, TEXT_B, WATER, b_writes, link_in,
+from e2ekit import (BASE, ENTERS, HEADLINE, TEXT_A, TEXT_B, WATER, b_writes, link_in,
                     open_case, pytestmark, see_story_then)  # noqa: F401 - pytestmark
 
 OUTCOMES = list(HEADLINE)[1:]  # win B, dithered, tie, froze, lunch break (+ win A in the chain)
@@ -31,8 +33,14 @@ def test_every_outcome_live_for_b_replay_for_a(rig, outcome):
     assert ("התיק: פיצה" in b.text()) == (outcome[0] != "tie")
     assert b.attr("button.appeal", "class")  # B may appeal
     public = link_in(b.attr("a.share", "href"), "c")
-    a.goto(url_a)
-    see_story_then(a, HEADLINE[outcome])  # replayed from stored data
+    a.goto(url_a)  # replayed from stored data: the meters fill during the tastings, ~7 s
+    a.wait_text(ENTERS, 10)
+    start = time.time()
+    if not froze:
+        a.wait("document.body.innerText.includes('טועם את הטענה') && "
+               "document.querySelectorAll('.live-meters .meter .fill').length === 2", 10)
+    a.wait_text(HEADLINE[outcome], 15)
+    assert time.time() - start < 8.5 and a.fits()
     if not froze:
         assert a.js("document.querySelectorAll('.verdict .meter .fill').length") == 2
     a.goto(url_a)
@@ -47,7 +55,7 @@ def test_every_outcome_live_for_b_replay_for_a(rig, outcome):
 
 def test_no_show_water_then_a_appeals(rig):
     sim, clock, browser = rig
-    a, b = browser.page(), browser.page()
+    a = browser.page()
     url_a, link_b = open_case(a)
     clock.offset += 3600
     a.wait("!document.querySelector('a.nudge').hidden", 10)  # the nudge from 1 h
@@ -59,8 +67,4 @@ def test_no_show_water_then_a_appeals(rig):
     a.click("button.appeal")
     see_story_then(a, "הצד השני לא התייצב לדיון", first="ערעור של דנה!")
     assert "הערעור של דנה התקבל!" in a.text() and not a.attr("button.appeal", "class")
-    b.goto(link_b)  # B comes late: the verdicts, no appeal, no form
-    b.wait_text("הצד השני לא התייצב לדיון", 25)
-    assert not b.attr("button.appeal", "class") and not b.attr("[name=text_b]", "name")
     clock.offset = 0
-    assert CLOSED not in b.text() and BASE in b.attr("a.share", "href").replace("%3A", ":").replace("%2F", "/")

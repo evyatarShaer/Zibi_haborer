@@ -54,10 +54,10 @@ def test_appeal_window_is_3_hours_from_the_latest_verdict(client, clock, case):
 def test_only_a_may_appeal_a_no_show(client, clock, case):
     clock.t += 3 * HOUR
     settled(client, f"/api/a/{case['a']}", 0)
-    b = device(client)
-    b.get(f"/api/b/{case['b']}")
+    b = device(client)  # after a no-show nobody is B, so B's link cannot appeal
+    assert "public_only" in b.get(f"/api/b/{case['b']}").json()
     r = appeal(b, case, "b")
-    assert r.status_code == 409 and r.json()["error"] == views.NO_SHOW_ONLY_A
+    assert r.status_code == 409 and r.json()["error"] == views.LATE
     assert appeal(client, case, "a").status_code == 201
     a = settled(client, f"/api/a/{case['a']}", 1)
     assert a["status"] == "no_show" and a["hearings"][1]["wait_h"] == 3.0

@@ -137,3 +137,9 @@ def test_meters_end_on_the_stored_share(tmp_path):
     for end, stored, start in got:
         assert end == stored
         assert start == {"A": {"share": 0, "width": 0}, "B": {"share": 0, "width": 0}}
+
+
+def test_replay_fills_a_then_b(tmp_path):
+    stages = [["mood", 0.5], ["tasteA", 0.25], ["tasteB", 0.5], ["deliberate", 1]]
+    got = run(tmp_path, "S.map(([k, p]) => M.replayFill(k, p))", S=stages)
+    assert got == [None, [0.25, 0], [1, 0.5], [1, 1]]

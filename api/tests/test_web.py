@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 
+import pytest
 from fastapi.testclient import TestClient
 
 from borer_api.app import create_app
@@ -54,25 +55,28 @@ def test_fast_verdict_still_tells_the_whole_story(tmp_path):
     views = story(tmp_path, [(0, "decided")])
     keys = [v["key"] for _, v in views if v["kind"] == "stage"]
     assert [k for i, k in enumerate(keys) if i == 0 or keys[i - 1] != k] == ["mood", "tasteA", "tasteB", "deliberate"]
-    assert views[-1] == [10000, {"kind": "verdict"}]  # 7 s story + 3 s meters
+    assert views[-1] == [9000, {"kind": "verdict"}]  # live: 7 s story + 2 s meters
     reveal = [v["p"] for t, v in views if v["kind"] == "reveal"]
-    assert reveal[0] == 0 and reveal == sorted(reveal) and len(reveal) == 12 and max(reveal) < 1
+    assert reveal[0] == 0 and reveal == sorted(reveal) and len(reveal) == 8 and max(reveal) < 1
+    tastes = [(t, v["p"]) for t, v in views if v.get("key") == "tasteA"]
+    assert tastes[0] == (2250, pytest.approx(50 / 1800)) and tastes[-1][1] < 1
 
 
-def test_froze_skips_the_meters(tmp_path):
+def test_replay_and_froze_skip_the_reveal(tmp_path):
+    """A replay fills the meters during the tastings instead; Froze has none."""
     assert story(tmp_path, [(0, "decided")], reveal=False)[-1] == [7000, {"kind": "verdict"}]
 
 
 def test_queued_first_then_story(tmp_path):
     views = story(tmp_path, [(0, "queued"), (3000, "running"), (9000, "decided")])
     assert all(v == {"kind": "queued"} for t, v in views if t < 3000)
-    assert views[12][1]["key"] == "mood" and views[-1] == [13000, {"kind": "verdict"}]
+    assert views[12][1]["key"] == "mood" and views[-1] == [12000, {"kind": "verdict"}]
 
 
 def test_slow_host_loops_cleanly(tmp_path):
     """Simulation delayed to 40 s: deliberate keeps cycling; the line changes every 2 s."""
     views = story(tmp_path, [(0, "running"), (40000, "decided")])
-    assert views[-1] == [43000, {"kind": "verdict"}]
+    assert views[-1] == [42000, {"kind": "verdict"}]
     lines = [(t, v["line"]) for t, v in views if v.get("key") == "deliberate"]
     changes = [t for (t, l), (_, prev) in zip(lines[1:], lines) if l != prev]
     assert len(changes) >= 15 and max(b - a for a, b in zip(changes, changes[1:])) <= 2000

@@ -1,7 +1,7 @@
 """More flows in headless Chrome at 360 px (P2B-8): the 3-hearing appeal chain seen from
 both phones, a hearing that ends in error, closed links and A's own device on B's link,
 B bound to the browser that submits, and the report button. Run: uv run pytest -m chrome."""
-from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, b_writes, get, link_in, open_case,
+from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, TEXT_A, b_writes, get, link_in, open_case,
                     pytestmark, see_story_then)  # noqa: F401 - pytestmark
 
 CHAIN = "פסק דין ← ערעור התקבל ← ערעור נדחה"
@@ -97,5 +97,23 @@ def test_how_it_works_page(rig):
     p.click("footer a[href='/how']")
     p.wait_text("קרדיטים")
     assert p.js("document.querySelectorAll('.credits li').length") == 7
-    assert p.js("document.querySelectorAll('.credits a[href^=\"https://doi.org/\"]').length") == 6
+    assert p.js("document.querySelectorAll('.credits a[href^=\"https://doi.org/\"]').length") == 7
     assert "CC BY-NC" in p.text() and p.fits()
+
+
+def test_no_show_b_link_shows_only_the_public_card(rig):
+    """Nobody is B after a no-show: B's link must not show A's argument (SPEC §15.1)."""
+    sim, clock, browser = rig
+    a, b = browser.page(), browser.page()
+    url_a, link_b = open_case(a)
+    sim.script = [("win", "A")]
+    clock.offset += 3 * 3600
+    try:
+        a.wait_text("הצד השני לא התייצב לדיון", 30)
+        b.goto(link_b)
+        b.wait_text("הצד השני לא התייצב לדיון")
+        assert TEXT_A not in b.text() and "דנה נגד יוסי" in b.text() and b.fits()
+        assert b.attr("a.button.primary", "href") == "/" and not b.attr("button.appeal", "class")
+        assert not b.attr("[name=text_b]", "name") and not b.attr("button.brain-toggle", "class")
+    finally:
+        clock.offset = 0

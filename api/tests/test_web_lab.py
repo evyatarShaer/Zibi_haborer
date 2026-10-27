@@ -63,5 +63,5 @@ def test_how_it_works_has_credits_and_no_table(tmp_path):
     assert leaks(text) == []
     spec = (ROOT / "docs" / "SPEC.md").read_text().split("7. **Disclosure.**")[1].split("8. **Retention")[0]
     dois = set(re.findall(r"\(?(10\.\d+/[^)\s,]+)\)", spec))
-    assert len(dois) == 6 and dois == {doi for _, _, doi in how["credits"] if doi}
-    assert any(who.startswith("Shiu") for who, _, _ in how["credits"]) and "CC BY-NC" in text
+    assert len(dois) == 7 and dois == {doi for _, _, doi in how["credits"]}
+    assert "CC BY-NC" in text

@@ -79,8 +79,11 @@ def test_deadline_fires_the_water_hearing(client, sim, clock):
     assert sim.calls == [(OK["text_a"], None, sim.calls[0][2], 3.0)]
     assert a["status"] == "no_show" and a["no_show"] and a["hearings"][0]["wait_h"] == 3.0
     b = device(client)
-    r = b.get(f"/api/b/{case['b']}")  # B comes late: sees the verdict, cannot write
-    assert r.json()["status"] == "no_show"
+    r = b.get(f"/api/b/{case['b']}")  # B comes late: only the public card, no arguments
+    assert r.json()["public_only"]["status"] == "no_show" and OK["text_a"] not in r.text
+    for path in ("brain/0", "appeal"):
+        r = (b.get if path.startswith("brain") else b.post)(f"/api/b/{case['b']}/{path}")
+        assert r.status_code == 409 and OK["text_a"] not in r.text
     r = b.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})
     assert r.status_code == 409 and r.json()["error"] == views.LATE
 

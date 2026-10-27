@@ -15,7 +15,6 @@ NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
 APPEALED = "כבר ערערת בתיק הזה"
 FINAL = "הפסק סופי. אין עוד ערעורים בתיק הזה"
 APPEAL_LATE = "עברו 3 שעות מפסק הדין. הפסק סופי"
-NO_SHOW_ONLY_A = "רק הצד שהתייצב לדיון יכול לערער"
 FAILED = "משהו השתבש במוח של הזבוב והתיק לא נשמע. אפשר לפתוח תיק חדש"
 
 NUDGE_AFTER_S = 3600          # A's "nudge again" button (SPEC §3.2)
@@ -35,11 +34,10 @@ def closed() -> JSONResponse:
 
 
 def appeal_refused(case: dict, hearings: list[dict], side: str, now: float) -> str | None:
-    """Why `side` cannot appeal now (Hebrew), or None if it can (SPEC §15.4)."""
+    """Why `side` cannot appeal now (Hebrew), or None if it can (SPEC §15.4). After a
+    no-show only A can get here: B's link has no personal page (routes._party)."""
     if case["status"] not in ("decided", "no_show"):
         return NOT_DECIDED
-    if case["status"] == "no_show" and side == "B":
-        return NO_SHOW_ONLY_A
     if any(h["appealed_by"] == side for h in hearings):
         return APPEALED
     if len(hearings) >= MAX_HEARINGS:

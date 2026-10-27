@@ -18,9 +18,20 @@ export function shares(a, b, top) {
   return { A: one(a), B: one(b) };
 }
 
-// The meters `p` (0–1) of the way through the reveal; bars are scaled to the final top.
-export function revealAt(brain, p) {
+// The meters with A's tasting `pA` and B's `pB` (0–1) of the way through; bars are
+// scaled to the final top. Live, both fill together after the story; on a replay, A's
+// fills while A's argument is tasted, then B's.
+export function revealAt(brain, pA, pB = pA) {
   const [a, b] = brain.mn9_hz;
   const top = Math.max(cumulative(a, 1), cumulative(b, 1));
-  return shares(cumulative(a, p), cumulative(b, p), top);
+  return shares(cumulative(a, pA), cumulative(b, pB), top);
+}
+
+// On a replay: how far each tasting's meter is during story stage `key` at progress `p`
+// ([pA, pB]); null while the mood is told (no meters yet).
+export function replayFill(key, p) {
+  if (key === "mood") return null;
+  if (key === "tasteA") return [p, 0];
+  if (key === "tasteB") return [1, p];
+  return [1, 1];
 }

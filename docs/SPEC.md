@@ -467,8 +467,9 @@ the data model in §10.
        From then on, any other device gets "התיק כבר בטיפול".
      - A's device is never B: on B's link it gets "this is the other
        side's link", and it cannot submit there.
-     - A no-show has no B device: until the case closes, B's link shows
-       the no-show verdict to any device but A's.
+     - A no-show has no B device, so B's link has no personal page: it
+       shows only the public card (verdict, history, **no arguments**)
+       and "open a new case" (changed 2026-10-27).
 2. **Blind writing.** B never sees A's argument before submitting. No
    API response or page for B's token contains `text_a` while the case
    is `waiting` (test).
@@ -506,9 +507,15 @@ the data model in §10.
    - **Admin:** a command on the server lists reported cases and
      deletes or restores one.
 6. **Animation.** The ~7 s courtroom waiting story (§14.3) stays. The
-   appetite meters fill **live from the stored MN9 curves**, as
-   cumulative rate over the tasting. There are no neuron graphics. **On
-   a Froze verdict the meters are hidden.**
+   appetite meters fill **from the stored MN9 curves**, as cumulative
+   rate over the tasting (decided 2026-10-27):
+   - **live** (the hearing still running when the story starts): the
+     curves exist only once it is decided, so both meters fill together
+     in a 2 s reveal after the story (~9 s in all);
+   - **replay** (already decided): A's meter fills while A's argument is
+     tasted, then B's while B's is, so the replay stays ~7 s.
+   There are no neuron graphics. **On a Froze verdict the meters are
+   hidden.**
 7. **Disclosure.**
    - The brain view is for **parties only** (personal links), never on
      the public card. It loses the **taste-class bars**; they are neither
@@ -527,7 +534,9 @@ the data model in §10.
        Buhmann et al. 2021 (10.1038/s41592-021-01183-7) and Heinrich et
        al. 2018 (10.1007/978-3-030-00934-2_36); neurotransmitters:
        Eckstein, Bates et al. 2024 (10.1016/j.cell.2024.03.016);
-     - the model: Shiu et al. 2024 (*Nature*).
+     - the model: Shiu et al. 2024 (*Nature* 634, 210–219,
+       10.1038/s41586-024-07763-9; checked 2026-10-27 on nature.com and
+       Crossref).
    - The letter table is never published (§2.3).
 8. **Retention.** Everything about a case (hearings, appeals, reports)
    is deleted **7 days after case open**. An expired, deleted or hidden

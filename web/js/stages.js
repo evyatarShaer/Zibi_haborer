@@ -4,16 +4,17 @@
 export const STAGES = [["mood", 2200], ["tasteA", 1800], ["tasteB", 1800], ["deliberate", 1200]];
 export const STORY_MS = STAGES.reduce((sum, [, ms]) => sum + ms, 0);
 export const CYCLE_MS = 2000;
-export const REVEAL_MS = 3000; // the appetite meters fill (SPEC §15.6), not on Froze
+export const REVEAL_MS = 2000; // live: the appetite meters fill after the story (SPEC §15.6)
 
-// The stage `t` ms into the story; `line` counts deliberate's cycles from 0.
+// The stage `t` ms into the story: `p` is how far into it (0–1; 1 for deliberate, which
+// has no end), `line` counts deliberate's cycles from 0.
 export function stageAt(t) {
-  let end = 0;
+  let start = 0;
   for (const [key, ms] of STAGES.slice(0, -1)) {
-    end += ms;
-    if (t < end) return { key, line: 0 };
+    if (t < start + ms) return { key, line: 0, p: (t - start) / ms };
+    start += ms;
   }
-  return { key: "deliberate", line: Math.floor((t - end) / CYCLE_MS) };
+  return { key: "deliberate", line: Math.floor((t - start) / CYCLE_MS), p: 1 };
 }
 
 // What the screen shows now. `state` ({} at first) remembers when the story started

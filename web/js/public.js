@@ -38,7 +38,12 @@ function reportButton(id, root) {
 export async function publicPage(root, id) {
   const r = await getPublic(id);
   if (r.status !== 200) return noticeScreen(root, r.status === 0 ? T.noConnection : T.closed, "closed");
-  const m = publicModel(r.data);
+  publicCard(root, r.data);
+}
+
+// The card itself; also what B's link shows after a no-show (nobody is B).
+export function publicCard(root, card) {
+  const id = card.id, m = publicModel(card);
   show(root, el("section", { class: "card verdict public" },
     el("div", { class: "judge", "aria-hidden": "true" }, "🪰⚖️"),
     m.topic ? el("p", { class: "topic" }, m.topic) : null,
@@ -47,4 +52,5 @@ export async function publicPage(root, id) {
     m.history ? el("p", { class: "history" }, m.history) : null,
     el("div", { class: "actions" }, el("a", { class: "button primary", href: "/" }, T.newCase),
       reportButton(id, root))));
+  return { update: () => {}, stop: () => {} };
 }
