@@ -4,6 +4,7 @@
 export const STAGES = [["mood", 2200], ["tasteA", 1800], ["tasteB", 1800], ["deliberate", 1200]];
 export const STORY_MS = STAGES.reduce((sum, [, ms]) => sum + ms, 0);
 export const CYCLE_MS = 2000;
+export const REVEAL_MS = 3000; // the appetite meters fill (SPEC §15.6), not on Froze
 
 // The stage `t` ms into the story; `line` counts deliberate's cycles from 0.
 export function stageAt(t) {
@@ -15,14 +16,18 @@ export function stageAt(t) {
   return { key: "deliberate", line: Math.floor((t - end) / CYCLE_MS) };
 }
 
-// What the screen shows now. `state` ({} at first) remembers when the story started:
-// when the hearing left the queue. The verdict waits for the story to finish.
-export function step(state, status, now) {
+// What the screen shows now. `state` ({} at first) remembers when the story started
+// (when the hearing left the queue) and when the reveal started. The verdict waits for
+// the story to finish; with `reveal`, the meters fill for REVEAL_MS first.
+export function step(state, status, now, reveal = true) {
   if (state.start === undefined) {
     if (status === "queued") return { kind: "queued" };
     state.start = now;
   }
   const t = now - state.start;
-  if (status === "decided" && t >= STORY_MS) return { kind: "verdict" };
-  return { kind: "stage", ...stageAt(t) };
+  if (status !== "decided" || t < STORY_MS) return { kind: "stage", ...stageAt(t) };
+  if (!reveal) return { kind: "verdict" };
+  if (state.reveal === undefined) state.reveal = now;
+  const r = now - state.reveal;
+  return r >= REVEAL_MS ? { kind: "verdict" } : { kind: "reveal", p: r / REVEAL_MS };
 }

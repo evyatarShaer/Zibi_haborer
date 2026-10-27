@@ -2,7 +2,7 @@
 // screen flow.screen() picks. B's link is bound to a device only when B submits (any
 // browser may open it before that). The highest hearing this device has shown is
 // remembered, so a verdict it has not seen is replayed once.
-import { getMine, postAppeal } from "./api.js";
+import { getBrain, getMine, postAppeal } from "./api.js";
 import { T } from "./copy.js";
 import { screen } from "./flow.js";
 import { noticeScreen } from "./notice.js";
@@ -18,16 +18,24 @@ export function casePage(root, side, token) {
   let view = null, current = null, key = "", stopped = false, timer = null;
   const seenKey = () => `seen:${view.id}`;
   const publicUrl = () => `${location.origin}/c/${view.id}`;
+  const brains = {};  // hearing n → its brain summary request (fetched once)
+  const loadBrain = (n) => () => {
+    if (!brains[n]) brains[n] = getBrain(side, token, n).then((r) => {
+      if (r.status !== 200) delete brains[n];
+      return r;
+    });
+    return brains[n];
+  };
 
   function make(s) {
     if (s.kind === "error") return noticeScreen(root, view.error_message, "error");
     if (s.kind === "waitA") return waitAScreen(root, view);
     if (s.kind === "writeB") return writeBScreen(root, view, token, accept);
     if (s.kind === "story") {
-      return storyScreen(root, view, s.n, () => { remember(seenKey(), s.n); render(); });
+      return storyScreen(root, view, s.n, () => { remember(seenKey(), s.n); render(); }, loadBrain(s.n));
     }
     remember(seenKey(), s.n);
-    return verdictScreen(root, view, s.n, { onAppeal, publicUrl: publicUrl() });
+    return verdictScreen(root, view, s.n, { onAppeal, publicUrl: publicUrl(), loadBrain: loadBrain(s.n) });
   }
 
   function render() {

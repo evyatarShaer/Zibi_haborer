@@ -13,8 +13,11 @@ from borer_sim import mood
 
 OK = {"topic": "פיצה", "name_a": "דנה", "name_b": "יוסי", "text_a": "פיצה עם אננס זה פשוט טעים"}
 TEXT_B = "אננס על פיצה זה פשע נגד האנושות"
-BRAIN = {"bin_ms": 50, "mn9_hz": [[1.0, 2.0], [3.0, 4.0]], "taste_hz": [{"sugar": 5.0}] * 2,  # a 0.8.x row
-         "mood": {}, "seed": 1, "sim_version": "0.8.2", "platform": "test"}
+# A 0.8.x-shaped summary (still holds taste_hz, which the API never sends); its 30 bins per
+# tasting average to the fake metrics' A = 30 Hz and B = 20 Hz, as a real summary would.
+BRAIN = {"bin_ms": 50, "mn9_hz": [[20.0, 40.0] * 15, [0.0, 40.0] * 15],
+         "taste_hz": [{"sugar": 5.0}] * 2, "mood": {"hunger": 0.3, "arousal": 0.1}, "seed": 1,
+         "sim_version": "0.8.2", "platform": "test"}
 
 
 class FakeSim:

@@ -40,13 +40,13 @@ def test_letter_counter_matches_python(tmp_path):
         assert ok == server_ok, text[:30]
 
 
-def story(tmp_path, statuses):
+def story(tmp_path, statuses, reveal=True):
     """statuses: [(from_ms, status)]; ticks every 250 ms for 60 s -> [(t, view)]."""
     return node(tmp_path, 'import { step } from "@/stages.js";'
                 f"\nconst S = {json.dumps(statuses)}; const state = {{}}; const out = [];"
                 "\nfor (let t = 0; t <= 60000; t += 250) {"
                 "\n  const status = S.filter(([from]) => from <= t).pop()[1];"
-                "\n  const v = step(state, status, t); out.push([t, v]);"
+                f"\n  const v = step(state, status, t, {json.dumps(reveal)}); out.push([t, v]);"
                 "\n  if (v.kind === 'verdict' || v.kind === 'failed') break; }", "out")
 
 
@@ -54,19 +54,25 @@ def test_fast_verdict_still_tells_the_whole_story(tmp_path):
     views = story(tmp_path, [(0, "decided")])
     keys = [v["key"] for _, v in views if v["kind"] == "stage"]
     assert [k for i, k in enumerate(keys) if i == 0 or keys[i - 1] != k] == ["mood", "tasteA", "tasteB", "deliberate"]
-    assert views[-1] == [7000, {"kind": "verdict"}]
+    assert views[-1] == [10000, {"kind": "verdict"}]  # 7 s story + 3 s meters
+    reveal = [v["p"] for t, v in views if v["kind"] == "reveal"]
+    assert reveal[0] == 0 and reveal == sorted(reveal) and len(reveal) == 12 and max(reveal) < 1
+
+
+def test_froze_skips_the_meters(tmp_path):
+    assert story(tmp_path, [(0, "decided")], reveal=False)[-1] == [7000, {"kind": "verdict"}]
 
 
 def test_queued_first_then_story(tmp_path):
     views = story(tmp_path, [(0, "queued"), (3000, "running"), (9000, "decided")])
     assert all(v == {"kind": "queued"} for t, v in views if t < 3000)
-    assert views[12][1]["key"] == "mood" and views[-1] == [10000, {"kind": "verdict"}]
+    assert views[12][1]["key"] == "mood" and views[-1] == [13000, {"kind": "verdict"}]
 
 
 def test_slow_host_loops_cleanly(tmp_path):
     """Simulation delayed to 40 s: deliberate keeps cycling; the line changes every 2 s."""
     views = story(tmp_path, [(0, "running"), (40000, "decided")])
-    assert views[-1] == [40000, {"kind": "verdict"}]
+    assert views[-1] == [43000, {"kind": "verdict"}]
     lines = [(t, v["line"]) for t, v in views if v.get("key") == "deliberate"]
     changes = [t for (t, l), (_, prev) in zip(lines[1:], lines) if l != prev]
     assert len(changes) >= 15 and max(b - a for a, b in zip(changes, changes[1:])) <= 2000
@@ -76,7 +82,7 @@ def test_page_and_modules_served(tmp_path):
     with TestClient(create_app(lambda *a: None, str(tmp_path / "h.sqlite3"))) as c:
         page = c.get("/").text
         assert 'dir="rtl"' in page and "Heebo" in page and 'src="/js/app.js"' in page
-        for path in ("/a/tok", "/b/tok", "/c/id1"):  # personal pages and the public card
+        for path in ("/a/tok", "/b/tok", "/c/id1", "/how"):  # personal, public, how it works
             assert c.get(path).text == page
         assert c.get("/x/tok").status_code == 404
         for f in sorted(JS.glob("*.js")) + [ROOT / "web" / "css" / "app.css"]:

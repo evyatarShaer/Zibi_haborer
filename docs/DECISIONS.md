@@ -2331,3 +2331,54 @@ the first opener after the deadline was bound.
 
 **Impacts:** SPEC §3, §10, §13, §15.1; `api/src/borer_api/{routes,cases}.py`;
 `web/js/{api,casepage}.js`; `api/tests`.
+
+---
+
+## 2026-10-27 — P2B-9: live meters, brain view, how it works
+
+**Built:**
+- **Live meters (SPEC §15.6):**
+  - Once a hearing is decided, the story fetches its stored brain summary
+    and adds a **3 s reveal** before the verdict. Both appetite meters
+    fill together.
+  - Each side shows the cumulative rate of its tasting so far: the mean
+    of its first ⌈p·30⌉ bins, with the 1.5 s tasting shown over 3 s.
+  - At the end, the meters equal the stored A/B rates exactly (mean of
+    the bins = spikes / tasting seconds), so the verdict's meters match.
+  - Live and replay behave the same.
+  - **Froze:** no reveal, and the verdict shows the arguments without
+    bars.
+  - If the summary can't be fetched, the story goes straight to the
+    verdict.
+- **Brain view (parties only):** "מה קרה במוח?" on the verdict of both
+  personal pages, from `GET /api/{a|b}/{token}/brain/{n}`.
+  - It shows the MN9 curves, mood, seed, `SIM_VERSION` and platform.
+    There are no taste bars.
+  - The public card has none.
+  - Each hearing's summary is fetched once and shared with the reveal.
+- **How it works (`/how`, linked in the footer):**
+  - general sections: the real brain (FlyWire, Shiu et al. model),
+    words become tastes (the mapping stays secret), MN9 decides, the
+    added mood layer, no AI;
+  - the CC BY-NC note;
+  - credits exactly as verified in SPEC §15.7: six DOIs as doi.org links,
+    plus Shiu et al. 2024 (Nature) without a DOI, since SPEC gives none.
+    No titles were added from memory.
+
+**Choices (owner to confirm):**
+- The reveal makes every story about 10 s instead of 7 s. The meters
+  can't fill during the tasting stages of a live hearing, because the
+  curves exist only after the simulation ends.
+- All copy is placeholder ("כמה הזבוב רצה לבלוע כל טענה…" and the
+  `/how` text).
+
+**Checks:**
+- A test flags GRN group names, taste class names or a lone Hebrew
+  letter (how a letter table would read) in the lab view or on `/how`.
+  It caught "כ־140" in the draft copy, now "בערך 140".
+- The fake sim's brain summary now has 30 bins per tasting averaging its
+  A/B rates, and a real mood.
+
+**Impacts:** `web/js/{meters,how,waiting,verdict,casepage,brain,stages,app}.js`,
+`web/css/app.css`, `web/index.html`, `api/src/borer_api/app.py` (`/how`),
+`api/tests`; TASKS P2B-9.

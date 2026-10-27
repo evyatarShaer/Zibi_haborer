@@ -88,3 +88,14 @@ def test_report_hides_the_case(rig):
         page.goto(url)
         page.wait_text(CLOSED)
     assert ENTERS not in b.text()
+
+
+def test_how_it_works_page(rig):
+    _, _, browser = rig
+    p = browser.page()
+    p.goto(BASE + "/")
+    p.click("footer a[href='/how']")
+    p.wait_text("קרדיטים")
+    assert p.js("document.querySelectorAll('.credits li').length") == 7
+    assert p.js("document.querySelectorAll('.credits a[href^=\"https://doi.org/\"]').length") == 6
+    assert "CC BY-NC" in p.text() and p.fits()

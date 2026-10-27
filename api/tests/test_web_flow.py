@@ -35,7 +35,7 @@ def view(*hearings, **kw):
 def run(tmp_path, body, **data):
     consts = "".join(f"\nconst {k} = {json.dumps(v, ensure_ascii=False)};" for k, v in data.items())
     return node(tmp_path, 'import * as F from "@/flow.js"; import { verdictModel } from "@/verdict.js";'
-                ' import { publicModel } from "@/public.js";' + consts, body)
+                ' import { publicModel } from "@/public.js"; import * as M from "@/meters.js";' + consts, body)
 
 
 def spec_headlines():
@@ -67,6 +67,7 @@ def test_verdict_for_every_outcome(tmp_path, topic):
         assert v["topic"] == (f"התיק: {topic}" if topic else None)
         assert (v["appeal"], v["history"], v["final"], v["canAppeal"]) == (None, None, False, True)
         assert v["appealLeft"] == "אפשר לערער עוד 2:00 שעות"
+        assert v["showMeters"] == (k != "froze")  # SPEC §7: no meters on Froze
         a, b = v["meters"]
         assert (a["name"], a["text"], b["name"], b["text"]) == ("דנה", "טענה א", "יוסי", "טענה ב")
         assert (a["winner"], b["winner"]) == (OUTCOME[k][1] == "A", OUTCOME[k][1] == "B")
@@ -119,3 +120,20 @@ def test_public_card_model(tmp_path):
                       "headline": "פסק הדין: הצדק עם יוסי", "history": "פסק דין ← ערעור התקבל"}
     assert got[1]["headline"] == got[2]["headline"] == "הזבוב עוד לא פסק בתיק הזה"
     assert got[3]["headline"] == "תקלה"
+
+
+def test_meters_end_on_the_stored_share(tmp_path):
+    """The live meters fill from the MN9 bins and end exactly on the stored A/B share."""
+    import random
+    rng = random.Random(4)
+    cases = []
+    for _ in range(20):
+        bins = [[rng.choice([0, 0, 20, 40, 60, 80]) for _ in range(30)] for _ in range(2)]
+        rates = [sum(b) * 0.05 / 1.5 for b in bins]  # readout: spikes / tasting seconds
+        cases.append([{"mn9_hz": bins}, view(hearing(0) | {"appetite": {"A": rates[0], "B": rates[1]}})])
+    got = run(tmp_path, "C.map(([brain, v]) => { const m = verdictModel(v, 0).meters;"
+              " return [M.revealAt(brain, 1), {A: {share: m[0].share, width: m[0].width},"
+              " B: {share: m[1].share, width: m[1].width}}, M.revealAt(brain, 0)]; })", C=cases)
+    for end, stored, start in got:
+        assert end == stored
+        assert start == {"A": {"share": 0, "width": 0}, "B": {"share": 0, "width": 0}}

@@ -481,7 +481,7 @@ the owner's Hebrew copy and fly art.
   - No overflow and no script error on any page. Regular api suite: 92
     passed.
   - Choices: DECISIONS.md 2026-10-27 (P2B-8).
-- [ ] **P2B-9 — Live meters, brain view, how it works.**
+- [x] **P2B-9 — Live meters, brain view, how it works.**
   - The appetite meters fill from the stored MN9 bins during the story
     (cumulative rate), live and on replay; hidden on Froze.
   - The brain view without taste bars (MN9 curves, mood, seed,
@@ -495,6 +495,16 @@ the owner's Hebrew copy and fly art.
   - Froze shows no meters.
   - The lab view and the how-it-works page contain no letter, GRN group
     or class table (automated check).
+  *Done 2026-10-27:* `web/js/{meters,how}.js`; story, verdict and
+  brain view wired to `GET /api/{a|b}/{token}/brain/{n}`; `/how`.
+  - Node: the meters end on the stored share (20 random bin sets);
+    Froze has no meters and no reveal; the lab view and `/how` show no
+    group, class or lone letter; `/how` holds the six SPEC §15.7 DOIs
+    plus Shiu et al.
+  - Chrome (12 passed, 5 m 24 s): meters fill live for B; a replay for A
+    on every outcome except Froze, which has no bars; the brain view
+    draws 2 curves; `/how` lists 7 credits.
+  - api suite: 95 passed. The no-show headlines were done in P2B-8.
 - [ ] **P2B-10 — Public card, teaser and OG images.**
   - Server-rendered OG tags for the teaser (B's link: fly + topic, no
     verdict) and the public card (topic, names, final verdict, history,

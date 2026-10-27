@@ -38,6 +38,7 @@ export const T = {
   tastingWater: "הצד השני לא הגיע. טועם כוס מים…",
   deliberating: ["השופט מתלבט…", "שוקל את הטעמים…", "עוד רגע ההכרעה…"],
   hungry: (h) => `הזבוב רעב כבר ${h} שעות.`,
+  revealing: "כמה הזבוב רצה לבלוע כל טענה…",
   // the verdict (SPEC §7, §8, §15.4)
   preferredWater: "הזבוב העדיף מים",
   noShow: "הצד השני לא התייצב לדיון",
@@ -65,6 +66,7 @@ export const T = {
   brain: "מה קרה במוח?",
   brainHide: "הסתר את המוח",
   brainLoading: "פותחים את המוח…",
+  how: "איך זה עובד?",
 };
 
 const HUNGER = [[0.25, "שבע"], [0.5, "קצת רעב"], [0.8, "רעב"], [Infinity, "מורעב"]];

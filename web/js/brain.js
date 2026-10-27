@@ -53,7 +53,7 @@ export function labView(b, h) {
 export function brainToggle(h, load) {
   const slot = el("div");
   let open = false, loaded = null;
-  const button = el("button", { class: "secondary", "aria-expanded": "false" }, T.brain);
+  const button = el("button", { class: "secondary brain-toggle", "aria-expanded": "false" }, T.brain);
   const set = (isOpen) => {
     open = isOpen;
     button.textContent = open ? T.brainHide : T.brain;

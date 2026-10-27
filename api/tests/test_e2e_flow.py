@@ -2,7 +2,7 @@
 public card; the no-show (plain water) with A's appeal. Run: uv run pytest -m chrome."""
 import pytest
 
-from e2ekit import (BASE, CLOSED, HEADLINE, TEXT_A, TEXT_B, WATER, b_writes, link_in,
+from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, TEXT_A, TEXT_B, WATER, b_writes, link_in,
                     open_case, pytestmark, see_story_then)  # noqa: F401 - pytestmark
 
 OUTCOMES = list(HEADLINE)[1:]  # win B, dithered, tie, froze, lunch break (+ win A in the chain)
@@ -16,13 +16,25 @@ def test_every_outcome_live_for_b_replay_for_a(rig, outcome):
     a.goto("about:blank")  # A is away while B writes
     sim.script = [outcome]
     b_writes(b, link_b)
-    see_story_then(b, HEADLINE[outcome])  # live
+    b.wait_text(ENTERS, 10)  # the story, live
+    froze = outcome[0] == "froze"
+    if not froze:  # the meters fill from the stored MN9 bins before the verdict
+        b.wait("document.querySelectorAll('.live-meters .meter .fill').length === 2", 25)
+        assert HEADLINE[outcome] not in b.text()
+    b.wait_text(HEADLINE[outcome], 25)
+    assert b.fits()
+    assert b.js("document.querySelectorAll('.verdict .bar').length") == (0 if froze else 2)
+    b.click("button.brain-toggle")  # the brain view: two MN9 curves, no taste bars
+    b.wait("document.querySelectorAll('.lab polyline').length === 2")
+    assert "סוכר" not in b.text() and b.fits()
     assert TEXT_A in b.text() and TEXT_B in b.text()  # both arguments after the verdict
     assert ("התיק: פיצה" in b.text()) == (outcome[0] != "tie")
     assert b.attr("button.appeal", "class")  # B may appeal
     public = link_in(b.attr("a.share", "href"), "c")
     a.goto(url_a)
     see_story_then(a, HEADLINE[outcome])  # replayed from stored data
+    if not froze:
+        assert a.js("document.querySelectorAll('.verdict .meter .fill').length") == 2
     a.goto(url_a)
     a.wait_text(HEADLINE[outcome], 5)
     assert "השופט נכנס" not in a.text()  # seen once: no second replay

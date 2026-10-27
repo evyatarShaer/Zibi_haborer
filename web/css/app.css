@@ -125,6 +125,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .bar { height: 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
 .fill { height: 100%; background: var(--muted); border-radius: 8px; transition: width 0.8s ease-out; }
 .meter.winner .fill { background: var(--win); }
+.live-meters { margin: 14px 0 0; text-align: start; }
+.live-meters .fill { background: var(--gold); transition: width 0.25s linear; }
 .meter.winner strong::after { content: " ⚖️"; }
 .argument { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
 .actions { margin-top: 8px; }
@@ -140,3 +142,10 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   .buzz, .dots span { animation: none; }
 }
+
+footer a { color: inherit; }
+.how h2 { margin: 0 0 4px; }
+.how h3 { margin: 16px 0 2px; color: var(--wood); font-size: 1.05rem; }
+.how p { margin: 0; }
+.credits { padding-inline-start: 18px; font-size: 0.8rem; text-align: left; overflow-wrap: anywhere; }
+.credits a { color: var(--wood); }
