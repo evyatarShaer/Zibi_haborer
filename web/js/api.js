@@ -16,7 +16,6 @@ async function call(method, path, body) {
 const enc = encodeURIComponent;
 export const openCase = (body) => call("POST", "/api/case", body);
 export const getMine = (side, token) => call("GET", `/api/${side}/${enc(token)}`);
-export const openB = (token) => call("POST", `/api/b/${enc(token)}/open`);
 export const submitB = (token, text) => call("POST", `/api/b/${enc(token)}/submit`, { text_b: text });
 export const postAppeal = (side, token) => call("POST", `/api/${side}/${enc(token)}/appeal`);
 export const getBrain = (side, token, n) => call("GET", `/api/${side}/${enc(token)}/brain/${n}`);

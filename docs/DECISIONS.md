@@ -2290,3 +2290,44 @@ look: courtroom, placeholder fly, RTL, one 360 px column.
 
 **Impacts:** `web/`, `api/src/borer_api/app.py`, `api/tests`,
 `api/pyproject.toml` (marker, addopts, websockets); TASKS P2B-8.
+
+---
+
+## 2026-10-27 — B is bound when B submits, not when the link opens (owner)
+
+**Context:** in P2B-6/8, the first device whose page opened B's link
+became B. In the play-test plan, opening the link in WhatsApp's in-app
+browser and then in Chrome turned Chrome into "התיק כבר בטיפול".
+
+**Decision (owner):**
+- Before B submits, any device with B's link can open it and switch
+  browsers freely.
+- **The first device to submit becomes B.** Later devices see "התיק כבר
+  בטיפול".
+- A's device can still never become B.
+
+**Built:**
+- `POST /api/b/{token}/open` and `Store.claim_b` are removed.
+- `GET /api/b/{token}` gives the device cookie and binds nothing.
+- `POST /api/b/{token}/submit` stores the device hash in the same
+  transaction as B's argument. A second submit finds the case no longer
+  waiting, and its device gets 403.
+- A's device on B's link gets 409 "this is the other side's link", for
+  both reads and submits.
+
+**Consequence (owner to confirm):** a no-show has no B device. Until the
+case closes, B's link shows the no-show verdict, including A's argument,
+to anyone who has the link (A's device excepted). Before this change,
+the first opener after the deadline was bound.
+
+**Tests:**
+- API: `test_b_is_the_device_that_submits`, `test_a_device_is_never_b`,
+  `test_page_and_preview_gets_bind_nothing`.
+- Chrome: the new `test_open_in_one_browser_submit_from_another` (the
+  open page in browser 1 switches to "התיק כבר בטיפול" after browser 2
+  submits).
+
+**Supersedes:** "first opener is B" (2026-10-26 open items; P2B-6 entry).
+
+**Impacts:** SPEC §3, §10, §13, §15.1; `api/src/borer_api/{routes,cases}.py`;
+`web/js/{api,casepage}.js`; `api/tests`.

@@ -1,8 +1,8 @@
 // A personal page, /a/{token} or /b/{token} (SPEC §3, §15): polls the case and shows the
-// screen flow.screen() picks. B's page first claims the link for this device (POST open,
-// never on the HTML request, so link previews never claim it). The highest hearing this
-// device has shown is remembered, so a verdict it has not seen is replayed once.
-import { getMine, openB, postAppeal } from "./api.js";
+// screen flow.screen() picks. B's link is bound to a device only when B submits (any
+// browser may open it before that). The highest hearing this device has shown is
+// remembered, so a verdict it has not seen is replayed once.
+import { getMine, postAppeal } from "./api.js";
 import { T } from "./copy.js";
 import { screen } from "./flow.js";
 import { noticeScreen } from "./notice.js";
@@ -71,7 +71,7 @@ export function casePage(root, side, token) {
       key.startsWith("story") ? STORY_POLL_MS : POLL_MS);
   }
 
-  poll(side === "b" ? () => openB(token) : () => getMine(side, token));
+  poll(() => getMine(side, token));
   return () => {
     stopped = true;
     clearTimeout(timer);

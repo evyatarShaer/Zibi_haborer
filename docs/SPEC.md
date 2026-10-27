@@ -45,9 +45,10 @@ and has a **personal link** (§15.1).
    "send to the other side" button. The button opens WhatsApp with B's
    link, which has a teaser preview (§9).
 2. **B's turn.** B opens their link and sees the topic and the names,
-   **never A's argument**, then writes their own. The first device to
-   open B's link becomes B; any later device sees "התיק כבר בטיפול"
-   (§15.1). B has **3 hours** from
+   **never A's argument**, then writes their own. Until B submits, any
+   device may open B's link (and switch browsers); the device that
+   **submits** becomes B, and any other device then sees "התיק כבר
+   בטיפול" (§15.1). B has **3 hours** from
    case open. A's link shows that the court is waiting for B. **After
    1 hour** A gets a "nudge again" button, which opens WhatsApp with a
    ready message and B's link. There are no push notifications.
@@ -250,7 +251,7 @@ Phase 2B, SQLite (§11). The 2A `hearing` table (§14) grows into:
 - **case:** `id`, `created_at`, `deadline_at` (created + 3 h), `topic`,
   `name_a`, `name_b`, `text_a`, `text_b` (null until B submits; null for
   a no-show = plain water), `b_submitted_at`, `token_a_hash`,
-  `token_b_hash`, `b_device_hash` (the first device to open B's link),
+  `token_b_hash`, `b_device_hash` (the device that submitted B's argument),
   `ip_hash` + day (rate limit), `status` (`waiting`|`hearing`|`decided`|`no_show`),
   `hidden_at` (set by a report or the admin), `shared_at` (first "send
   the verdict" tap; it also bumps the `case_shared` counter once).
@@ -377,8 +378,9 @@ determinism check are 2B tasks.
   מים" when water wins; only A may appeal (§8).
 - ~~Reports~~ — resolved 2026-10-26: a report hides everything,
   personal pages included.
-- ~~B's link in a group~~ — resolved 2026-10-26: the first device to
-  open it becomes B; later devices see "התיק כבר בטיפול".
+- ~~B's link in a group~~ — resolved 2026-10-26: one device becomes B;
+  others see "התיק כבר בטיפול". Changed 2026-10-27: B is bound when B
+  **submits**, not when the link is first opened (§15.1).
 - ~~Brain view on the public card~~ — resolved 2026-10-26: parties only.
 - ~~Rate limit~~ — resolved 2026-10-26: 20 new cases per day per IP.
 - **Not in 2B; maybe later:** template sentences, rarity, decision time,
@@ -457,13 +459,16 @@ the data model in §10.
      topic, names, the final verdict and the history, but **no
      arguments**.
    - Tokens are unguessable. Only their hashes are stored.
-   - **First opener is B.** The first device to open B's link is bound
-     to it (cookie). Any other device gets "התיק כבר בטיפול".
-     - The binding happens through the page's script (an API call), not
-       on the HTML request, so WhatsApp's preview crawler (no JS) never
-       claims B.
-     - A device already bound as A is never bound as B: A can tap B's
-       link safely.
+   - **The device that submits is B** (changed 2026-10-27, DECISIONS).
+     - Before B submits, any device may open B's link and switch
+       browsers freely (e.g. WhatsApp's in-app browser → Chrome). Opening
+       binds nothing, so a link preview or crawler never claims B.
+     - The first device to submit B's argument is bound to it (cookie).
+       From then on, any other device gets "התיק כבר בטיפול".
+     - A's device is never B: on B's link it gets "this is the other
+       side's link", and it cannot submit there.
+     - A no-show has no B device: until the case closes, B's link shows
+       the no-show verdict to any device but A's.
 2. **Blind writing.** B never sees A's argument before submitting. No
    API response or page for B's token contains `text_a` while the case
    is `waiting` (test).

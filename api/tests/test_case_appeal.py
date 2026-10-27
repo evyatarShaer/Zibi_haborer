@@ -55,7 +55,7 @@ def test_only_a_may_appeal_a_no_show(client, clock, case):
     clock.t += 3 * HOUR
     settled(client, f"/api/a/{case['a']}", 0)
     b = device(client)
-    b.post(f"/api/b/{case['b']}/open")
+    b.get(f"/api/b/{case['b']}")
     r = appeal(b, case, "b")
     assert r.status_code == 409 and r.json()["error"] == views.NO_SHOW_ONLY_A
     assert appeal(client, case, "a").status_code == 201
@@ -90,4 +90,4 @@ def test_brain_is_stored_data_for_parties_only(client, sim, case):
         assert b.get(f"/api/b/{case['b']}/brain/0").json() == want
     assert len(sim.calls) == calls
     assert client.get(f"/api/a/{case['a']}/brain/1").status_code == 404
-    assert client.get(f"/api/b/{case['b']}/brain/0").status_code == 403  # A's device on B's link
+    assert client.get(f"/api/b/{case['b']}/brain/0").status_code == 409  # A's device on B's link

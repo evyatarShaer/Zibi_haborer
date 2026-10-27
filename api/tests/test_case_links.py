@@ -14,33 +14,40 @@ HEARING = {"n", "appealed_by", "status", "wait_h", "mood", "outcome", "winner", 
            "appetite"}
 
 
-def test_first_opener_is_b_others_get_taken(client):
+def test_b_is_the_device_that_submits(client):
+    """Any device may open B's link and switch browsers; the first to submit becomes B."""
     case = open_case(client)
-    b, other = as_b(client, case), device(client)
-    assert b.post(f"/api/b/{case['b']}/open").status_code == 200  # again: still B
-    for r in (other.post(f"/api/b/{case['b']}/open"), other.get(f"/api/b/{case['b']}"),
-              other.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})):
-        assert r.status_code == 403 and r.json()["error"] == views.TAKEN
+    first, second, late = device(client), device(client), device(client)
+    for d in (first, second):
+        v = d.get(f"/api/b/{case['b']}")
+        assert v.status_code == 200 and v.json()["status"] == "waiting"
+    assert second.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B}).status_code == 200
+    for d in (first, late):
+        for r in (d.get(f"/api/b/{case['b']}"),
+                  d.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B}),
+                  d.get(f"/api/b/{case['b']}/brain/0")):
+            assert r.status_code == 403 and r.json()["error"] == views.TAKEN
+    assert second.get(f"/api/b/{case['b']}").json()["you"] == "B"
+
+
+def test_a_device_is_never_b(client):
+    case = open_case(client)
+    for r in (client.get(f"/api/b/{case['b']}"),
+              client.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})):
+        assert r.status_code == 409 and r.json()["error"] == views.OWN_LINK
+    assert client.get(f"/api/a/{case['a']}").json()["status"] == "waiting"
+    b = as_b(client, case)  # B's link is still free for B
     assert b.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B}).status_code == 200
 
 
-def test_a_device_is_never_bound_as_b(client):
-    case = open_case(client)
-    r = client.post(f"/api/b/{case['b']}/open")
-    assert r.status_code == 409 and r.json()["error"] == views.OWN_LINK
-    assert client.get(f"/api/b/{case['b']}").status_code == 403
-    as_b(client, case)  # B's link is still free for B
-
-
-def test_crawler_get_does_not_claim_b(client):
+def test_page_and_preview_gets_bind_nothing(client):
     case = open_case(client)
     crawler = device(client)
-    crawler.get(case["link_b"])          # WhatsApp's preview fetch: no JS
-    crawler.get(f"/api/b/{case['b']}")   # even a GET of the API
-    assert crawler.post(f"/api/b/{case['b']}/open").status_code == 200  # a real page could
-    case2 = open_case(client)
-    device(client).get(case2["link_b"])
-    as_b(client, case2)
+    assert crawler.get(case["link_b"]).status_code == 200  # WhatsApp's preview fetch (no JS)
+    crawler.get(f"/api/b/{case['b']}")
+    assert client.app.state.store.case(case["case_id"])["b_device_hash"] is None
+    b = as_b(client, case)
+    assert b.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B}).status_code == 200
 
 
 def test_twenty_cases_per_ip_per_day(client, clock):

@@ -71,15 +71,6 @@ class Store(Reports, Db):
                       "AND created_at >= ?", (h, h, self.oldest_kept()))
         return (c, "A" if c["token_a_hash"] == h else "B") if c else None
 
-    def claim_b(self, cid: str, device: str) -> str | None:
-        """Bind B's link to the first device that opens it through the page (SPEC §15.1).
-        Returns "B" for the bound device, "A" for A's device (never bound), else None."""
-        d = tokens.digest(device)
-        self._run('UPDATE "case" SET b_device_hash = ? WHERE id = ? AND b_device_hash IS NULL '
-                  "AND a_device_hash IS NOT ?", (d, cid, d))
-        c = self.case(cid) or {}
-        return "A" if c.get("a_device_hash") == d else "B" if c.get("b_device_hash") == d else None
-
     def hearings(self, cid: str) -> list[dict]:
         return self._all("SELECT * FROM hearing WHERE case_id = ? ORDER BY n", (cid,))
 
@@ -88,13 +79,16 @@ class Store(Reports, Db):
         with self._lock:
             return self.case(cid), self.hearings(cid)
 
-    def submit_b(self, cid: str, text_b: str, seed: int) -> int:
-        """B's argument before the deadline; files the verdict hearing (n 0)."""
+    def submit_b(self, cid: str, text_b: str, seed: int, device: str | None = None) -> int:
+        """B's argument before the deadline; files the verdict hearing (n 0). The submitting
+        device becomes B (SPEC §15.1): the first submit wins, a later one finds the case
+        no longer waiting (Closed)."""
         with self._tx():
             c = self._live(cid, "status = 'waiting' AND deadline_at > ?", (self.clock(),))
             c |= {"text_b": text_b, "b_submitted_at": self.clock()}
-            self._run('UPDATE "case" SET text_b = ?, b_submitted_at = ?, status = \'hearing\' '
-                      "WHERE id = ?", (text_b, c["b_submitted_at"], cid))
+            self._run('UPDATE "case" SET text_b = ?, b_submitted_at = ?, b_device_hash = ?, '
+                      "status = 'hearing' WHERE id = ?",
+                      (text_b, c["b_submitted_at"], device and tokens.digest(device), cid))
             return self._file(c, 0, None, seed)
 
     def no_show(self, cid: str, seed: int) -> int:

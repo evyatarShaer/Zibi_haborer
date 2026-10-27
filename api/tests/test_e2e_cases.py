@@ -1,6 +1,6 @@
 """More flows in headless Chrome at 360 px (P2B-8): the 3-hearing appeal chain seen from
-both phones, a hearing that ends in error, links that are closed, taken or A's own, and
-the report button. Run: uv run pytest -m chrome."""
+both phones, a hearing that ends in error, closed links and A's own device on B's link,
+B bound to the browser that submits, and the report button. Run: uv run pytest -m chrome."""
 from e2ekit import (BASE, CLOSED, ENTERS, HEADLINE, b_writes, get, link_in, open_case,
                     pytestmark, see_story_then)  # noqa: F401 - pytestmark
 
@@ -45,7 +45,7 @@ def test_failed_hearing_ends_in_error(rig):
 
 def test_closed_taken_and_own_links(rig):
     _, _, browser = rig
-    a, b, other = browser.page(), browser.page(), browser.page()
+    a, other = browser.page(), browser.page()
     url_a, link_b = open_case(a)
     for page, url in ((other, BASE + "/a/nope"), (other, BASE + "/b/nope"), (other, BASE + "/c/nope")):
         page.goto(url)
@@ -53,11 +53,23 @@ def test_closed_taken_and_own_links(rig):
         assert page.attr("a.button.primary", "href") == "/" and page.fits()
     assert get(link_b) == 200  # a preview crawler's GET (no script) does not claim B
     a.goto(link_b)
-    a.wait_text("זה הקישור של הצד השני")  # A's device is never bound as B
-    b.goto(link_b)
-    b.wait("!!document.querySelector('[name=text_b]')")
-    other.goto(link_b)
-    other.wait_text("התיק כבר בטיפול")
+    a.wait_text("זה הקישור של הצד השני")  # A's device is never B
+
+
+def test_open_in_one_browser_submit_from_another(rig):
+    """WhatsApp's in-app browser → Chrome: B is the browser that submits (SPEC §15.1)."""
+    _, _, browser = rig
+    a, inapp, chrome, late = browser.page(), browser.page(), browser.page(), browser.page()
+    url_a, link_b = open_case(a)
+    inapp.goto(link_b)
+    inapp.wait("!!document.querySelector('[name=text_b]')")  # opened, not bound
+    b_writes(chrome, link_b)
+    see_story_then(chrome, HEADLINE[("win", "A")])
+    inapp.wait_text("התיק כבר בטיפול", 10)  # its open page notices on the next poll
+    late.goto(link_b)
+    late.wait_text("התיק כבר בטיפול")
+    chrome.goto(link_b)  # the submitting browser stays B
+    chrome.wait_text(HEADLINE[("win", "A")])
 
 
 def test_report_hides_the_case(rig):

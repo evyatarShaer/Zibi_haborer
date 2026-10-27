@@ -1,7 +1,8 @@
 """Case API (SPEC §3, §15; P2B-6) under /api. Personal links: /a/{token}, /b/{token};
 the public card: /c/{case id}. Every closed case (wrong token, expired, deleted, hidden)
-gets the same 404. B's link is bound to the first device whose page calls
-POST /api/b/{token}/open (a device cookie); a plain GET never binds it."""
+gets the same 404. Before B submits, any device but A's may open B's link (and switch
+browsers); the device that submits B's argument becomes B (device cookie), and later
+other devices get "התיק כבר בטיפול" (SPEC §15.1)."""
 import sqlite3
 
 from fastapi import APIRouter, Request
@@ -50,13 +51,17 @@ def _link(request: Request, side: str, token: str) -> dict | None:
 
 
 def _party(request: Request, side: str, token: str) -> tuple[dict | None, JSONResponse | None]:
-    """(case, None) for a personal link of `side`, else (None, the error).
-    B's link answers only the device bound to it."""
+    """(case, None) for a personal link of `side`, else (None, the error). B's link never
+    answers A's device, and once B has submitted, only the device that did."""
     case, device = _link(request, side, token), request.cookies.get(DEVICE)
     if case is None:
         return None, views.closed()
-    if side == "b" and (device is None or tokens.digest(device) != case["b_device_hash"]):
-        return None, views.error(views.TAKEN, 403)
+    if side == "b":
+        d = device and tokens.digest(device)
+        if d is not None and d == case["a_device_hash"]:
+            return None, views.error(views.OWN_LINK, 409)
+        if case["b_device_hash"] is not None and d != case["b_device_hash"]:
+            return None, views.error(views.TAKEN, 403)
     return case, None
 
 
@@ -91,24 +96,12 @@ def a_view(token: str, request: Request):
     return err or _view(request, case, "a", token)
 
 
-@router.post("/b/{token}/open")
-def b_open(token: str, request: Request):
-    """The page's first call on B's link: bind this device as B if B is still free."""
-    store, case = request.app.state.store, _link(request, "b", token)
-    if case is None:
-        return views.closed()
-    bound = store.claim_b(case["id"], _device(request))
-    if bound == "A":
-        return _with_device(request, views.error(views.OWN_LINK, 409))
-    if bound is None:
-        return _with_device(request, views.error(views.TAKEN, 403))
-    return _with_device(request, _view(request, case, "b", token))
-
-
 @router.get("/b/{token}")
 def b_view(token: str, request: Request):
+    """B's page; gives the browser its device cookie (needed to submit and come back)."""
+    _device(request)
     case, err = _party(request, "b", token)
-    return err or _view(request, case, "b", token)
+    return _with_device(request, err or _view(request, case, "b", token))
 
 
 @router.post("/b/{token}/submit")
@@ -120,14 +113,14 @@ def b_submit(token: str, req: Argument, request: Request):
     if errors := validate.problems(None, {}, {"b": text_b}):
         return JSONResponse({"errors": errors}, status_code=422)
     try:
-        store.submit_b(case["id"], text_b, new_seed())
+        store.submit_b(case["id"], text_b, new_seed(), device=_device(request))
     except Closed:
         late = store.clock() >= case["deadline_at"]
         return views.error(views.LATE if late else views.SUBMITTED, 409)
     except Busy:
         return views.error(BUSY, 503)
     request.app.state.court.wake()
-    return _view(request, case, "b", token)
+    return _with_device(request, _view(request, case, "b", token))
 
 
 @router.post("/{side}/{token}/appeal")

@@ -37,7 +37,7 @@ def test_b_never_receives_text_a_while_waiting(client, sim):
     sim.gate.clear()
     case = open_case(client)
     b = device(client)
-    seen = [b.post(f"/api/b/{case['b']}/open"), b.get(f"/api/b/{case['b']}"),
+    seen = [b.get(f"/api/b/{case['b']}"), b.get(f"/api/b/{case['b']}"),
             b.post(f"/api/b/{case['b']}/submit", json={"text_b": "קצר"}),
             b.post(f"/api/b/{case['b']}/appeal"), b.get(f"/api/b/{case['b']}/brain/0"),
             b.get(f"/api/c/{case['case_id']}")]
@@ -53,10 +53,10 @@ def test_wrong_and_gone_tokens_are_the_same_404(client, clock):
     case = open_case(client)
     wrong = [client.get("/api/a/nope"), client.get(f"/api/a/{case['b']}"),
              device(client).get(f"/api/b/{case['a']}"), client.get("/api/c/nope"),
-             client.post("/api/a/nope/appeal"), client.post("/api/b/nope/open")]
+             client.post("/api/a/nope/appeal"), client.get("/api/b/nope")]
     clock.t += 7 * 24 * HOUR + 1
     gone = [client.get(f"/api/a/{case['a']}"), client.get(f"/api/c/{case['case_id']}"),
-            device(client).post(f"/api/b/{case['b']}/open")]
+            device(client).get(f"/api/b/{case['b']}")]
     assert {(r.status_code, r.text) for r in wrong + gone} == \
         {(404, json.dumps({"error": views.CLOSED}, ensure_ascii=False, separators=(",", ":")))}
 
@@ -79,7 +79,7 @@ def test_deadline_fires_the_water_hearing(client, sim, clock):
     assert sim.calls == [(OK["text_a"], None, sim.calls[0][2], 3.0)]
     assert a["status"] == "no_show" and a["no_show"] and a["hearings"][0]["wait_h"] == 3.0
     b = device(client)
-    r = b.post(f"/api/b/{case['b']}/open")  # B comes late: sees the verdict, cannot write
+    r = b.get(f"/api/b/{case['b']}")  # B comes late: sees the verdict, cannot write
     assert r.json()["status"] == "no_show"
     r = b.post(f"/api/b/{case['b']}/submit", json={"text_b": TEXT_B})
     assert r.status_code == 409 and r.json()["error"] == views.LATE

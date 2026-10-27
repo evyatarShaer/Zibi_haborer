@@ -18,9 +18,9 @@ def device(client) -> TestClient:
 
 
 def as_b(client, case) -> TestClient:
-    """B's device, bound to B's link."""
+    """B's device, with B's page open (it becomes B when it submits)."""
     b = device(client)
-    assert b.post(f"/api/b/{case['b']}/open").status_code == 200
+    assert b.get(f"/api/b/{case['b']}").status_code == 200
     return b
 
 
