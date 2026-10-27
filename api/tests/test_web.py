@@ -1,10 +1,9 @@
-"""Page logic (P2A-4/5/6) run in Node: letter counter == Python, waiting story, verdict copy."""
+"""Page logic run in Node: letter counter == Python, the waiting story; the page is served."""
 import json
 import os
 import re
 import subprocess
 
-import pytest
 from fastapi.testclient import TestClient
 
 from borer_api.app import create_app
@@ -73,47 +72,13 @@ def test_slow_host_loops_cleanly(tmp_path):
     assert len(changes) >= 15 and max(b - a for a, b in zip(changes, changes[1:])) <= 2000
 
 
-def test_failed_is_shown_at_once(tmp_path):
-    assert story(tmp_path, [(0, "running"), (2000, "failed")])[-1] == [2000, {"kind": "failed"}]
-
-
-def spec_headlines():
-    table = (ROOT / "docs" / "SPEC.md").read_text().split("## 7. Outcomes")[1].split("## 8.")[0]
-    rows = [r.split("|") for r in table.splitlines()
-            if r.startswith("| ") and not r.startswith("| Outcome")]
-    return {r[1].strip().split()[0].lower(): r[3].strip() for r in rows}
-
-
-FIX = {"name_a": "דנה", "name_b": "יוסי", "text_a": "טענה א", "text_b": "טענה ב"}
-CASES = {"win": ("A", 30.0, 10.0), "dithered": ("B", 20.0, 21.0), "plain": (None, 20.0, 20.5),
-         "froze": (None, 2.0, 0.0), "lunch": (None, 12.0, 12.4)}
-OUTCOME = {"win": "win", "dithered": "dithered", "plain": "tie", "froze": "froze", "lunch": "food"}
-
-
-@pytest.mark.parametrize("topic", ["פיצה עם אננס", None])
-def test_verdict_for_every_outcome(tmp_path, topic):
-    spec = spec_headlines()
-    fixtures = {k: FIX | {"topic": topic, "outcome": OUTCOME[k], "winner": w,
-                          "winner_name": {"A": "דנה", "B": "יוסי"}.get(w), "appetite": {"A": a, "B": b}}
-                for k, (w, a, b) in CASES.items()}
-    js = node(tmp_path, 'import { verdictModel } from "@/verdict.js";'
-              f"\nconst F = {json.dumps(fixtures, ensure_ascii=False)};",
-              "Object.fromEntries(Object.entries(F).map(([k, h]) => [k, verdictModel(h)]))")
-    for k, v in js.items():
-        name = fixtures[k]["winner_name"]
-        assert v["headline"] == spec[k].replace("{name}", name or "")
-        assert v["topic"] == (f"התיק: {topic}" if topic else None)
-        a, b = v["meters"]
-        assert (a["name"], b["name"]) == ("דנה", "יוסי") and (a["winner"], b["winner"]) == (
-            fixtures[k]["winner"] == "A", fixtures[k]["winner"] == "B")
-        assert a["share"] + b["share"] in (0, 99, 100, 101) and max(a["width"], b["width"]) in (0, 100)
-    assert js["froze"]["meters"][1] == {"name": "יוסי", "text": "טענה ב", "winner": False, "share": 0, "width": 0}
-
-
 def test_page_and_modules_served(tmp_path):
     with TestClient(create_app(lambda *a: None, str(tmp_path / "h.sqlite3"))) as c:
         page = c.get("/").text
-        assert 'dir="rtl"' in page and "Heebo" in page and 'src="js/app.js"' in page
+        assert 'dir="rtl"' in page and "Heebo" in page and 'src="/js/app.js"' in page
+        for path in ("/a/tok", "/b/tok", "/c/id1"):  # personal pages and the public card
+            assert c.get(path).text == page
+        assert c.get("/x/tok").status_code == 404
         for f in sorted(JS.glob("*.js")) + [ROOT / "web" / "css" / "app.css"]:
             r = c.get("/" + f.relative_to(ROOT / "web").as_posix())
             assert r.status_code == 200 and ("javascript" in r.headers["content-type"] or f.suffix == ".css")

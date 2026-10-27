@@ -1,17 +1,18 @@
-// sessionStorage as JSON, never throwing (private mode, blocked storage).
-export function load(key) {
+// localStorage as JSON, never throwing (private mode, blocked storage): what this device
+// has already seen is a convenience only (without it, a verdict is replayed again).
+export function recall(key, fallback) {
   try {
-    return JSON.parse(sessionStorage.getItem(key));
+    const v = JSON.parse(localStorage.getItem(key));
+    return v === null ? fallback : v;
   } catch (e) {
-    return null;
+    return fallback;
   }
 }
 
-export function save(key, value) {
+export function remember(key, value) {
   try {
-    if (value === null) sessionStorage.removeItem(key);
-    else sessionStorage.setItem(key, JSON.stringify(value));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
-    // storage unavailable: drafts and the story flag are conveniences only
+    // storage unavailable
   }
 }

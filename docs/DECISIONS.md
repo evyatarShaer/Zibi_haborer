@@ -2229,3 +2229,64 @@ on the page (P2B-8/10).
 
 **Impacts:** `api/src/borer_api/{words,reports,admin,validate,routes,cases}.py`,
 `api/moderation/`, `.gitignore`; TASKS P2B-7.
+
+---
+
+## 2026-10-27 — P2B-8: case pages; choices for the owner to confirm
+
+**What was built:** the 2A page reworked for the two-link flow. Same
+look: courtroom, placeholder fly, RTL, one 360 px column.
+- `/`: A opens a case (topic, both names, A's argument).
+- `/a/{token}` (A):
+  - while B writes: a countdown, "send to the other side" (WhatsApp),
+    and "nudge again" from 1 h;
+  - then the story and the verdict.
+- `/b/{token}` (B): claims the link for this device, then B writes blind,
+  watches the story live and sees the verdict.
+- `/c/{case id}`: the public card (no arguments) with "open a new case"
+  and a two-tap report.
+- Also: the error state, "case closed", "התיק כבר בטיפול", and A's own
+  device on B's link.
+- The server serves `index.html` at `/a/…`, `/b/…` and `/c/…`. The
+  script routes by path. Assets now use absolute paths.
+
+**Choices:**
+- **Story or verdict:**
+  - A hearing still running is shown live.
+  - A decided hearing this device has not shown yet is **replayed once**
+    (7 s story) from stored data. Shown hearings are remembered in
+    localStorage per case.
+  - Without storage, the replay simply happens again.
+  - This one rule gives: B live, A's replay, the appellant live, and the
+    other side's replay of an appeal. A page left open follows an
+    appeal on its own.
+- **No-show headlines** ("הזבוב העדיף מים" / "הצד השני לא התייצב לדיון",
+  SPEC §8) are in now, pulled forward from P2B-9: the no-show flow needs
+  them. They apply to every hearing of a no-show case (A's appeal too).
+- **Meters:** the 2A static appetite meters (final share) stay until
+  P2B-9's live meters. On Froze they still show 0% (P2B-9 hides them).
+  The brain view is not wired in yet (P2B-9); `brain.js` now takes a
+  loader.
+- **Links are built from the page's own origin.** A must open the site
+  through the address B will use (the tunnel URL), not `localhost`.
+- **Copy:** every new Hebrew line is placeholder, for the owner to
+  replace (`web/js/copy.js`):
+  - the WhatsApp invite, nudge and share texts;
+  - the appeal lines ("הערעור של {name} התקבל!");
+  - the history line "פסק דין ← ערעור התקבל ← ערעור נדחה";
+  - B's blind hint.
+- **Report** asks for a second tap ("בטוח?") before hiding a case.
+- **Page tests:**
+  - Windows Chrome is driven headless from WSL over CDP (`tests/cdp.py`),
+    with the dev-only library `websockets` added (free, PyPI). Each
+    device is its own browser context.
+  - The rig is the real app on 127.0.0.1:8077 with a scripted sim and a
+    movable clock.
+  - Marked `chrome` and excluded by default (~3.5 min). Run them with
+    `cd api && uv run pytest -m chrome`.
+  - One full run failed 2 of 10 while the host stalled (8 m 49 s, a
+    websocket keepalive timeout: the known WSL starvation). The two
+    tests passed alone, and the next full run passed 10/10 in 3 m 27 s.
+
+**Impacts:** `web/`, `api/src/borer_api/app.py`, `api/tests`,
+`api/pyproject.toml` (marker, addopts, websockets); TASKS P2B-8.

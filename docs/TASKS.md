@@ -451,7 +451,7 @@ the owner's Hebrew copy and fly art.
     entries until the owner's list). `words.example.txt` (in git) holds
     the format and is the fallback, with a warning.
   - Matching rules and limits: DECISIONS.md 2026-10-26 (P2B-7).
-- [ ] **P2B-8 — Pages: case flow.** Hebrew RTL, mobile-first, the 2A
+- [x] **P2B-8 — Pages: case flow.** Hebrew RTL, mobile-first, the 2A
   modules reused:
   - A's open-case screen + "send to the other side" (`wa.me`);
   - A's waiting page with a "nudge again" button from 1 h;
@@ -467,6 +467,20 @@ the owner's Hebrew copy and fly art.
     outcome, a no-show and an appeal chain of 3 (scripted sim, as at
     the 2A gate).
   - No horizontal overflow.
+  *Done 2026-10-27:* `web/js/{flow,casepage,pending,public,notice}.js`,
+  `input/verdict/waiting.js` reworked; pages at `/`, `/a/…`, `/b/…`,
+  `/c/…`.
+  - Node: `test_web_flow.py` (screen choice, every headline including
+    no-show, the appeal chain, links, clock, public card).
+  - Chrome 155 headless at 360 px (`uv run pytest -m chrome`, 10 passed,
+    3 m 27 s):
+    - 5 outcomes (live for B, replay for A, public card);
+    - a no-show (water, the 1 h nudge, A's appeal, B late);
+    - a 3-hearing appeal chain on both phones;
+    - error, closed / taken / own links, and the report.
+  - No overflow and no script error on any page. Regular api suite: 92
+    passed.
+  - Choices: DECISIONS.md 2026-10-27 (P2B-8).
 - [ ] **P2B-9 — Live meters, brain view, how it works.**
   - The appetite meters fill from the stored MN9 bins during the story
     (cumulative rate), live and on replay; hidden on Froze.

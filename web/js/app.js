@@ -1,37 +1,11 @@
-// Router: "#/" input screen; "#/h/{id}" waiting screen, then the verdict. A hearing
-// just submitted from this tab gets the full story; a reopened link of a decided
-// hearing goes straight to the verdict.
-import { inputScreen } from "./input.js";
-import { verdict } from "./verdict.js";
-import { waiting } from "./waiting.js";
-import { load, save } from "./session.js";
+// Router by path (SPEC §15.1): "/" opens a case (A); "/a/{token}" and "/b/{token}" are the
+// two personal pages; "/c/{case id}" is the public share card.
+import { casePage } from "./casepage.js";
+import { openCaseScreen } from "./input.js";
+import { publicPage } from "./public.js";
 
 const root = document.getElementById("app");
-let cleanup = () => {};
-
-const goNew = () => { location.hash = "#/"; };
-const goHearing = (id) => {
-  save("fresh", id);
-  location.hash = `#/h/${id}`;
-};
-
-function route() {
-  cleanup();
-  window.scrollTo(0, 0);
-  const m = location.hash.match(/^#\/h\/([\w-]+)$/);
-  if (!m) {
-    cleanup = inputScreen(root, goHearing);
-    return;
-  }
-  const id = m[1];
-  const fresh = load("fresh") === id;
-  save("fresh", null);
-  cleanup = waiting(root, id, fresh, {
-    onNew: goNew,
-    onSubmitted: goHearing,
-    onVerdict: (h) => { cleanup = verdict(root, h, { onNew: goNew, onAppealed: goHearing }); },
-  });
-}
-
-window.addEventListener("hashchange", route);
-route();
+const m = location.pathname.match(/^\/([abc])\/([\w-]+)\/?$/);
+if (!m) openCaseScreen(root);
+else if (m[1] === "c") publicPage(root, m[2]);
+else casePage(root, m[1], m[2]);

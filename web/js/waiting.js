@@ -1,85 +1,45 @@
-// Waiting screen (SPEC §14.3, P2A-5): polls GET /hearing/{id} and tells the story from
-// stages.js. Something always moves (the buzzing fly, the dots). Queued → a "waiting in
-// line" line first; failed → a Hebrew error with a retry; unknown id → not found.
+// The waiting story (SPEC §14.3, §15.6) for hearing `n` of a personal view: told live
+// while it runs, or replayed from stored data when this device has not seen it yet.
+// stages.js paces it; update(view) brings each poll in; onDone() once the story ends.
 import { el, show } from "./dom.js";
-import { getHearing } from "./api.js";
 import { T, moodLine } from "./copy.js";
 import { step } from "./stages.js";
-import { submit } from "./input.js";
-import { load, save } from "./session.js";
 
-const POLL_MS = 700;
 const TICK_MS = 250;
-const OFFLINE_AFTER = 5;
 
-export function waiting(root, id, fresh, { onVerdict, onNew, onSubmitted }) {
-  let h = null, misses = 0, stopped = false;
+export function storyScreen(root, view, n, onDone) {
+  let v = view;
   const state = {};
   const title = el("p", { class: "stage-title" });
   const line = el("p", { class: "stage-line" });
-  const note = el("p", { class: "hint" });
   show(root, el("section", { class: "card waiting", "aria-live": "polite" },
     el("div", { class: "judge buzz", "aria-hidden": "true" }, "🪰"), title, line,
-    el("div", { class: "dots", "aria-hidden": "true" }, el("span"), el("span"), el("span")), note));
-
-  const stop = () => { stopped = true; clearInterval(poller); clearInterval(ticker); };
-  const ending = (text, ...buttons) => {
-    stop();
-    show(root, el("section", { class: "card waiting" }, el("div", { class: "judge" }, "🪰"),
-      el("p", { class: "stage-title" }, text), ...buttons,
-      el("button", { class: "secondary", onclick: onNew }, T.newArgument)));
-  };
-  const retry = async () => {
-    const body = load("lastBody");
-    const out = body ? await submit(body) : {};
-    if (out.id) return onSubmitted(out.id);
-    save("draft", body);
-    onNew();
-  };
-
-  async function poll() {
-    const r = await getHearing(id);
-    if (stopped) return;
-    if (r.status === 404) return ending(T.notFound);
-    if (r.status !== 200) {
-      misses += 1;
-      note.textContent = misses >= OFFLINE_AFTER ? T.noConnection : "";
-      return;
-    }
-    misses = 0;
-    note.textContent = "";
-    if (h === null && !fresh && r.data.status === "decided") {
-      stop();
-      return onVerdict(r.data);  // reopened link: no story
-    }
-    h = r.data;
-  }
+    el("div", { class: "dots", "aria-hidden": "true" }, el("span"), el("span"), el("span")),
+    el("p", { class: "note" }, T.personal)));
 
   function tick() {
-    if (h === null) return;
-    const v = step(state, h.status, Date.now());
-    if (v.kind === "failed") return ending(T.failed, el("button", { class: "primary", onclick: retry }, T.retry));
-    if (v.kind === "verdict") {
-      stop();
-      return onVerdict(h);
+    const h = v.hearings[n];
+    const s = step(state, h.status, Date.now());
+    if (s.kind === "verdict") {
+      clearInterval(ticker);
+      return onDone();
     }
-    if (v.kind === "queued") {
+    line.textContent = "";
+    if (s.kind === "queued") {
       title.textContent = T.queued;
-      line.textContent = "";
-    } else if (v.key === "mood") {
-      title.textContent = h.appeal_of ? T.entersAppeal : T.enters;
-      line.textContent = moodLine(h.mood);
-    } else if (v.key === "tasteA" || v.key === "tasteB") {
-      title.textContent = T.tasting(v.key === "tasteA" ? h.name_a : h.name_b);
-      line.textContent = "";
+    } else if (s.key === "mood") {
+      title.textContent = n > 0 ? T.entersAppeal(h.appealed_by === "A" ? v.name_a : v.name_b) : T.enters;
+      line.textContent = moodLine(h.mood, h.wait_h);
+    } else if (s.key === "tasteA") {
+      title.textContent = T.tasting(v.name_a);
+    } else if (s.key === "tasteB") {
+      title.textContent = v.no_show ? T.tastingWater : T.tasting(v.name_b);
     } else {
-      title.textContent = T.deliberating[v.line % T.deliberating.length];
-      line.textContent = "";
+      title.textContent = T.deliberating[s.line % T.deliberating.length];
     }
   }
 
-  const poller = setInterval(poll, POLL_MS);
   const ticker = setInterval(tick, TICK_MS);
-  poll();
-  return stop;
+  tick();
+  return { update: (next) => { v = next; }, stop: () => clearInterval(ticker) };
 }

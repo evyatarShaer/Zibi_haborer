@@ -18,7 +18,6 @@ export function stageAt(t) {
 // What the screen shows now. `state` ({} at first) remembers when the story started:
 // when the hearing left the queue. The verdict waits for the story to finish.
 export function step(state, status, now) {
-  if (status === "failed") return { kind: "failed" };
   if (state.start === undefined) {
     if (status === "queued") return { kind: "queued" };
     state.start = now;

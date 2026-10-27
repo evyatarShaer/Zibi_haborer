@@ -18,6 +18,7 @@ dependencies = [
 dev = [
     "httpx2>=2.16.0",
     "pytest>=8",
+    "websockets>=17.3",
 ]
 
 [tool.uv]
@@ -34,4 +35,6 @@ torch = { index = "pytorch-cpu" }
 [tool.pytest.ini_options]
 pythonpath = ["src", "../sim/src"]
 testpaths = ["tests"]
-markers = ["needs_data: requires the FlyWire v783 raw files in sim/data/raw/"]
+markers = ["needs_data: requires the FlyWire v783 raw files in sim/data/raw/",
+           "chrome: page tests in headless Chrome (run with -m chrome)"]
+addopts = "-m 'not chrome'"

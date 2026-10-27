@@ -1,4 +1,4 @@
-// The local API (api/src/borer_api/app.py). Each call resolves to {status, data};
+// The case API (api/src/borer_api/routes.py). Each call resolves to {status, data};
 // a network error gives status 0.
 async function call(method, path, body) {
   try {
@@ -13,7 +13,12 @@ async function call(method, path, body) {
   }
 }
 
-export const postHearing = (body) => call("POST", "/hearing", body);
-export const getHearing = (id) => call("GET", `/hearing/${encodeURIComponent(id)}`);
-export const postAppeal = (id) => call("POST", `/hearing/${encodeURIComponent(id)}/appeal`);
-export const getBrain = (id) => call("GET", `/hearing/${encodeURIComponent(id)}/brain`);
+const enc = encodeURIComponent;
+export const openCase = (body) => call("POST", "/api/case", body);
+export const getMine = (side, token) => call("GET", `/api/${side}/${enc(token)}`);
+export const openB = (token) => call("POST", `/api/b/${enc(token)}/open`);
+export const submitB = (token, text) => call("POST", `/api/b/${enc(token)}/submit`, { text_b: text });
+export const postAppeal = (side, token) => call("POST", `/api/${side}/${enc(token)}/appeal`);
+export const getBrain = (side, token, n) => call("GET", `/api/${side}/${enc(token)}/brain/${n}`);
+export const getPublic = (id) => call("GET", `/api/c/${enc(id)}`);
+export const postReport = (id) => call("POST", `/api/c/${enc(id)}/report`);

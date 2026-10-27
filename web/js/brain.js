@@ -1,7 +1,6 @@
 // "What happened in the brain?" (SPEC §14.6, P2A-8): a toggle under the verdict. The
 // summary is fetched once, on the first open; the drawing comes from lab.js.
 import { el, svg } from "./dom.js";
-import { getBrain } from "./api.js";
 import { LAB, T } from "./copy.js";
 import { CHART, labModel } from "./lab.js";
 
@@ -50,7 +49,8 @@ export function labView(b, h) {
 }
 
 // The toggle button and the place the lab view opens into.
-export function brainToggle(h) {
+// `load()` resolves to the API's {status, data} for this hearing's brain summary.
+export function brainToggle(h, load) {
   const slot = el("div");
   let open = false, loaded = null;
   const button = el("button", { class: "secondary", "aria-expanded": "false" }, T.brain);
@@ -64,7 +64,7 @@ export function brainToggle(h) {
     if (open || loaded) return set(!open);
     button.disabled = true;
     button.textContent = T.brainLoading;
-    const r = await getBrain(h.id);
+    const r = await load();
     button.disabled = false;
     if (r.status !== 200) {
       button.textContent = T.brain;

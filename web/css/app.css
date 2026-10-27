@@ -11,6 +11,7 @@
   --error: #b3261e;
   --side-a: #3b6ea8;
   --side-b: #a8483b;
+  --wa: #1f8f4e;
 }
 
 * { box-sizing: border-box; }
@@ -85,8 +86,15 @@ button {
   border: 0;
   cursor: pointer;
 }
-button.primary { background: var(--wood); color: #fff; }
-button.secondary { background: var(--paper); color: var(--wood); border: 1px solid var(--line); }
+a.button {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 48px; margin-top: 10px; padding: 8px 12px; border-radius: 12px;
+  font-weight: 700; font-size: 1.05rem; text-decoration: none;
+}
+.primary { background: var(--wood); color: #fff; }
+.secondary { background: var(--paper); color: var(--wood); border: 1px solid var(--line); }
+.wa { background: var(--wa); color: #fff; }
+[hidden] { display: none !important; }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .judge { font-size: 3.5rem; text-align: center; line-height: 1.2; }
@@ -120,6 +128,14 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .meter.winner strong::after { content: " ⚖️"; }
 .argument { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
 .actions { margin-top: 8px; }
+.history { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 4px 0 0; }
+.names { text-align: center; font-weight: 500; margin: 2px 0 0; }
+.countdown { color: var(--muted); margin: 0; }
+.center { text-align: center; }
+.note { text-align: center; color: var(--muted); font-size: 0.75rem; margin: 12px 0 0; }
+.waiting .topic { color: var(--muted); font-weight: 500; margin: 4px 0 0; }
+.waiting .argument { margin-top: 14px; }
+.report.sure { color: var(--error); border-color: var(--error); }
 
 @media (prefers-reduced-motion: reduce) {
   .buzz, .dots span { animation: none; }
