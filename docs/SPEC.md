@@ -239,7 +239,11 @@ Three views of a case (§15.1):
   no verdict, so nothing is spoiled.
 
 OG tags are rendered server-side (WhatsApp's crawler runs no JS). Images
-are drawn with Pillow, with correct RTL Hebrew shaping.
+are drawn with Pillow, with correct RTL Hebrew shaping (libraqm; font
+Heebo, SIL OFL). Every other page (start, how it works, A's link, a
+closed case) previews as the site only. The verdict headlines and the
+history line have one copy, on the server (`borer_api.verdicts`): the
+API sends them, the pages and the previews show them (2026-10-27).
 
 Not in 2B (§13): template sentences, rarity, decision time, direction
 flips, deciding neuron id and the mini brain map.

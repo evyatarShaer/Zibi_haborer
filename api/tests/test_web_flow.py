@@ -6,7 +6,7 @@ import urllib.parse
 
 import pytest
 
-from fake import ROOT, needs_node, node
+from fake import needs_node, node
 
 pytestmark = needs_node
 
@@ -18,7 +18,7 @@ def hearing(n, outcome="win", winner="A", status="decided", by=None, accepted=No
     h = {"n": n, "appealed_by": by, "status": status, "wait_h": 1.0,
          "mood": {"hunger": 0.3, "arousal": 0.1}}
     if status == "decided":
-        h |= {"outcome": outcome, "winner": winner,
+        h |= {"outcome": outcome, "winner": winner, "headline": f"headline {outcome} {winner}",
               "winner_name": {"A": "דנה", "B": "יוסי"}.get(winner), "appetite": {"A": 30.0, "B": 10.0}}
         if n:
             h["accepted"] = accepted
@@ -28,6 +28,7 @@ def hearing(n, outcome="win", winner="A", status="decided", by=None, accepted=No
 def view(*hearings, **kw):
     return {"id": "c1", "status": "decided", "topic": "פיצה", "name_a": "דנה", "name_b": "יוסי",
             "no_show": False, "error_message": None, "hearings": list(hearings), "you": "A",
+            "history": "line" if len(hearings) > 1 else None,
             "text_a": "טענה א", "text_b": "טענה ב", "deadline_in_s": 0, "can_appeal": True,
             "appeal_closes_in_s": 7199} | kw
 
@@ -36,12 +37,6 @@ def run(tmp_path, body, **data):
     consts = "".join(f"\nconst {k} = {json.dumps(v, ensure_ascii=False)};" for k, v in data.items())
     return node(tmp_path, 'import * as F from "@/flow.js"; import { verdictModel } from "@/verdict.js";'
                 ' import { publicModel } from "@/public.js"; import * as M from "@/meters.js";' + consts, body)
-
-
-def spec_headlines():
-    table = (ROOT / "docs" / "SPEC.md").read_text().split("## 7. Outcomes")[1].split("## 8.")[0]
-    rows = [r.split("|") for r in table.splitlines() if r.startswith("| ") and not r.startswith("| Outcome")]
-    return {r[1].strip().split()[0].lower(): r[3].strip() for r in rows}
 
 
 def test_which_screen(tmp_path):
@@ -58,12 +53,11 @@ def test_which_screen(tmp_path):
 
 @pytest.mark.parametrize("topic", ["פיצה עם אננס", None])
 def test_verdict_for_every_outcome(tmp_path, topic):
-    spec = spec_headlines()
+    """The headline is the API's (borer_api.verdicts); meters on all but Froze."""
     views = {k: view(hearing(0, *OUTCOME[k]), topic=topic) for k in OUTCOME}
     got = run(tmp_path, "Object.fromEntries(Object.entries(V).map(([k, v]) => [k, verdictModel(v, 0)]))", V=views)
     for k, v in got.items():
-        name = views[k]["hearings"][0]["winner_name"]
-        assert v["headline"] == spec[k].replace("{name}", name or "")
+        assert v["headline"] == views[k]["hearings"][0]["headline"]
         assert v["topic"] == (f"התיק: {topic}" if topic else None)
         assert (v["appeal"], v["history"], v["final"], v["canAppeal"]) == (None, None, False, True)
         assert v["appealLeft"] == "אפשר לערער עוד 2:00 שעות"
@@ -73,14 +67,9 @@ def test_verdict_for_every_outcome(tmp_path, topic):
         assert (a["winner"], b["winner"]) == (OUTCOME[k][1] == "A", OUTCOME[k][1] == "B")
 
 
-def test_no_show_headlines_and_water(tmp_path):
-    v = [view(hearing(0, w, s), no_show=True, text_b=None) for w, s in
-         [("win", "A"), ("win", "B"), ("dithered", "B"), ("tie", None), ("froze", None)]]
-    got = run(tmp_path, "V.map((v) => verdictModel(v, 0))", V=v)
-    assert [g["headline"] for g in got] == ["הצד השני לא התייצב לדיון", "הזבוב העדיף מים",
-                                            "הזבוב העדיף מים", "הצד השני לא התייצב לדיון",
-                                            "הצד השני לא התייצב לדיון"]
-    assert got[0]["meters"][1]["name"] == "כוס מים" and got[0]["meters"][1]["text"] is None
+def test_no_show_water_meter(tmp_path):
+    got = run(tmp_path, "verdictModel(V, 0)", V=view(hearing(0), no_show=True, text_b=None))
+    assert got["meters"][1]["name"] == "כוס מים" and got["meters"][1]["text"] is None
 
 
 def test_appeal_chain_lines_and_history(tmp_path):
@@ -88,7 +77,7 @@ def test_appeal_chain_lines_and_history(tmp_path):
                  hearing(2, "win", "B", by="B", accepted=False), can_appeal=False, appeal_closes_in_s=None)
     got = run(tmp_path, "[0, 1, 2].map((n) => verdictModel(V, n))", V=chain)
     assert [g["appeal"] for g in got] == [None, "הערעור של דנה התקבל!", "הערעור של יוסי נדחה"]
-    assert got[2]["history"] == "פסק דין ← ערעור התקבל ← ערעור נדחה" and got[2]["final"]
+    assert got[2]["history"] == "line" and got[2]["final"]
     assert not got[2]["canAppeal"] and got[2]["appealLeft"] is None
 
 
@@ -103,13 +92,14 @@ def test_links_and_clock(tmp_path):
     text = [urllib.parse.unquote(x.split("text=")[1]) for x in (invite, nudge, share)]
     assert "https://x/b/T" in text[0] and "דנה" in text[0] and "3 שעות" in text[0]
     assert "https://x/b/T" in text[1] and "2:59" in text[1]
-    assert text[2] == "התיק: פיצה\nפסק הדין: הצדק עם דנה\nhttps://x/c/c1"
+    assert text[2] == "התיק: פיצה\nheadline win A\nhttps://x/c/c1"
     assert clocks == ["0:00", "0:01", "0:01", "0:01", "1:00", "3:00"]
 
 
 def test_public_card_model(tmp_path):
     pub = {k: v for k, v in view(hearing(0), hearing(1, "win", "B", by="A", accepted=True)).items()
-           if k in ("id", "status", "topic", "name_a", "name_b", "no_show", "error_message", "hearings")}
+           if k in ("id", "status", "topic", "name_a", "name_b", "no_show", "error_message", "hearings",
+                    "history")}
     for h in pub["hearings"]:
         for k in ("mood", "wait_h", "appetite"):
             h.pop(k)
@@ -117,7 +107,7 @@ def test_public_card_model(tmp_path):
              pub | {"status": "error", "error_message": "תקלה"}]
     got = run(tmp_path, "V.map(publicModel)", V=cases)
     assert got[0] == {"topic": "התיק: פיצה", "names": "דנה נגד יוסי",
-                      "headline": "פסק הדין: הצדק עם יוסי", "history": "פסק דין ← ערעור התקבל"}
+                      "headline": "headline win B", "history": "line"}
     assert got[1]["headline"] == got[2]["headline"] == "הזבוב עוד לא פסק בתיק הזה"
     assert got[3]["headline"] == "תקלה"
 

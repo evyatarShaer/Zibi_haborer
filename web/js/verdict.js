@@ -5,7 +5,7 @@
 import { brainToggle } from "./brain.js";
 import { el, show } from "./dom.js";
 import { T, topicLine } from "./copy.js";
-import { appealLine, clock, historyLine, shareVerdict, verdictHeadline } from "./flow.js";
+import { appealLine, clock, shareVerdict } from "./flow.js";
 import { hasMeters, shares } from "./meters.js";
 
 // Pure (tested in Node): what the screen shows for hearing `n` of a personal view.
@@ -16,7 +16,7 @@ export function verdictModel(view, n) {
   const meter = (s, name, text) => ({ name, text, winner: h.winner === s, ...end[s] });
   return {
     appeal: appealLine(view, h), accepted: Boolean(h.accepted), topic: topicLine(view),
-    headline: verdictHeadline(view, h), outcome: h.outcome, history: historyLine(view),
+    headline: h.headline, outcome: h.outcome, history: view.history,
     final: !view.can_appeal && view.hearings.length > 1,
     canAppeal: Boolean(view.can_appeal), showMeters: hasMeters(h.outcome),
     appealLeft: view.can_appeal ? T.appealLeft(clock(view.appeal_closes_in_s)) : null,

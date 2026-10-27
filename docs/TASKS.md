@@ -341,6 +341,9 @@ the owner's Hebrew copy and fly art.
   - the app as a systemd service, restarted on boot;
   - a deploy script from git;
   - the same env config as 2A (no workstation paths).
+  - `libfribidi0` installed (Pillow's RTL layout for the preview
+    images) and `BORER_PUBLIC_URL=https://<sub>.duckdns.org` set (the
+    absolute og:image address; P2B-10).
   *Accept:*
   - `https://<sub>.duckdns.org` serves the app after a reboot.
   - The certificate renews automatically (Caddy).
@@ -505,7 +508,7 @@ the owner's Hebrew copy and fly art.
     on every outcome except Froze, which has no bars; the brain view
     draws 2 curves; `/how` lists 7 credits.
   - api suite: 95 passed. The no-show headlines were done in P2B-8.
-- [ ] **P2B-10 — Public card, teaser and OG images.**
+- [x] **P2B-10 — Public card, teaser and OG images.**
   - Server-rendered OG tags for the teaser (B's link: fly + topic, no
     verdict) and the public card (topic, names, final verdict, history,
     no arguments).
@@ -516,6 +519,16 @@ the owner's Hebrew copy and fly art.
     data; the teaser has no verdict.
   - Hebrew renders right to left with joined final forms (golden image).
   - A real WhatsApp preview checked on the owner's phone.
+  *Done 2026-10-27 (code and tests); the real WhatsApp check is the
+  owner's:*
+  - `borer_api.{og,ogimage,pages,verdicts}`; Heebo (OFL) in
+    `api/assets/fonts`; Pillow 13.0.0 with raqm.
+  - `test_og.py` covers: the teaser (topic, no verdict); the card (the
+    final verdict); personal and closed pages show the site only; no
+    argument in any tag or image line; PNG 1200×630 under 300 KB; RTL
+    layout against Pillow's basic layout; the golden card image.
+  - `test_verdicts.py`: SPEC §7/§8 headlines, now in one place.
+  - api suite: 114 passed.
 - [ ] **P2B-11 — Share counters.** Server-side aggregate counters
   (`cases_opened`, `cases_decided`, `cases_shared`, no-shows, appeals,
   reports) per day, kept past the 7-day purge. An admin command prints

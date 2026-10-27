@@ -4,7 +4,6 @@
 import { el, show } from "./dom.js";
 import { getPublic, postReport } from "./api.js";
 import { T, topicLine } from "./copy.js";
-import { historyLine, verdictHeadline } from "./flow.js";
 import { noticeScreen } from "./notice.js";
 
 // Pure (tested in Node).
@@ -14,8 +13,8 @@ export function publicModel(c) {
   return {
     topic: topicLine(c), names: `${c.name_a} נגד ${c.name_b}`,
     headline: c.status === "error" ? c.error_message
-      : h && c.status !== "hearing" ? verdictHeadline(c, h) : T.notDecided,
-    history: historyLine(c),
+      : h && c.status !== "hearing" ? h.headline : T.notDecided,
+    history: c.history,
   };
 }
 

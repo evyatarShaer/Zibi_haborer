@@ -7,11 +7,12 @@ from borer_api import routes, views
 from borer_sim import taste
 from fake import OK, TEXT_B
 
-PUBLIC = {"id", "status", "topic", "name_a", "name_b", "no_show", "error_message", "hearings"}
+PUBLIC = {"id", "status", "topic", "name_a", "name_b", "no_show", "error_message", "hearings",
+          "history"}
 PERSONAL = PUBLIC | {"you", "text_a",
             "text_b", "deadline_in_s", "can_appeal", "appeal_closes_in_s"}
 HEARING = {"n", "appealed_by", "status", "wait_h", "mood", "outcome", "winner", "winner_name",
-           "appetite"}
+           "headline", "appetite"}
 
 
 def test_b_is_the_device_that_submits(client):
@@ -68,7 +69,7 @@ def test_responses_allowlisted(client):
     pub = client.get(f"/api/c/{case['case_id']}").json()
     assert set(pub) == PUBLIC
     assert set(pub["hearings"][0]) == {"n", "appealed_by", "status", "outcome", "winner",
-                                       "winner_name"}
+                                       "winner_name", "headline"}
     brain = client.get(f"/api/a/{case['a']}/brain/0").json()
     assert set(brain) == {"bin_ms", "mn9_hz", "mood", "seed", "sim_version", "platform"}
     everything = json.dumps([waiting_a, a, b.get(f"/api/b/{case['b']}").json(), pub, brain],

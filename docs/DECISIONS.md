@@ -2421,3 +2421,55 @@ now link a DOI.
 
 **Impacts:** SPEC §15.1, §15.6, §15.7; `api/src/borer_api/{routes,views}.py`;
 `web/js/{casepage,public,waiting,meters,stages,how}.js`; `api/tests`.
+
+---
+
+## 2026-10-27 — P2B-10: link previews (tags + Pillow images)
+
+**Built:**
+- **Server-rendered preview tags** (`borer_api.pages`, `og`): every page
+  is `web/index.html` with its `<title>` replaced by Open Graph tags.
+  - **B's link (teaser):** "הבורר · התיק: {topic}", a fixed invitation
+    line, and an image with the fly and the topic. It never shows a
+    verdict, even after one exists. No names: SPEC §9 says fly and topic
+    only.
+  - **Public card `/c/{id}`:**
+    - title: the final verdict's headline;
+    - description: topic · names · history;
+    - image: the same, with a `?v=` that changes with each appeal, so
+      WhatsApp fetches a new image.
+  - **Start page, `/how`, A's link, closed, hidden or unknown cases:** the
+    site preview only. Personal links and the card carry `noindex`.
+  - No argument, mood or brain data in any tag or image (tested).
+- **Images** (`borer_api.ogimage`): 1200×630 PNG, about 33 KB, in the
+  courtroom look with a placeholder fly.
+  - Hebrew goes through libraqm (Pillow 13.0.0 wheel; FriBiDi 1.0.8 from
+    the system's `libfribidi0`, HarfBuzz 14.5.0). Font: Heebo, SIL OFL
+    1.1, from the google/fonts repository, with its OFL.txt.
+  - Heebo has no "←", so images join the history steps with "·".
+  - RTL is tested against Pillow's basic layout, which draws in typing
+    order: our rendering is 10–17× closer to the reversed text. A golden
+    card image (checked by eye: RTL, right-aligned, final letters) is
+    compared pixel for pixel.
+- **One copy of the verdict wording.** The headlines (SPEC §7/§8) and
+  the history line moved from `web/js` to `borer_api.verdicts`. The API
+  sends `headline` per decided hearing and `history` per case; the pages
+  and previews only show them (the project rule against duplicated
+  logic).
+- **Absolute image address:** `BORER_PUBLIC_URL` when set (production),
+  else the request's host (`X-Forwarded-Host` honoured) and scheme
+  (uvicorn takes `X-Forwarded-Proto` from a local proxy, such as
+  cloudflared or Caddy).
+  - I couldn't try the quick tunnel's headers: opening a tunnel needs
+    the owner's approval. The owner's WhatsApp check covers it.
+  - P2B-2 now lists `BORER_PUBLIC_URL` and `libfribidi0`.
+- **Case ids are hex** (`token_hex(9)`, still 72 bits). A urlsafe id can
+  start with "-", which `python -m borer_api.admin delete <id>` then
+  read as an option (a flaky admin test showed it).
+
+**Not checked here:** a real WhatsApp preview (the owner's phone). WhatsApp
+caches a preview per URL.
+
+**Impacts:** SPEC §9; TASKS P2B-2, P2B-10; `api/src/borer_api/{pages,og,
+ogimage,verdicts,views,app,cases}.py`, `api/assets/fonts`, `api/pyproject.toml`
+(pillow); `web/js/{flow,verdict,public,copy}.js`; `api/tests`.

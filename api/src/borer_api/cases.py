@@ -45,7 +45,7 @@ class Store(Reports, Db):
              device: str | None = None, per_day: int | None = None) -> dict:
         """A new waiting case; returns {"id", "token_a", "token_b"} (only hashes are kept).
         Limited if `ip` already opened `per_day` cases today."""
-        cid, token_a, now = secrets.token_urlsafe(9), tokens.new(), self.clock()
+        cid, token_a, now = secrets.token_hex(9), tokens.new(), self.clock()  # never "-…" (CLI)
         ip_hash = tokens.ip(ip)
         with self._tx():
             if per_day is not None and self._one(

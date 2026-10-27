@@ -13,10 +13,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from borer_api import court, routes
+from borer_api import court, pages, routes
 from borer_api.cases import Store
 from borer_api.db import cleanup_loop
 
@@ -56,15 +55,6 @@ def create_app(runner=None, db_path: str = DB, purge_every_s: float = 3600,
 
     app = FastAPI(title="HaBorer", lifespan=lifespan)
     app.include_router(routes.router)
-
-    def page(key: str = ""):
-        """The page for /a/{token}, /b/{token}, /c/{case id} and /how (its script routes by
-        path). Serving it binds nothing (SPEC §15.1)."""
-        return FileResponse(ROOT / "web" / "index.html")
-
-    for kind in "abc":
-        app.add_api_route(f"/{kind}/{{key}}", page, include_in_schema=False)
-    app.add_api_route("/how", page, include_in_schema=False)
-
+    app.include_router(pages.router)
     app.mount("/", StaticFiles(directory=ROOT / "web", html=True), name="web")
     return app

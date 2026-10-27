@@ -87,7 +87,7 @@ def test_page_and_modules_served(tmp_path):
         page = c.get("/").text
         assert 'dir="rtl"' in page and "Heebo" in page and 'src="/js/app.js"' in page
         for path in ("/a/tok", "/b/tok", "/c/id1", "/how"):  # personal, public, how it works
-            assert c.get(path).text == page
+            assert 'src="/js/app.js"' in c.get(path).text  # same page; preview tags: test_og.py
         assert c.get("/x/tok").status_code == 404
         for f in sorted(JS.glob("*.js")) + [ROOT / "web" / "css" / "app.css"]:
             r = c.get("/" + f.relative_to(ROOT / "web").as_posix())

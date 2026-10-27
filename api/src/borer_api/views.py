@@ -3,7 +3,7 @@ leaks by accident: no letter-level data (SPEC §2.3), no `text_a` for B while th
 waits (§15.2), no arguments, mood or brain on the public card (§9)."""
 from fastapi.responses import JSONResponse
 
-from borer_api import tokens
+from borer_api import tokens, verdicts
 
 CLOSED = "התיק נסגר. אפשר לפתוח תיק חדש"
 TAKEN = "התיק כבר בטיפול"
@@ -48,23 +48,23 @@ def appeal_refused(case: dict, hearings: list[dict], side: str, now: float) -> s
 
 
 def hearing(h: dict, prev: dict | None, case: dict, public: bool = False) -> dict:
-    """One hearing of the history; the verdict fields appear once it is decided. An appeal
-    is accepted when its winner differs from the previous verdict's (no winner = None)."""
+    """One hearing of the history; the verdict fields (headline included) appear once it
+    is decided."""
     out = {k: h[k] for k in ("n", "appealed_by", "status")}
     if not public:
         out |= {"wait_h": h["wait_h"], "mood": {"hunger": h["hunger"], "arousal": h["arousal"]}}
     if h["status"] == "decided":
-        w = h["winner"]
-        out |= {"outcome": h["outcome"], "winner": w,
-                "winner_name": case[f"name_{w.lower()}"] if w else None}
+        out |= {"outcome": h["outcome"], "winner": h["winner"],
+                "winner_name": verdicts.winner_name(case, h),
+                "headline": verdicts.headline(case, h)}
         if not public:
             out["appetite"] = {"A": h["metrics"]["A"], "B": h["metrics"]["B"]}
-        if prev is not None and prev["status"] == "decided":
-            out["accepted"] = w != prev["winner"]
+        if (a := verdicts.accepted(h, prev)) is not None:
+            out["accepted"] = a
     return out
 
 
-def history(case: dict, hearings: list[dict], public: bool = False) -> list[dict]:
+def hearing_list(case: dict, hearings: list[dict], public: bool = False) -> list[dict]:
     return [hearing(h, hearings[i - 1] if i else None, case, public) for i, h in enumerate(hearings)]
 
 
@@ -72,7 +72,8 @@ def _common(case: dict, hearings: list[dict], public: bool) -> dict:
     return {k: case[k] for k in ("id", "status", "topic", "name_a", "name_b")} | {
         "no_show": case["status"] not in ("waiting", "error") and case["text_b"] is None,
         "error_message": FAILED if case["status"] == "error" else None,
-        "hearings": history(case, hearings, public)}
+        "hearings": hearing_list(case, hearings, public),
+        "history": verdicts.history_line(hearings)}
 
 
 def public(case: dict, hearings: list[dict]) -> dict:

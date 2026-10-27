@@ -1,5 +1,5 @@
-// User-facing Hebrew text. Verdict headlines are SPEC §7 (decided 2026-10-25); the mood
-// and waiting lines are placeholder copy for the owner to replace.
+// User-facing Hebrew text. Verdict headlines and the history line come from the API
+// (borer_api.verdicts); the rest is placeholder copy for the owner to replace.
 export const T = {
   title: "הבורר",
   tagline: "פותחים תיק, שולחים לצד השני, זבוב אחד מכריע",
@@ -40,15 +40,10 @@ export const T = {
   hungry: (h) => `הזבוב רעב כבר ${h} שעות.`,
   revealing: "כמה הזבוב רצה לבלוע כל טענה…",
   // the verdict (SPEC §7, §8, §15.4)
-  preferredWater: "הזבוב העדיף מים",
-  noShow: "הצד השני לא התייצב לדיון",
   water: "כוס מים",
   appetite: "תיאבון",
   appealAcceptedBy: (name) => `הערעור של ${name} התקבל!`,
   appealRejectedBy: (name) => `הערעור של ${name} נדחה`,
-  historyVerdict: "פסק דין",
-  historyAccepted: "ערעור התקבל",
-  historyRejected: "ערעור נדחה",
   final: "הפסק סופי",
   appeal: "ערעור",
   appealing: "מגישים ערעור…",
@@ -82,16 +77,6 @@ export function moodLine(m, waitH) {
 
 export function topicLine(c) {
   return c.topic ? `התיק: ${c.topic}` : null;
-}
-
-export function headline(h) {
-  return {
-    win: `פסק הדין: הצדק עם ${h.winner_name}`,
-    dithered: `אחרי התלבטות קשה... הצדק עם ${h.winner_name}`,
-    tie: "תיקו. הזבוב לא השתכנע מאף אחד",
-    froze: "הזבוב קפא. התיק הזה גדול עליו",
-    food: "הבורר יצא להפסקת צהריים. הדיון נדחה",
-  }[h.outcome];
 }
 
 // The lab view (SPEC §15.7): MN9 curves and the run's identity; no taste classes.
