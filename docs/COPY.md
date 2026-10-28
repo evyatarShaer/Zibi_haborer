@@ -190,8 +190,8 @@ not "כ־140".
 | `SITE_TITLE` | preview title (start page, /how, A's link, closed) | הבורר | decided (name) |
 | `SITE_TEXT` | preview description, same pages | יש ויכוח? זבוב אמיתי יכריע. 140 אלף נוירונים, בלי AI. | placeholder → owner-approved |
 | `site()` image lines | site preview image | שני צדדים, זבוב אחד מכריע / בלי AI. רק מוח של זבוב. | placeholder |
-| `teaser()` title | B's link preview title | הבורר · התיק: {topic} (no topic: הבורר · הוגשה נגדך תביעה) | placeholder → owner-approved |
-| `teaser()` no-topic line | B's link preview, title and image | הוגשה נגדך תביעה | placeholder → owner-approved |
+| `teaser()` title | B's link preview title | הבורר · התיק: {topic} (no topic: הבורר · 📜 צו הזמנה לדין) | placeholder → owner-approved |
+| `SUMMONS` (no-topic teaser headline) | B's link preview: title with 📜, image without it (Heebo has no emoji) | 📜 צו הזמנה לדין (image: צו הזמנה לדין) | placeholder → owner-approved |
 | `TEASER_TEXT` | B's link preview description and image | הוגשה נגדך תביעה. יש לך 3 שעות להתגונן. | placeholder → owner-approved |
 | `NOT_DECIDED` | public card preview before a verdict | הזבוב עוד לא פסק בתיק הזה | placeholder; same as `views.NOT_DECIDED`, `T.notDecided` |
 | `card()` names | public card preview | {name A} נגד {name B} | placeholder; same as `publicModel` names |

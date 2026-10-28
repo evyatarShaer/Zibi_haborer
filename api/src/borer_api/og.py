@@ -22,10 +22,15 @@ def site() -> dict:
             "lines": [("headline", "שני צדדים, זבוב אחד מכריע"), ("note", "בלי AI. רק מוח של זבוב.")]}
 
 
+SUMMONS = "צו הזמנה לדין"  # the teaser headline without a topic; 📜 only in the title
+
+
 def teaser(case: dict) -> dict:
-    topic = f"התיק: {case['topic']}" if case["topic"] else "הוגשה נגדך תביעה"
-    return {"title": f"{SITE_TITLE} · {topic}", "text": TEASER_TEXT,
-            "image": f"/og/t/{case['id']}.png", "lines": [("headline", topic), ("note", TEASER_TEXT)]}
+    topic = f"התיק: {case['topic']}" if case["topic"] else None
+    title = topic or f"📜 {SUMMONS}"  # Heebo has no emoji: the image drops it
+    return {"title": f"{SITE_TITLE} · {title}", "text": TEASER_TEXT,
+            "image": f"/og/t/{case['id']}.png",
+            "lines": [("headline", topic or SUMMONS), ("note", TEASER_TEXT)]}
 
 
 def card(case: dict, hearings: list[dict]) -> dict:
