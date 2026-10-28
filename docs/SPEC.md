@@ -356,7 +356,11 @@ determinism check are 2B tasks.
      No-shows are reported on a line of their own and do not count
      toward either number (2026-10-28).
    - On the production host: hearing ≤ 15 s (submit → verdict) and
-     bit-identical determinism.
+     bit-identical determinism. **Deferred until a server exists**
+     (2026-10-28): the Oracle account is blocked, so the friends beta
+     runs from the workstation through a Cloudflare quick tunnel
+     (`scripts/beta.sh`). The workstation figures (≤ 15 s, recheck) stand
+     in meanwhile.
 4. **Phase 3** — public defender, group bets, case history, verdict
    themes, public "what the fly likes" stats (group-level only, §2.3).
 

@@ -58,6 +58,12 @@ fly's choice is the verdict — the humor is the point.
   relaunched with the same command. Give the user the check command, then
   end the turn. Reason: the Claude Code UI used ~24% CPU on Windows
   during long polls, and the PC throttled to 1.79 GHz.
+- **Friends beta (P2B-12, from the laptop).** `scripts/beta.sh` starts
+  the quick tunnel, then the server with `BORER_PUBLIC_URL` = the tunnel
+  address, and prints it; `status` / `stop` / `restart-tunnel`. Never
+  restart the tunnel during the beta: a new address breaks every link
+  already sent (the script reuses a running tunnel and asks before a
+  new one). No server exists yet (Oracle blocked, 2026-10-28).
 - **Play-testing (Phase 2A).** Server: `scripts/detach.sh haborer
   api/data/server.log scripts/run_local.sh` (port 8000; restart with
   `systemctl --user restart haborer`). Phone: `scripts/tunnel.sh`
@@ -138,7 +144,7 @@ scripts/       repo checks (file length, clean tree); run_local.sh (2A server), 
 
 ## Current status
 
-**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — done, gate passed 2026-10-25** (tag `phase-2a-done`; determinism check `python -m borer_api.recheck`; SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`; P2A-3 done, `borer_api.app`, SIM_VERSION 0.8.2; P2A-4…8 done, `web/`, play-tested 2026-10-25). **Phase 2B (MVP) — in progress** (P2B-1 done: hunger 0.25 / h; P2B-4 done, SIM_VERSION 0.9.0, balance 8/8; P2B-5 done, `borer_api.cases`; P2B-6 done, case API `/api`, 2A `/hearing` API removed; P2B-7 done, word filter + report + `borer_api.admin`; P2B-8 done, case pages, Chrome page tests `cd api && uv run pytest -m chrome`; B bound on submit (2026-10-27); P2B-9 done, live meters + brain view + `/how`; P2B-10 done, preview tags + Pillow images (`borer_api.og`/`ogimage`), headlines only in `borer_api.verdicts`; P2B-11 done, share counters (`borer_api.admin counters`); SPEC §15, TASKS P2B-1…13; Oracle Always Free ARM + Caddy + DuckDNS, same FastAPI + SQLite + static page). Details:
+**Phase 1 (POC) — done, gate passed 2026-10-25** (tag `phase-1-done`, SIM_VERSION 0.8.0). **Phase 2A (Local UI POC) — done, gate passed 2026-10-25** (tag `phase-2a-done`; determinism check `python -m borer_api.recheck`; SPEC §14, TASKS P2A-1…9; P2A-1 done, `borer_sim.hearing`, SIM_VERSION 0.8.1; P2A-2 done, `borer_api.store`; P2A-3 done, `borer_api.app`, SIM_VERSION 0.8.2; P2A-4…8 done, `web/`, play-tested 2026-10-25). **Phase 2B (MVP) — in progress** (P2B-1 done: hunger 0.25 / h; P2B-4 done, SIM_VERSION 0.9.0, balance 8/8; P2B-5 done, `borer_api.cases`; P2B-6 done, case API `/api`, 2A `/hearing` API removed; P2B-7 done, word filter + report + `borer_api.admin`; P2B-8 done, case pages, Chrome page tests `cd api && uv run pytest -m chrome`; B bound on submit (2026-10-27); P2B-9 done, live meters + brain view + `/how`; P2B-10 done, preview tags + Pillow images (`borer_api.og`/`ogimage`), headlines only in `borer_api.verdicts`; P2B-11 done, share counters (`borer_api.admin counters`); P2B-2/3 blocked or deferred (no server); P2B-12 prepared, `scripts/beta.sh`; SPEC §15, TASKS P2B-1…13; Oracle Always Free ARM + Caddy + DuckDNS, same FastAPI + SQLite + static page). Details:
 `docs/POC_REPORT.md`, `docs/TASKS.md`.
 
 - **Done:** P1-1 environment, P1-2 FlyWire v783 data, P1-3 Shiu sugar→MN9

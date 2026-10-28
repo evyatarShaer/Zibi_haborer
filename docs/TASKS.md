@@ -296,10 +296,13 @@ running on a free server.
 - Oracle Always Free + Caddy + a free subdomain.
 
 **Exit criteria** (from `SPEC.md §12`):
-- 20 real cases in friends' groups; of the decided cases, ≥ half had
-  "send the verdict" tapped (server-side counter).
+- 20 real cases in friends' groups; of the decided cases where both
+  sides submitted, ≥ half had "send the verdict" tapped (server-side
+  counter; no-shows on their own line, 2026-10-28).
 - On the production host: hearing ≤ 15 s (submit → verdict) and
-  bit-identical determinism.
+  bit-identical determinism. **Deferred until a server exists**
+  (2026-10-28: the Oracle account is blocked; the beta runs from the
+  laptop).
 
 **Decided 2026-10-25:** DECISIONS.md, the eleven 2B planning entries.
 **Open:** the lunch-break growth rate (P2B-1; the owner picks). The
@@ -331,7 +334,8 @@ the owner's Hebrew copy and fly art.
   *Done 2026-10-26 (POC_REPORT.md P2B-1):* the owner picked **0.25 / h**.
   No-shows stay brain-decided: water MN9 ≈ 0 Hz, so A wins by forfeit.
   "הזבוב העדיף מים" stays rare.
-- [ ] **P2B-2 — Host setup.** The owner creates the Oracle Cloud
+- [ ] **P2B-2 — Host setup.** *Blocked 2026-10-28: the Oracle account
+  was refused; the beta runs from the laptop (P2B-12).* The owner creates the Oracle Cloud
   account; the signup asks for a card, and only Always Free resources
   are used. Then:
   - an ARM (Ampere A1) VM with Ubuntu, `uv` and the FlyWire v783 files
@@ -352,7 +356,8 @@ the owner's Hebrew copy and fly art.
   - No paid resource exists in the tenancy (checked in the console).
   - Risk noted: Oracle may reclaim idle Always Free VMs; check the
     current rule and keep a note in DECISIONS.
-- [ ] **P2B-3 — Production-host timing and ARM determinism.** 20
+- [ ] **P2B-3 — Production-host timing and ARM determinism.** *Deferred
+  until a server exists (2026-10-28).* 20
   timing hearings on the server.
   Run with the 2A app and sim right after setup; it decides whether the
   host works at all. Re-measured on the 2B sim at the gate.
@@ -546,8 +551,21 @@ the owner's Hebrew copy and fly art.
 - [ ] **P2B-12 — Friends beta.** Run real cases in friends' WhatsApp
   groups. Fix what breaks.
   *Accept:* 20 decided real cases; counters show the shared share.
+  *Prepared 2026-10-28 — runs from the laptop through the quick tunnel*
+  (no server yet, DECISIONS.md 2026-10-28):
+  - `scripts/beta.sh` starts the tunnel, then the server with
+    `BORER_PUBLIC_URL` set to the tunnel address, and prints that
+    address. A running tunnel is reused. `restart-tunnel` asks for
+    "yes", because a new address breaks every link sent so far.
+  - `status` and `stop` also exist. Counters: `python -m
+    borer_api.admin counters`.
+  - The laptop stays on AC, lid open, screen on for the whole beta (WSL
+    starvation under Modern Standby).
+  - Tested 2026-10-28: the server half with a stand-in address (the
+    preview tags carry it). The tunnel half is the owner's first run.
 - [ ] **P2B-13 — Phase 2B gate.** Every exit criterion with evidence
-  (`phase-gate` skill).
+  (`phase-gate` skill). The production-host criterion is deferred until
+  a server exists (SPEC §12, 2026-10-28).
 
 ## Epic: Phase 3
 

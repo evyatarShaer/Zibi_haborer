@@ -2530,3 +2530,46 @@ hidden.
 
 **Impacts:** SPEC §10, §12; `api/src/borer_api/{db,cases,reports,admin}.py`;
 `api/tests/test_counters.py`; CLAUDE.md.
+
+---
+
+## 2026-10-28 — No server yet: the friends beta runs from the laptop (owner)
+
+**Context:** the Oracle Cloud account is blocked (P2B-2), so there is no
+production host.
+
+**Decision (owner):**
+- P2B-12 (friends beta) runs from the workstation through the Cloudflare
+  quick tunnel, with one script.
+- The SPEC §12 production-host criterion (≤ 15 s and bit-identical
+  determinism on the host) is **deferred until a server exists**.
+  P2B-2 is blocked and P2B-3 deferred.
+
+**Built:** `scripts/beta.sh`.
+- `start` (default): reuses a running tunnel (so links already sent
+  keep working), else starts one. Then it (re)starts the server with
+  `BORER_PUBLIC_URL` = the tunnel's https address, waits for the brain
+  to load, and prints the address.
+- The warnings it prints:
+  - a new tunnel breaks every link sent so far;
+  - keep the laptop on AC, lid open, screen on;
+  - anyone with the address can use the app.
+- `restart-tunnel`: a new address, only after typing "yes".
+- `status`, `stop`.
+- Every local curl has a timeout: under WSL mirrored networking a request
+  to a closed port hung instead of failing (found while testing
+  `status`).
+- Tested: the server half with a stand-in address, through
+  `scripts/detach.sh` and `run_local.sh`. The page's og:image used it,
+  and the server stopped cleanly. The tunnel half was not run: opening a
+  public tunnel needs the owner's approval.
+
+**Risks:**
+- The beta depends on the laptop staying awake and online.
+- A tunnel restart (crash, reboot) ends all live links. Cases stay in
+  the DB, but their addresses change.
+- Hearings run at workstation speed (6.6–7.2 s measured behind the API,
+  P2B-6).
+
+**Impacts:** SPEC §12; TASKS 2B exit, P2B-2, P2B-3, P2B-12, P2B-13;
+CLAUDE.md; `scripts/beta.sh`.
