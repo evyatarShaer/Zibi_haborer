@@ -3,7 +3,7 @@
 Every Hebrew string a user can see, as of 2026-10-28. Status:
 **decided** = fixed by SPEC (change it there first, with a DECISIONS
 entry); **placeholder** = written for the build, for the owner to
-replace. `{x}` marks a value filled in at run time.
+replace; **placeholder → owner-approved** = the owner's text (2026-10-28). `{x}` marks a value filled in at run time.
 
 Some texts exist in more than one place (marked **same as**). They must
 be changed together.
@@ -26,7 +26,7 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | Key | Where it appears | Current text | Status |
 |---|---|---|---|
 | `T.title` | not shown (kept for the pages) | הבורר | decided (name) |
-| `T.tagline` | open-case screen, above the form | פותחים תיק, שולחים לצד השני, זבוב אחד מכריע | placeholder |
+| `T.tagline` | open-case screen, above the form | יש ויכוח? תנו לזבוב להכריע. | placeholder → owner-approved |
 | `T.topic` | open-case form, topic label | על מה הוויכוח? (לא חובה) | placeholder |
 | `T.topicHint` | open-case form, under the topic | הזבוב לא טועם את הנושא, הוא רק יופיע בפסק הדין | placeholder |
 | `T.yourName` | open-case form, A's name label | השם שלך | placeholder |
@@ -46,18 +46,18 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `T.timeLeft` | A's waiting page and B's form, countdown | נשארו {h:mm} שעות להגשה | placeholder |
 | `T.sendToB` | A's waiting page, WhatsApp button | לשלוח לצד השני בוואטסאפ | placeholder |
 | `T.nudgeB` | A's waiting page, WhatsApp button from 1 h | להציק שוב בוואטסאפ | placeholder |
-| `T.invite` | WhatsApp message with B's link | {name A} פתח/ה נגדך תיק בבית המשפט של הזבוב: {topic}. יש לך 3 שעות להגיש טענה. הזבוב מחכה: {link} (": {topic}" only when there is a topic) | placeholder |
-| `T.nudgeText` | WhatsApp nudge message | הזבוב עדיין מחכה לטענה שלך בתיק של {name A}. נשארו {h:mm} שעות: {link} | placeholder |
-| `T.summoned` | B's form, title | {name A} פתח/ה נגדך תיק | placeholder |
+| `T.invite` | WhatsApp message with B's link | 📜 הוגשה נגדך תביעה בבית המשפט העליון לענייני זבובים ⏎ התובע/ת: {name A} ⏎ בעניין: {topic} ⏎ יש לך 3 שעות להגיש טענה, לפני שהשופט נהיה רעב: {link} (no topic: no "בעניין" line) | placeholder → owner-approved |
+| `T.nudgeText` | WhatsApp nudge message | תזכורת מבית המשפט: השופט עדיין מחכה לטענה שלך בתיק של {name A}, והבטן שלו כבר מקרקרת. נשארו {h:mm} שעות: {link} | placeholder → owner-approved |
+| `T.summoned` | B's form, title | הוגשה נגדך תביעה מאת {name A} | placeholder → owner-approved |
 | `T.submitB` | B's submit button | להגיש לזבוב | placeholder |
 | `T.submitting` | B's submit button while sending | מגישים… | placeholder |
 | `T.queued` | story, while waiting in line | התיק ממתין בתור. השופט מסיים דיון אחר… | placeholder |
-| `T.enters` | story, first stage (verdict) | השופט נכנס לאולם | placeholder |
-| `T.entersAppeal` | story, first stage (appeal) | ערעור של {name}! השופט חוזר לאולם | placeholder |
+| `T.enters` | story, first stage (verdict) | כל הקהל קם! כבוד השופט נכנס לאולם | placeholder → owner-approved |
+| `T.entersAppeal` | story, first stage (appeal) | ערעור של {name}! השופט חוזר לאולם, לא מרוצה | placeholder → owner-approved |
 | `T.tasting` | story, tasting stages | טועם את הטענה של {name}… | placeholder |
-| `T.tastingWater` | story, B's tasting in a no-show | הצד השני לא הגיע. טועם כוס מים… | placeholder |
-| `T.deliberating` | story, last stage (cycles) | השופט מתלבט… / שוקל את הטעמים… / עוד רגע ההכרעה… | placeholder |
-| `T.hungry` | story, after the mood line (wait ≥ 0.5 h) | הזבוב רעב כבר {h} שעות. | placeholder |
+| `T.tastingWater` | story, B's tasting in a no-show | הנתבע לא התייצב. השופט טועם כוס מים… | placeholder → owner-approved |
+| `T.deliberating` | story, last stage (cycles) | השופט משפשף את הרגליים… / מזמזם לעצמו בהתלבטות… / עוד רגע ההכרעה… | placeholder → owner-approved |
+| `T.hungry` | story, after the mood line (wait ≥ 0.5 h) | השופט מחכה כבר {h} שעות, והבטן מקרקרת. | placeholder → owner-approved |
 | `T.revealing` | story, live meter reveal | כמה הזבוב רצה לבלוע כל טענה… | placeholder |
 | `T.water` | B's meter name in a no-show | כוס מים | placeholder |
 | `T.appetite` | appetite meters | תיאבון | placeholder |
@@ -70,7 +70,7 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `T.shareVerdict` | verdict, WhatsApp button | לשלוח את פסק הדין | placeholder |
 | `T.shareText` | WhatsApp message with the public card | התיק: {topic} ⏎ {headline} ⏎ {link} | placeholder ("התיק:" part decided, SPEC §7) |
 | `T.newCase` | verdict, notices, public card, /how | לפתוח תיק חדש | placeholder |
-| `T.closed` | "case closed" page | התיק נסגר. אפשר לפתוח תיק חדש | placeholder; same as `views.CLOSED` |
+| `T.closed` | "case closed" page | התיק נסגר והועבר לארכיון. רוצים לפתוח תיק חדש? | placeholder → owner-approved; same as `views.CLOSED` |
 | `T.ownLink` | A's device on B's link | זה הקישור של הצד השני. שלחו אותו אליו | placeholder; same as `views.OWN_LINK` |
 | `T.taken` | another device on B's link after B submitted | התיק כבר בטיפול | decided (SPEC §3, §15.1); same as `views.TAKEN` |
 | `T.notDecided` | public card before a verdict | הזבוב עוד לא פסק בתיק הזה | placeholder; same as `views.NOT_DECIDED`, `og.NOT_DECIDED` |
@@ -153,7 +153,7 @@ not "כ־140".
 
 | Key | Where it appears | Current text | Status |
 |---|---|---|---|
-| `CLOSED` | every closed / wrong / expired / hidden link | התיק נסגר. אפשר לפתוח תיק חדש | placeholder; same as `T.closed` |
+| `CLOSED` | every closed / wrong / expired / hidden link | התיק נסגר והועבר לארכיון. רוצים לפתוח תיק חדש? | placeholder → owner-approved; same as `T.closed` |
 | `TAKEN` | B's link on another device after B submitted | התיק כבר בטיפול | decided (SPEC §15.1); same as `T.taken` |
 | `OWN_LINK` | A's device on B's link | זה הקישור של הצד השני. שלחו אותו אליו | placeholder; same as `T.ownLink` |
 | `LIMIT` | open-case form, 21st case of the day | הזבוב שמע מספיק תיקים מכם היום. נסו שוב מחר | placeholder |
@@ -163,7 +163,7 @@ not "כ־140".
 | `APPEALED` | appeal, second time by the same side | כבר ערערת בתיק הזה | placeholder |
 | `FINAL` | appeal after 3 hearings | הפסק סופי. אין עוד ערעורים בתיק הזה | placeholder |
 | `APPEAL_LATE` | appeal after the 3 h window | עברו 3 שעות מפסק הדין. הפסק סופי | placeholder |
-| `FAILED` | error state (the sim failed 3 times) | משהו השתבש במוח של הזבוב והתיק לא נשמע. אפשר לפתוח תיק חדש | placeholder |
+| `FAILED` | error state (the sim failed 3 times) | השופט התעלף באמצע הדיון. אפשר לפתוח תיק חדש | placeholder → owner-approved |
 
 ## Court — `api/src/borer_api/court.py`
 
@@ -176,7 +176,7 @@ not "כ־140".
 | Key | Where it appears | Current text | Status |
 |---|---|---|---|
 | `SIDES` | inside the messages below | א׳ / ב׳ | placeholder |
-| `BLOCKED` | any field with a listed word (soft block) | הזבוב לא מוכן לטעום מילים כאלה. נסחו את זה אחרת | placeholder |
+| `BLOCKED` | any field with a listed word (soft block) | בית המשפט לא מקבל לשון כזו. נסחו את זה בנימוס | placeholder → owner-approved |
 | topic too long | topic field | נושא התיק ארוך מדי (עד {80} תווים) | placeholder |
 | name missing | name field | חסר שם לצד {א׳/ב׳} | placeholder |
 | name too long | name field | השם של צד {א׳/ב׳} ארוך מדי (עד {30} תווים) | placeholder |
@@ -188,11 +188,11 @@ not "כ־140".
 | Key | Where it appears | Current text | Status |
 |---|---|---|---|
 | `SITE_TITLE` | preview title (start page, /how, A's link, closed) | הבורר | decided (name) |
-| `SITE_TEXT` | preview description, same pages | שני צדדים, טענה אחת לכל צד, זבוב אחד שמכריע. 140 אלף נוירונים של מוח זבוב אמיתי, בלי AI. | placeholder |
+| `SITE_TEXT` | preview description, same pages | יש ויכוח? זבוב אמיתי יכריע. 140 אלף נוירונים, בלי AI. | placeholder → owner-approved |
 | `site()` image lines | site preview image | שני צדדים, זבוב אחד מכריע / בלי AI. רק מוח של זבוב. | placeholder |
-| `teaser()` title | B's link preview title | הבורר · התיק: {topic} (no topic: הבורר · תיק חדש מחכה לך) | placeholder |
-| `teaser()` no-topic line | B's link preview, title and image | תיק חדש מחכה לך | placeholder |
-| `TEASER_TEXT` | B's link preview description and image | פתחו נגדך תיק. הזבוב מחכה לטענה שלך, יש 3 שעות. | placeholder |
+| `teaser()` title | B's link preview title | הבורר · התיק: {topic} (no topic: הבורר · הוגשה נגדך תביעה) | placeholder → owner-approved |
+| `teaser()` no-topic line | B's link preview, title and image | הוגשה נגדך תביעה | placeholder → owner-approved |
+| `TEASER_TEXT` | B's link preview description and image | הוגשה נגדך תביעה. יש לך 3 שעות להתגונן. | placeholder → owner-approved |
 | `NOT_DECIDED` | public card preview before a verdict | הזבוב עוד לא פסק בתיק הזה | placeholder; same as `views.NOT_DECIDED`, `T.notDecided` |
 | `card()` names | public card preview | {name A} נגד {name B} | placeholder; same as `publicModel` names |
 | `card()` topic | public card preview | התיק: {topic} | decided (SPEC §7) |

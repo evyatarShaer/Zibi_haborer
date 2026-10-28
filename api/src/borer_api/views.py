@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from borer_api import tokens, verdicts
 
-CLOSED = "התיק נסגר. אפשר לפתוח תיק חדש"
+CLOSED = "התיק נסגר והועבר לארכיון. רוצים לפתוח תיק חדש?"
 TAKEN = "התיק כבר בטיפול"
 OWN_LINK = "זה הקישור של הצד השני. שלחו אותו אליו"
 LIMIT = "הזבוב שמע מספיק תיקים מכם היום. נסו שוב מחר"
@@ -15,7 +15,7 @@ NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
 APPEALED = "כבר ערערת בתיק הזה"
 FINAL = "הפסק סופי. אין עוד ערעורים בתיק הזה"
 APPEAL_LATE = "עברו 3 שעות מפסק הדין. הפסק סופי"
-FAILED = "משהו השתבש במוח של הזבוב והתיק לא נשמע. אפשר לפתוח תיק חדש"
+FAILED = "השופט התעלף באמצע הדיון. אפשר לפתוח תיק חדש"
 
 NUDGE_AFTER_S = 3600          # A's "nudge again" button (SPEC §3.2)
 APPEAL_WINDOW_S = 3 * 3600    # appeals within 3 h of the latest verdict (§15.4)

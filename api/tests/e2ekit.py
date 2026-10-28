@@ -15,7 +15,7 @@ BASE = f"http://127.0.0.1:{PORT}"
 pytestmark = [pytest.mark.chrome,
               pytest.mark.skipif(not CHROME.exists(), reason="Windows Chrome not found")]
 # Page copy the tests look for (web/js/copy.js; SPEC §7, §8).
-ENTERS, WATER, CLOSED = "השופט נכנס לאולם", "טועם כוס מים", "התיק נסגר. אפשר לפתוח תיק חדש"
+ENTERS, WATER, CLOSED = "השופט נכנס לאולם", "טועם כוס מים", "התיק נסגר והועבר לארכיון. רוצים לפתוח תיק חדש?"
 HEADLINE = {("win", "A"): "פסק הדין: הצדק עם דנה", ("win", "B"): "פסק הדין: הצדק עם יוסי",
             ("dithered", "B"): "אחרי התלבטות קשה... הצדק עם יוסי",
             ("tie", None): "תיקו. הזבוב לא השתכנע מאף אחד",

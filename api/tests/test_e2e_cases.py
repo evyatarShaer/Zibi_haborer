@@ -41,8 +41,8 @@ def test_failed_hearing_ends_in_error(rig):
     url_a, link_b = open_case(a)
     sim.script = ["raise"] * 3
     b_writes(b, link_b)
-    b.wait_text("משהו השתבש במוח של הזבוב", 25)
-    a.wait_text("משהו השתבש במוח של הזבוב", 10)
+    b.wait_text("השופט התעלף באמצע הדיון", 25)
+    a.wait_text("השופט התעלף באמצע הדיון", 10)
     assert b.attr("a.button.primary", "href") == "/" and b.fits()
 
 

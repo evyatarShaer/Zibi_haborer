@@ -12,8 +12,8 @@ import os
 from borer_api import verdicts
 
 SITE_TITLE = "הבורר"
-SITE_TEXT = "שני צדדים, טענה אחת לכל צד, זבוב אחד שמכריע. 140 אלף נוירונים של מוח זבוב אמיתי, בלי AI."
-TEASER_TEXT = "פתחו נגדך תיק. הזבוב מחכה לטענה שלך, יש 3 שעות."
+SITE_TEXT = "יש ויכוח? זבוב אמיתי יכריע. 140 אלף נוירונים, בלי AI."
+TEASER_TEXT = "הוגשה נגדך תביעה. יש לך 3 שעות להתגונן."
 NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
 
 
@@ -23,7 +23,7 @@ def site() -> dict:
 
 
 def teaser(case: dict) -> dict:
-    topic = f"התיק: {case['topic']}" if case["topic"] else "תיק חדש מחכה לך"
+    topic = f"התיק: {case['topic']}" if case["topic"] else "הוגשה נגדך תביעה"
     return {"title": f"{SITE_TITLE} · {topic}", "text": TEASER_TEXT,
             "image": f"/og/t/{case['id']}.png", "lines": [("headline", topic), ("note", TEASER_TEXT)]}
 

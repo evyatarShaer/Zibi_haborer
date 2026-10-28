@@ -7,7 +7,7 @@ from borer_sim.params import TASTE
 
 MAX_TEXT, MAX_NAME, MAX_TOPIC = TASTE["max_chars"], 30, 80
 SIDES = {"a": "א׳", "b": "ב׳"}
-BLOCKED = "הזבוב לא מוכן לטעום מילים כאלה. נסחו את זה אחרת"
+BLOCKED = "בית המשפט לא מקבל לשון כזו. נסחו את זה בנימוס"
 
 
 def problems(topic: str | None, names: dict, texts: dict) -> dict[str, str]:
