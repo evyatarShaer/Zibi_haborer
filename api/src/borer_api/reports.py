@@ -22,13 +22,15 @@ class Reports:
             return True
 
     def shared(self, cid: str) -> bool:
-        """A "send the verdict" tap: the first one sets shared_at and counts the case once in
-        cases_shared; later taps (either side, any device) change nothing."""
+        """A "send the verdict" tap: the first one sets shared_at and counts the case once,
+        in cases_shared (both sides wrote) or no_shows_shared; later taps (either side, any
+        device) change nothing."""
         with self._tx():
             if self._run('UPDATE "case" SET shared_at = ? WHERE id = ? AND shared_at IS NULL',
                          (self.clock(), cid)) != 1:
                 return False
-            self.bump("cases_shared")
+            no_show = self._one('SELECT text_b IS NULL AS n FROM "case" WHERE id = ?', (cid,))["n"]
+            self.bump("no_shows_shared" if no_show else "cases_shared")
             return True
 
     def reported(self) -> list[dict]:

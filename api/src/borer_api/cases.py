@@ -164,9 +164,7 @@ class Store(Reports, Db):
             first = self._one('SELECT h.n, c.text_b FROM hearing h JOIN "case" c '
                               "ON c.id = h.case_id WHERE h.id = ?", (hid,))
             if first["n"] == 0:  # the case's first verdict (counters, SPEC §12)
-                self.bump("cases_decided")
-                if first["text_b"] is None:
-                    self.bump("no_shows")
+                self.bump("no_shows" if first["text_b"] is None else "cases_decided")
 
     def fail(self, hid: int) -> None:
         """The hearing could not be run: it is failed and its case ends in error."""

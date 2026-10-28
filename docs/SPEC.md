@@ -267,7 +267,10 @@ Phase 2B, SQLite (§11). The 2A `hearing` table (§14) grows into:
 - **report:** `id`, `case_id`, `created_at`.
 - **counter:** `day`, `event`, `count`. These are aggregate numbers with
   no case data or ids. They survive the 7-day deletion so that the 2B
-  exit criterion can be measured (§12).
+  exit criterion can be measured (§12). Events: `cases_opened`;
+  `cases_decided` and `cases_shared` (cases where both sides wrote: the
+  first verdict, the first "send the verdict" tap); `no_shows` and
+  `no_shows_shared` (the same for no-shows); `appeals`; `reports`.
 
 Everything except `counter` is deleted 7 days after case open.
 
@@ -348,8 +351,10 @@ determinism check are 2B tasks.
    - production-host timing.
    **Exit:**
    - **20 real cases** in friends' groups, **≥ half shared onward**: of
-     the decided cases, at least half had "send the verdict" tapped at
-     least once (server-side counter, §10).
+     the decided cases **where both sides submitted**, at least half had
+     "send the verdict" tapped at least once (server-side counter, §10).
+     No-shows are reported on a line of their own and do not count
+     toward either number (2026-10-28).
    - On the production host: hearing ≤ 15 s (submit → verdict) and
      bit-identical determinism.
 4. **Phase 3** — public defender, group bets, case history, verdict

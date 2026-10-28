@@ -30,10 +30,10 @@ def test_every_event_is_counted(client, clock, sim):
     client.post(f"/api/a/{opened[0]['a']}/appeal")  # appeal
     settled(client, f"/api/a/{opened[0]['a']}", 1)
     client.post(f"/api/c/{opened[0]['case_id']}/report")  # report
-    clock.t += 3 * 3600  # opened[1] and [2] are no-shows (also decided)
+    clock.t += 3 * 3600  # opened[1] and [2] are no-shows, counted apart from decided
     for c in opened[1:]:
         settled(client, f"/api/a/{c['a']}", 0)
-    assert counts(client) == {"cases_opened": 3, "cases_decided": 3, "no_shows": 2,
+    assert counts(client) == {"cases_opened": 3, "cases_decided": 1, "no_shows": 2,
                               "appeals": 1, "reports": 1}
     assert len(sim.calls) == 4  # an appeal's verdict is not a new decided case
 
@@ -51,15 +51,22 @@ def test_counter_table_holds_no_case_data(client, tmp_path):
     assert case["case_id"] not in dump and "דנה" not in dump and TEXT_B not in dump
 
 
-def test_admin_prints_counters_and_the_exit_share(client, tmp_path, capsys):
+def test_admin_prints_the_exit_share_and_no_shows_apart(client, clock, tmp_path, capsys):
+    """The exit measure counts only cases where both sides wrote; no-shows get their own line."""
     for i in range(2):
         case = open_case(client)
         decided(client, case)
         if i == 0:
             client.post(f"/api/a/{case['a']}/shared")
+    gone = open_case(client)
+    clock.t += 3 * 3600
+    settled(client, f"/api/a/{gone['a']}", 0)
+    assert client.post(f"/api/a/{gone['a']}/shared").json() == {"first": True}
+    assert counts(client)["no_shows_shared"] == 1 and counts(client)["cases_shared"] == 1
     assert admin.main(["counters", "--db", str(tmp_path / "c.sqlite3")]) == 0
     out = capsys.readouterr().out
-    assert "cases_shared" in out and "shared / decided: 1 / 2 = 50%" in out
+    assert "both sides wrote, shared / decided: 1 / 2 = 50%" in out
+    assert "no-shows, shared / decided: 1 / 1 = 100%" in out
 
 
 def test_busy_appeal_counts_nothing(client, sim):

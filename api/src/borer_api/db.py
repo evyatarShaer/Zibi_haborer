@@ -12,7 +12,9 @@ from contextlib import contextmanager
 
 RETENTION_S = 7 * 24 * 3600
 # Aggregate counters per UTC day (SPEC §10, §12; P2B-11): kept past the purge, no case data.
-EVENTS = ("cases_opened", "cases_decided", "no_shows", "appeals", "reports", "cases_shared")
+# "cases_*" are cases where both sides wrote (the exit measure); no-shows are counted apart.
+EVENTS = ("cases_opened", "cases_decided", "cases_shared", "no_shows", "no_shows_shared",
+          "appeals", "reports")
 JSON_COLUMNS = ("metrics", "brain")
 
 SCHEMA = """

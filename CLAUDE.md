@@ -16,6 +16,13 @@ fly's choice is the verdict — the humor is the point.
   spec edits — is committed as soon as it forms one coherent step. One
   logical step per commit, clear message. Push after every commit.
   Never end a turn with uncommitted changes (a Stop hook enforces this).
+- **Run the full test suite before every commit.** `cd api && uv run
+  pytest` (all api tests; add `cd sim && uv run pytest` when `sim/`
+  changed), **plus `uv run pytest -m chrome` whenever `web/` changed**
+  (or anything a page shows: routes, views, verdict text). Commit only
+  when they pass; if a run fails because the host stalled, rerun it and
+  say so in the commit. Never let a pipe (`| tail`) hide pytest's exit
+  status in a commit chain.
 - **GitHub via MCP.** The repo is connected through the `github` MCP
   server (`.mcp.json`, token from the `GITHUB_PERSONAL_ACCESS_TOKEN` env
   var). Use it for issues, PRs and repo lookups; use plain `git` for

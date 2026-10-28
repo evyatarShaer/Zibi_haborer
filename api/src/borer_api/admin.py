@@ -3,7 +3,7 @@
   python -m borer_api.admin list              reported or hidden cases, with their texts
   python -m borer_api.admin delete <case id>  delete a case and everything in it
   python -m borer_api.admin restore <case id> make a hidden case visible again
-  python -m borer_api.admin counters          the daily share counters and the 2B exit share
+  python -m borer_api.admin counters          the daily counters, the 2B exit share, no-shows
 
 Run: cd api && PYTHONPATH=src:../sim/src uv run python -m borer_api.admin ... [--db path]
 """
@@ -31,9 +31,13 @@ def listing(store: Store) -> list[str]:
     return out or ["no reported or hidden cases"]
 
 
+def ratio(shared: int, decided: int) -> str:
+    return f"{shared} / {decided} = {shared / decided:.0%}" if decided else f"{shared} / 0 = -"
+
+
 def counter_table(store: Store) -> list[str]:
-    """One row per UTC day, a total row, and the share of decided cases that were shared
-    (SPEC §12: at least half)."""
+    """One row per UTC day, a total row, the exit measure (SPEC §12: of the decided cases
+    where both sides wrote, at least half shared) and the no-shows on a line of their own."""
     days: dict[str, dict] = {}
     for r in store.counters():
         days.setdefault(r["day"], {})[r["event"]] = r["count"]
@@ -42,9 +46,10 @@ def counter_table(store: Store) -> list[str]:
     rows = [row("day", *EVENTS)]
     rows += [row(day, *(d.get(e, 0) for e in EVENTS)) for day, d in sorted(days.items())]
     rows.append(row("total", *total.values()))
-    decided = total["cases_decided"]
-    share = f"{total['cases_shared'] / decided:.0%}" if decided else "-"
-    return rows + [f"shared / decided: {total['cases_shared']} / {decided} = {share}"]
+    both = ratio(total["cases_shared"], total["cases_decided"])
+    alone = ratio(total["no_shows_shared"], total["no_shows"])
+    return rows + [f"both sides wrote, shared / decided: {both}  (exit: >= 50%)",
+                   f"no-shows, shared / decided: {alone}"]
 
 
 def main(argv: list[str]) -> int:
@@ -64,7 +69,8 @@ def main(argv: list[str]) -> int:
             print("\n".join((listing if args.command == "list" else counter_table)(store)))
             return 0
         done = getattr(store, args.command)(args.case_id)
-        print(f"{args.command} {args.case_id}: {'done' if done else 'no such case (or not hidden)'}")
+        result = "done" if done else "no such case (or not hidden)"
+        print(f"{args.command} {args.case_id}: {result}")
         return 0 if done else 1
     finally:
         store.close()

@@ -2503,3 +2503,30 @@ event; say if you want that.
 
 **Impacts:** `api/src/borer_api/{db,cases,reports,routes,admin}.py`,
 `web/js/{api,verdict,casepage}.js`, `api/tests`; TASKS P2B-11.
+
+---
+
+## 2026-10-28 — Exit share over two-sided cases only; no-shows apart (owner)
+
+**Decision:** the SPEC §12 measure ("≥ half shared onward") is **shared
+÷ decided over cases where both sides submitted**. No-shows are counted
+and printed on a separate line and don't enter the measure.
+
+**Built:**
+- Counter events (supersedes the P2B-11 choice):
+  - `cases_decided`, `cases_shared`: two-sided cases only;
+  - new `no_shows_shared`, next to `no_shows`.
+  - Each case still counts once, in one of the two pairs, at its first
+    verdict and its first "send the verdict" tap.
+- `python -m borer_api.admin counters` ends with:
+  - `both sides wrote, shared / decided: S / D = P%  (exit: >= 50%)`
+  - `no-shows, shared / decided: s / d = p%`
+- Tests: `test_counters.py`.
+
+**Also:** CLAUDE.md now requires the full test suite before every commit:
+api, sim when `sim/` changed, and `-m chrome` when `web/` changed. A
+commit on 2026-10-27 went in with a failing test that a `| tail` had
+hidden.
+
+**Impacts:** SPEC §10, §12; `api/src/borer_api/{db,cases,reports,admin}.py`;
+`api/tests/test_counters.py`; CLAUDE.md.
