@@ -2573,3 +2573,50 @@ production host.
 
 **Impacts:** SPEC §12; TASKS 2B exit, P2B-2, P2B-3, P2B-12, P2B-13;
 CLAUDE.md; `scripts/beta.sh`.
+
+---
+
+## 2026-10-29 — UI refresh within the current stack (owner)
+
+**Context:** before the friends beta, the owner approved a full visual
+refresh of `web/` from a redesign plan, **without changing the stack**:
+static HTML + ES modules, no build step, no framework, Heebo, the
+courtroom identity. Tailwind and Framer Motion were proposed and
+rejected. Tailwind needs a build step, Framer Motion needs React, and
+Inter has no Hebrew letters.
+
+**Decision (owner):**
+- **Design tokens** in `web/css/tokens.css` (colours, radii, shadows,
+  timings, type scale). The other stylesheets use only tokens. CSS is
+  split by concern (`tokens`, `base`, `components`, `states`, `lab`),
+  each under 200 lines.
+- **Night-court dark theme.** It follows the system setting, and a
+  header toggle overrides it, saved per device in `localStorage`. An
+  inline script in `<head>` sets the theme before the first paint, so
+  the wrong theme never flashes.
+- **Sticky glass header** with the brand, a `[?]` link to `/how` and the
+  theme toggle. **Compact hero** on `/` above the open-case form; the
+  form's submit is the call to action.
+- **Form controls:** side cards, focus rings, a progress bar under each
+  argument counter, a spinner on busy buttons, 44 px tap targets,
+  logical properties only (RTL).
+- **Icons:** Lucide (ISC licence) paths inlined in `web/js/icons.js`,
+  plus a WhatsApp glyph. No CDN, no icon font.
+- **States:** a skeleton while a case page loads, a progress rail in
+  the waiting story, a staged verdict reveal (headline, then meters,
+  then the winner's mark), toasts for transient events, View
+  Transitions where the browser has them. Everything moves only with
+  CSS and stops under `prefers-reduced-motion`.
+- **Judge fly:** an original cartoon fruit fly in a judge's wig and
+  robe replaces the 🪰/⚖️ emoji. It has nine poses, one SVG each in
+  `web/img/fly/`, so the owner can swap in their own art without code
+  changes. The same poses, rendered to PNG, go into the preview images.
+- **WCAG AA** contrast for text in both themes.
+- New Hebrew strings are placeholders in `docs/COPY.md`.
+
+**Unchanged:** the class names the scripts and the Chrome tests use; no
+user text through `innerHTML`; ES2019 in modules Node tests.
+
+**Impacts:** `web/` (all stylesheets, most screens), `web/img/fly/`,
+`api/src/borer_api/ogimage.py` + `og.py` (fly poses), the golden
+preview image, `docs/COPY.md`, `docs/screenshots/ui-refresh/`.

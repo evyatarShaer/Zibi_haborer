@@ -1,0 +1,36 @@
+/* Design tokens (DECISIONS 2026-10-29, UI refresh). Every colour, radius, shadow and
+   timing the pages use comes from here; the night-court theme redefines the colours. */
+:root {
+  --bg: #fbf6ec;
+  --surface: #ffffff;
+  --surface-2: #fbf6ec;
+  --ink: #2b2118;
+  --muted: #7a6a58;
+  --line: #e4d8c3;
+  --brand: #5b3a24;
+  --brand-2: #3e2716;
+  --brand-ink: #ffffff;
+  --accent: #c99a2e;
+  --win: #2f7d4f;
+  --win-bg: #e6f2ea;
+  --error: #b3261e;
+  --side-a: #3b6ea8;
+  --side-b: #a8483b;
+  --wa: #1f8f4e;
+  --wa-ink: #ffffff;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-1: 0 2px 8px rgb(62 39 22 / 0.08);
+  --shadow-2: 0 8px 28px rgb(36 26 18 / 0.14);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 150ms;
+  --t: 250ms;
+
+  --fs-xs: 0.78rem;
+  --fs-sm: 0.9rem;
+  --fs-base: 1rem;
+  --fs-lg: 1.2rem;
+  --fs-xl: 1.45rem;
+  --fs-hero: clamp(1.6rem, 6vw, 2rem);
+}

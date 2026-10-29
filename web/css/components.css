@@ -1,0 +1,53 @@
+/* Screens: the judge, the waiting story, verdict and meters, /how. */
+
+.judge { font-size: 3.5rem; text-align: center; line-height: 1.2; }
+.buzz { animation: buzz 0.9s ease-in-out infinite; }
+@keyframes buzz {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(-6px, -3px) rotate(-8deg); }
+  50% { transform: translate(5px, 2px) rotate(6deg); }
+  75% { transform: translate(-3px, 4px) rotate(-4deg); }
+}
+
+.waiting { text-align: center; }
+.stage-title { font-size: 1.25rem; font-weight: 700; margin: 12px 0 4px; }
+.stage-line { color: var(--muted); margin: 0; min-height: 1.5em; }
+.dots { display: flex; justify-content: center; gap: 6px; margin: 14px 0 4px; }
+.dots span {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+
+.verdict .topic { text-align: center; color: var(--muted); font-weight: 500; margin: 4px 0 0; }
+.verdict .headline { text-align: center; font-size: 1.45rem; font-weight: 800; margin: 6px 0 16px; }
+.meter { margin-bottom: 14px; }
+.meter-head { display: flex; justify-content: space-between; gap: 8px; }
+.bar { height: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
+.fill { height: 100%; background: var(--muted); border-radius: 8px; transition: width 0.8s ease-out; }
+.meter.winner .fill { background: var(--win); }
+.live-meters { margin: 14px 0 0; text-align: start; }
+.live-meters .fill { background: var(--accent); transition: width 0.25s linear; }
+.meter.winner strong::after { content: " ⚖️"; }
+.argument { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
+.actions { margin-top: 8px; }
+.history { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 4px 0 0; }
+.names { text-align: center; font-weight: 500; margin: 2px 0 0; }
+.countdown { color: var(--muted); margin: 0; }
+.center { text-align: center; }
+.note { text-align: center; color: var(--muted); font-size: 0.75rem; margin: 12px 0 0; }
+.waiting .topic { color: var(--muted); font-weight: 500; margin: 4px 0 0; }
+.waiting .argument { margin-top: 14px; }
+.report.sure { color: var(--error); border-color: var(--error); }
+
+@media (prefers-reduced-motion: reduce) {
+  .buzz, .dots span { animation: none; }
+}
+
+.how h2 { margin: 0 0 4px; }
+.how h3 { margin: 16px 0 2px; color: var(--brand); font-size: 1.05rem; }
+.how p { margin: 0; }
+.credits { padding-inline-start: 18px; font-size: 0.8rem; text-align: left; overflow-wrap: anywhere; }
+.credits a { color: var(--brand); }

@@ -89,7 +89,7 @@ def test_page_and_modules_served(tmp_path):
         for path in ("/a/tok", "/b/tok", "/c/id1", "/how"):  # personal, public, how it works
             assert 'src="/js/app.js"' in c.get(path).text  # same page; preview tags: test_og.py
         assert c.get("/x/tok").status_code == 404
-        for f in sorted(JS.glob("*.js")) + [ROOT / "web" / "css" / "app.css"]:
+        for f in sorted(JS.glob("*.js")) + sorted((ROOT / "web" / "css").glob("*.css")):
             r = c.get("/" + f.relative_to(ROOT / "web").as_posix())
             assert r.status_code == 200 and ("javascript" in r.headers["content-type"] or f.suffix == ".css")
         imports = {m for f in JS.glob("*.js") for m in re.findall(r'from "\./([\w.]+)"', f.read_text())}
