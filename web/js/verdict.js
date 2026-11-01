@@ -7,7 +7,7 @@ import { el, show } from "./dom.js";
 import { T, topicLine } from "./copy.js";
 import { appealLine, clock, shareVerdict } from "./flow.js";
 import { flyImg, outcomePose } from "./fly.js";
-import { icon } from "./icons.js";
+import { icon, setLabel, withIcon } from "./icons.js";
 import { hasMeters, shares } from "./meters.js";
 
 // Pure (tested in Node): what the screen shows for hearing `n` of a personal view.
@@ -43,15 +43,17 @@ export function meterNode(m, bar = true) {
 export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain, onShared }) {
   const v = verdictModel(view, n);
   const message = el("p", { class: "error", "aria-live": "polite" });
-  const appeal = v.canAppeal ? el("button", { class: "secondary appeal" }, T.appeal) : null;
+  const appeal = v.canAppeal ? el("button", { class: "secondary appeal" }, withIcon("again", T.appeal)) : null;
   if (appeal) {
     appeal.addEventListener("click", async () => {
       appeal.disabled = true;
-      appeal.textContent = T.appealing;
+      appeal.classList.add("busy");
+      setLabel(appeal, T.appealing);
       const error = await onAppeal();
       if (!error) return;
       message.textContent = error;
-      appeal.textContent = T.appeal;
+      appeal.classList.remove("busy");
+      setLabel(appeal, T.appeal);
       appeal.disabled = false;
     });
   }
@@ -64,10 +66,10 @@ export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain, o
     v.history ? el("p", { class: "history" }, v.history, v.final ? ` · ${T.final}` : "") : null,
     el("div", { class: "actions" },
       el("a", { class: "button wa share", href: shareVerdict(view, view.hearings[n], publicUrl),
-        target: "_blank", rel: "noopener", onclick: onShared }, T.shareVerdict),
+        target: "_blank", rel: "noopener", onclick: onShared }, withIcon("whatsapp", T.shareVerdict)),
       appeal, v.appealLeft ? el("p", { class: "hint center" }, v.appealLeft) : null, message,
       brainToggle({ name_a: view.name_a, name_b: v.meters[1].name }, loadBrain),
-      el("a", { class: "button secondary", href: "/" }, T.newCase)),
+      el("a", { class: "button secondary", href: "/" }, withIcon("plus", T.newCase))),
     el("p", { class: "note" }, T.personal)));
   return { update: () => {}, stop: () => {} };
 }

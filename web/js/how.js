@@ -4,6 +4,7 @@
 // The Hebrew text is placeholder copy for the owner.
 import { el, show } from "./dom.js";
 import { T } from "./copy.js";
+import { withIcon } from "./icons.js";
 
 export const HOW = {
   sections: [
@@ -45,5 +46,5 @@ export function howPage(root) {
     el("ul", { class: "credits", dir: "ltr" }, HOW.credits.map(([who, what, doi]) =>
       el("li", {}, `${who}, ${what}. `, el("a", { href: `https://doi.org/${doi}`,
         target: "_blank", rel: "noopener" }, `doi:${doi}`)))),
-    el("a", { class: "button primary", href: "/" }, T.newCase)));
+    el("a", { class: "button primary", href: "/" }, withIcon("plus", T.newCase))));
 }

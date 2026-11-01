@@ -5,6 +5,8 @@
 import { el, show } from "./dom.js";
 import { openCase } from "./api.js";
 import { T } from "./copy.js";
+import { flyImg } from "./fly.js";
+import { icon, setLabel, withIcon } from "./icons.js";
 import { MAX_CHARS, MIN_LETTERS, argumentOk, chars, hebrewLetters } from "./letters.js";
 
 const MAX_NAME = 30;
@@ -19,33 +21,43 @@ export function field(label, input, hint) {
 export function argumentField(label, name) {
   const text = el("textarea", { name, rows: 4, placeholder: T.argumentPlaceholder });
   const count = el("p", { class: "counter" });
+  const fill = el("i");
+  const progress = el("div", { class: "progress", "aria-hidden": "true" }, fill);
   const update = () => {
-    const n = hebrewLetters(text.value);
-    count.textContent = `${T.letters(Math.min(n, MIN_LETTERS), MIN_LETTERS)} · ${T.chars(chars(text.value), MAX_CHARS)}`;
-    count.classList.toggle("ok", argumentOk(text.value));
+    const n = Math.min(hebrewLetters(text.value), MIN_LETTERS), ok = argumentOk(text.value);
+    count.textContent = `${T.letters(n, MIN_LETTERS)} · ${T.chars(chars(text.value), MAX_CHARS)}`;
+    fill.style.width = `${(100 * n) / MIN_LETTERS}%`;
+    count.classList.toggle("ok", ok);
+    progress.classList.toggle("ok", ok);
   };
   text.addEventListener("input", update);
   update();
-  return { ...field(label, text, count), valid: () => argumentOk(text.value) };
+  return { ...field(label, text, [progress, count]), valid: () => argumentOk(text.value) };
 }
 
 // A form whose submit(body) resolves to {errors} / {message} or never (it navigated).
-export function form(fields, button, collect, submit, busy = T.opening) {
+// `layout`: the form's content when the fields are grouped (default: the fields in order).
+export function form(fields, button, collect, submit, busy = T.opening, layout = null) {
   const message = el("p", { class: "error", "aria-live": "polite" });
   const label = button.textContent;
   const refresh = () => { button.disabled = !Object.values(fields).every((f) => !f.valid || f.valid()); };
   const node = el("form", { class: "card", novalidate: true, oninput: refresh },
-    Object.values(fields).map((f) => f.node), button, message);
+    layout || Object.values(fields).map((f) => f.node), button, message);
   node.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (button.disabled) return;
     button.disabled = true;
-    button.textContent = busy;
+    button.classList.add("busy");
+    setLabel(button, busy);
     const out = await submit(collect());
     const errors = out.errors || {};
-    for (const [k, f] of Object.entries(fields)) f.error.textContent = errors[k] || "";
+    for (const [k, f] of Object.entries(fields)) {
+      f.error.textContent = errors[k] || "";
+      f.node.classList.toggle("invalid", Boolean(errors[k]));
+    }
     message.textContent = out.message || "";
-    button.textContent = label;
+    button.classList.remove("busy");
+    setLabel(button, label);
     refresh();
   });
   refresh();
@@ -75,7 +87,11 @@ export function openCaseScreen(root) {
   fields.text_a.node.append(el("p", { class: "hint" }, T.blindHint));
   const collect = () => Object.fromEntries(Object.entries(fields).map(([k, f]) => [k, f.input.value]));
   const submit = async (body) => feedback(await openCase(body), (d) => { location.assign(d.link_a); });
-  show(root, el("p", { class: "tagline" }, T.tagline),
-    form(fields, el("button", { type: "submit", class: "primary" }, T.open), collect, submit));
+  const side = (cls, legend, ...nodes) => el("fieldset", { class: `side ${cls}` }, el("legend", {}, legend), nodes);
+  show(root, el("section", { class: "hero" }, flyImg("seated", 140), el("h1", { class: "tagline" }, T.tagline),
+    el("p", { class: "chip" }, icon("pulse"), T.trust)),
+  form(fields, el("button", { type: "submit", class: "primary" }, withIcon("gavel", T.open)), collect, submit,
+    T.opening, [fields.topic.node, side("side-a", T.sideA, fields.name_a.node, fields.text_a.node),
+      side("side-b", T.sideB, fields.name_b.node)]));
   return { update: () => {}, stop: () => {} };
 }

@@ -5,6 +5,7 @@ import { el, show } from "./dom.js";
 import { getPublic, postReport } from "./api.js";
 import { T, topicLine } from "./copy.js";
 import { flyImg, outcomePose } from "./fly.js";
+import { setLabel, withIcon } from "./icons.js";
 import { noticeScreen } from "./notice.js";
 
 // Pure (tested in Node).
@@ -21,11 +22,11 @@ export function publicModel(c) {
 }
 
 function reportButton(id, root) {
-  const b = el("button", { class: "secondary report" }, T.report);
+  const b = el("button", { class: "secondary report" }, withIcon("flag", T.report));
   b.addEventListener("click", async () => {
     if (!b.classList.contains("sure")) {
       b.classList.add("sure");
-      b.textContent = T.reportSure;
+      setLabel(b, T.reportSure);
       return;
     }
     b.disabled = true;
@@ -51,7 +52,7 @@ export function publicCard(root, card) {
     el("p", { class: "names" }, m.names),
     el("h2", { class: "headline" }, m.headline),
     m.history ? el("p", { class: "history" }, m.history) : null,
-    el("div", { class: "actions" }, el("a", { class: "button primary", href: "/" }, T.newCase),
+    el("div", { class: "actions" }, el("a", { class: "button primary", href: "/" }, withIcon("plus", T.newCase)),
       reportButton(id, root))));
   return { update: () => {}, stop: () => {} };
 }

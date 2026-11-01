@@ -2,6 +2,7 @@
 // summary is fetched once, on the first open; the drawing comes from lab.js.
 import { el, svg } from "./dom.js";
 import { LAB, T } from "./copy.js";
+import { setLabel, withIcon } from "./icons.js";
 import { CHART, labModel } from "./lab.js";
 
 const SIDES = ["a", "b"];
@@ -53,21 +54,23 @@ export function labView(b, h) {
 export function brainToggle(h, load) {
   const slot = el("div");
   let open = false, loaded = null;
-  const button = el("button", { class: "secondary brain-toggle", "aria-expanded": "false" }, T.brain);
+  const button = el("button", { class: "secondary brain-toggle", "aria-expanded": "false" }, withIcon("pulse", T.brain));
   const set = (isOpen) => {
     open = isOpen;
-    button.textContent = open ? T.brainHide : T.brain;
+    setLabel(button, open ? T.brainHide : T.brain);
     button.setAttribute("aria-expanded", String(open));
     slot.replaceChildren(...(open && loaded ? [loaded] : []));
   };
   button.addEventListener("click", async () => {
     if (open || loaded) return set(!open);
     button.disabled = true;
-    button.textContent = T.brainLoading;
+    button.classList.add("busy");
+    setLabel(button, T.brainLoading);
     const r = await load();
     button.disabled = false;
+    button.classList.remove("busy");
     if (r.status !== 200) {
-      button.textContent = T.brain;
+      setLabel(button, T.brain);
       slot.replaceChildren(el("p", { class: "error" }, r.data.error || LAB.error));
       return;
     }

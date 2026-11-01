@@ -1,6 +1,6 @@
 // Icons (DECISIONS 2026-10-29): Lucide (ISC licence, lucide.dev) shapes inlined, plus a
 // chat-bubble-and-phone glyph for WhatsApp buttons. 24 × 24, stroked in currentColor.
-import { svg } from "./dom.js";
+import { el, svg } from "./dom.js";
 
 const P = (d) => ["path", { d }];
 const C = (cx, cy, r) => ["circle", { cx, cy, r }];
@@ -29,6 +29,12 @@ export const ICONS = {
     "M2 8.82a15 15 0 0 1 4.18-2.65M22 8.82a15 15 0 0 0-11.29-3.76M2 2l20 20")],
   whatsapp: [P("M7.9 20A9 9 0 1 0 4 16.1L2 22Z"), ["path", { d: PHONE, transform: "translate(6.9 6.9) scale(.42)" }]],
 };
+
+// A button's content: its icon, then a label that setLabel() can change later.
+export const withIcon = (name, text) => [icon(name), el("span", { class: "label" }, text)];
+export function setLabel(node, text) {
+  (node.querySelector(".label") || node).textContent = text;
+}
 
 export const icon = (name, cls = "icon") =>
   svg("svg", { class: cls, viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },

@@ -1,14 +1,69 @@
-/* Screens: the judge, the waiting story, verdict and meters, /how. */
-.tagline { text-align: center; color: var(--muted); margin: 0 0 12px; }
-
+/* Screens: the judge fly, the hero, the waiting story, verdict and meters, /how. */
 .judge {
   display: block; width: 124px; height: 124px; margin: 0 auto 4px;
   background: radial-gradient(circle at 50% 54%, var(--halo) 0 60%, transparent 61%);
 }
 
+.hero { text-align: center; }
+.hero .judge { width: 140px; height: 140px; }
+.hero h1, .tagline { margin: 2px 0 8px; font-size: var(--fs-hero); font-weight: 800; line-height: 1.2; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; font-size: var(--fs-sm);
+  font-weight: 500; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+}
+.chip .icon { color: var(--brand-text); }
+
 .waiting { text-align: center; }
-.stage-title { font-size: 1.25rem; font-weight: 700; margin: 12px 0 4px; }
-.stage-line { color: var(--muted); margin: 0; min-height: 1.5em; }
+.stage-title { margin: 12px 0 4px; font-size: var(--fs-lg); font-weight: 700; }
+.stage-line { min-height: 1.5em; margin: 0; color: var(--muted); }
+.waiting .topic { margin: 4px 0 0; font-weight: 500; color: var(--muted); }
+.waiting .argument { margin-top: 14px; }
+.countdown { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; color: var(--muted); }
+
+/* The story's progress rail: queued, the judge enters, tasting A, tasting B, deliberating. */
+.rail { display: flex; gap: 6px; margin: 16px 0 4px; padding: 0; list-style: none; }
+.rail li { flex: 1; min-width: 0; font-size: var(--fs-xs); color: var(--muted); }
+.rail li::before {
+  content: ""; display: block; height: 5px; margin-bottom: 4px; background: var(--line); border-radius: 999px;
+  transition: background-color var(--t) var(--ease);
+}
+.rail li span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rail li.done::before { background: var(--accent); }
+.rail li.now { font-weight: 700; color: var(--ink); }
+.rail li.now::before { background: var(--accent); animation: glow 1.2s ease-in-out infinite; }
+@keyframes glow { 50% { opacity: 0.35; } }
+
+.verdict .topic { margin: 4px 0 0; text-align: center; font-weight: 500; color: var(--muted); }
+.verdict .headline { margin: 6px 0 18px; text-align: center; font-size: var(--fs-xl); font-weight: 800; line-height: 1.3; }
+.names { margin: 2px 0 0; text-align: center; font-weight: 500; }
+.history { margin: 4px 0 0; text-align: center; font-size: var(--fs-sm); color: var(--muted); }
+.appeal-result {
+  margin: 0 0 4px; padding: 8px; text-align: center; font-size: 1.15rem; font-weight: 800;
+  color: var(--brand-text); background: var(--surface-2); border-radius: var(--radius-sm);
+}
+.appeal-result.accepted { color: var(--win); background: var(--win-bg); }
+
+.meter { margin-bottom: 16px; text-align: start; }
+.meter-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.meter-head strong { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.meter-head .share { flex: none; font-size: var(--fs-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 12px; margin-top: 6px; overflow: hidden; background: var(--surface-2); border-radius: 999px; }
+.fill { width: 0; height: 100%; background: var(--muted); border-radius: inherit; transition: width 0.8s var(--ease); }
+.meter.winner .fill { background: var(--win); }
+.winner-mark { color: var(--win); }
+.live-meters { margin: 14px 0 0; }
+.live-meters .fill { background: var(--accent); transition: width 0.25s linear; }
+.argument { margin: 6px 0 0; font-size: var(--fs-sm); color: var(--muted); overflow-wrap: anywhere; }
+.actions { margin-top: 8px; }
+.center { text-align: center; }
+.note { margin: 12px 0 0; text-align: center; font-size: var(--fs-xs); color: var(--muted); }
+.report.sure { color: var(--error); border-color: var(--error); }
+
+.how h2 { margin: 0 0 4px; }
+.how h3 { margin: 16px 0 2px; font-size: 1.05rem; color: var(--brand-text); }
+.how p { margin: 0; }
+.credits { padding-inline-start: 18px; font-size: var(--fs-xs); text-align: left; overflow-wrap: anywhere; }
+
 .dots { display: flex; justify-content: center; gap: 6px; margin: 14px 0 4px; }
 .dots span {
   width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
@@ -17,34 +72,4 @@
 .dots span:nth-child(2) { animation-delay: 0.2s; }
 .dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes pulse { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
-
-.verdict .topic { text-align: center; color: var(--muted); font-weight: 500; margin: 4px 0 0; }
-.verdict .headline { text-align: center; font-size: 1.45rem; font-weight: 800; margin: 6px 0 16px; }
-.meter { margin-bottom: 14px; }
-.meter-head { display: flex; justify-content: space-between; gap: 8px; }
-.bar { height: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
-.fill { height: 100%; background: var(--muted); border-radius: 8px; transition: width 0.8s ease-out; }
-.meter.winner .fill { background: var(--win); }
-.live-meters { margin: 14px 0 0; text-align: start; }
-.live-meters .fill { background: var(--accent); transition: width 0.25s linear; }
-.winner-mark { color: var(--win); }
-.argument { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
-.actions { margin-top: 8px; }
-.history { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 4px 0 0; }
-.names { text-align: center; font-weight: 500; margin: 2px 0 0; }
-.countdown { color: var(--muted); margin: 0; }
-.center { text-align: center; }
-.note { text-align: center; color: var(--muted); font-size: 0.75rem; margin: 12px 0 0; }
-.waiting .topic { color: var(--muted); font-weight: 500; margin: 4px 0 0; }
-.waiting .argument { margin-top: 14px; }
-.report.sure { color: var(--error); border-color: var(--error); }
-
-@media (prefers-reduced-motion: reduce) {
-  .dots span { animation: none; }
-}
-
-.how h2 { margin: 0 0 4px; }
-.how h3 { margin: 16px 0 2px; color: var(--brand-text); font-size: 1.05rem; }
-.how p { margin: 0; }
-.credits { padding-inline-start: 18px; font-size: 0.8rem; text-align: left; overflow-wrap: anywhere; }
-.credits a { color: var(--brand-text); }
+@media (prefers-reduced-motion: reduce) { .dots span { animation: none; } }

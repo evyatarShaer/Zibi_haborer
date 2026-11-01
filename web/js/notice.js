@@ -3,11 +3,12 @@
 import { el, show } from "./dom.js";
 import { T } from "./copy.js";
 import { flyImg, noticePose } from "./fly.js";
+import { withIcon } from "./icons.js";
 
 export function noticeScreen(root, message, kind) {
   show(root, el("section", { class: `card waiting notice notice-${kind}` },
     flyImg(noticePose(kind)),
     el("p", { class: "stage-title" }, message),
-    el("a", { class: "button primary", href: "/" }, T.newCase)));
+    el("a", { class: "button primary", href: "/" }, withIcon("plus", T.newCase))));
   return { update: () => {}, stop: () => {} };
 }

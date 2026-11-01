@@ -6,14 +6,18 @@ import { submitB } from "./api.js";
 import { T, topicLine } from "./copy.js";
 import { clock, invite, nudge } from "./flow.js";
 import { flyImg } from "./fly.js";
+import { icon, withIcon } from "./icons.js";
 import { argumentField, feedback, form } from "./input.js";
 
 const abs = (path) => `${location.origin}${path}`;
 
+const countdown = (left) => el("p", { class: "countdown" }, icon("clock"), left);
+
 export function waitAScreen(root, view) {
-  const left = el("p", { class: "countdown" });
-  const send = el("a", { class: "button wa send", target: "_blank", rel: "noopener" }, T.sendToB);
-  const again = el("a", { class: "button secondary nudge", target: "_blank", rel: "noopener" }, T.nudgeB);
+  const left = el("span");
+  const send = el("a", { class: "button wa send", target: "_blank", rel: "noopener" }, withIcon("whatsapp", T.sendToB));
+  const again = el("a", { class: "button secondary nudge", target: "_blank", rel: "noopener" },
+    withIcon("whatsapp", T.nudgeB));
   const update = (v) => {
     left.textContent = T.timeLeft(clock(v.deadline_in_s));
     send.href = invite(v, abs(v.link_b));
@@ -23,7 +27,7 @@ export function waitAScreen(root, view) {
   show(root, el("section", { class: "card waiting" },
     flyImg("seated"),
     topicLine(view) ? el("p", { class: "topic" }, topicLine(view)) : null,
-    el("p", { class: "stage-title" }, T.waitingFor(view.name_b)), left,
+    el("p", { class: "stage-title" }, T.waitingFor(view.name_b)), countdown(left),
     el("div", { class: "actions" }, send, again),
     el("p", { class: "argument" }, `${T.yourArgument}: “${view.text_a}”`),
     el("p", { class: "note" }, T.personal)));
@@ -33,16 +37,16 @@ export function waitAScreen(root, view) {
 
 // onSubmitted(view): B's argument is in; the controller moves on to the story.
 export function writeBScreen(root, view, token, onSubmitted) {
-  const left = el("p", { class: "countdown" });
+  const left = el("span");
   const update = (v) => { left.textContent = T.timeLeft(clock(v.deadline_in_s)); };
   const fields = { text_b: argumentField(T.yourArgument, "text_b") };
   const submit = async (body) => feedback(await submitB(token, body.text_b), onSubmitted);
   show(root, el("section", { class: "card waiting" },
     flyImg("seated"),
     el("p", { class: "stage-title" }, T.summoned(view.name_a)),
-    topicLine(view) ? el("p", { class: "topic" }, topicLine(view)) : null, left,
+    topicLine(view) ? el("p", { class: "topic" }, topicLine(view)) : null, countdown(left),
     el("p", { class: "hint center" }, T.blindHintB(view.name_a))),
-  form(fields, el("button", { type: "submit", class: "primary" }, T.submitB),
+  form(fields, el("button", { type: "submit", class: "primary" }, withIcon("send", T.submitB)),
     () => ({ text_b: fields.text_b.input.value }), submit, T.submitting),
   el("p", { class: "note" }, T.personal));
   update(view);
