@@ -67,6 +67,11 @@ export const T = {
   brainLoading: "פותחים את המוח…",
   how: "איך זה עובד?",
   nightMode: "מצב לילה",
+  loading: "פותחים את התיק…",
+  rail: (a, b) => ["בתור", "כניסה", a, b, "הכרעה"],
+  appealFiled: "הערעור הוגש. השופט חוזר לאולם",
+  openingWhatsApp: "פותחים את וואטסאפ…",
+  reconnected: "החיבור חזר",
 };
 
 const HUNGER = [[0.25, "שבע"], [0.5, "קצת רעב"], [0.8, "רעב"], [Infinity, "מורעב"]];

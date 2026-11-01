@@ -6,7 +6,7 @@ import { getPublic, postReport } from "./api.js";
 import { T, topicLine } from "./copy.js";
 import { flyImg, outcomePose } from "./fly.js";
 import { setLabel, withIcon } from "./icons.js";
-import { noticeScreen } from "./notice.js";
+import { loadingScreen, noticeScreen } from "./notice.js";
 
 // Pure (tested in Node).
 export function publicModel(c) {
@@ -38,6 +38,7 @@ function reportButton(id, root) {
 }
 
 export async function publicPage(root, id) {
+  loadingScreen(root);
   const r = await getPublic(id);
   if (r.status !== 200) return noticeScreen(root, r.status === 0 ? T.noConnection : T.closed, "closed");
   publicCard(root, r.data);

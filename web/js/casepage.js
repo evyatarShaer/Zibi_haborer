@@ -5,18 +5,20 @@
 import { getBrain, getMine, postAppeal, postShared } from "./api.js";
 import { T } from "./copy.js";
 import { screen } from "./flow.js";
-import { noticeScreen } from "./notice.js";
+import { loadingScreen, noticeScreen } from "./notice.js";
 import { publicCard } from "./public.js";
 import { waitAScreen, writeBScreen } from "./pending.js";
 import { recall, remember } from "./session.js";
 import { verdictScreen } from "./verdict.js";
+import { toast } from "./toast.js";
 import { storyScreen } from "./waiting.js";
 
 const STORY_POLL_MS = 700;
 const POLL_MS = 3000;
+const LOST_AFTER = 3; // failed polls in a row before "no connection"
 
 export function casePage(root, side, token) {
-  let view = null, current = null, key = "", stopped = false, timer = null;
+  let view = null, current = null, key = "", stopped = false, timer = null, failed = 0;
   const seenKey = () => `seen:${view.id}`;
   const publicUrl = () => `${location.origin}/c/${view.id}`;
   const brains = {};  // hearing n → its brain summary request (fetched once)
@@ -37,7 +39,7 @@ export function casePage(root, side, token) {
     }
     remember(seenKey(), s.n);
     return verdictScreen(root, view, s.n, { onAppeal, publicUrl: publicUrl(), loadBrain: loadBrain(s.n),
-      onShared: () => postShared(side, token) });
+      onShared: () => { toast(T.openingWhatsApp, "info"); postShared(side, token); } });
   }
 
   function render() {
@@ -57,7 +59,10 @@ export function casePage(root, side, token) {
 
   async function onAppeal() {
     const r = await postAppeal(side, token);
-    if (r.status === 201) return accept(r.data) || null;
+    if (r.status === 201) {
+      toast(T.appealFiled);
+      return accept(r.data) || null;
+    }
     return r.status === 0 ? T.noConnection : r.data.error || T.failed;
   }
 
@@ -69,6 +74,10 @@ export function casePage(root, side, token) {
 
   // A network error keeps the current screen and tries again on the next poll.
   function answer(r) {
+    if (r.status === 0 && ++failed === LOST_AFTER) toast(T.noConnection, "error", 6000);
+    if (r.status === 0) return;
+    if (failed >= LOST_AFTER) toast(T.reconnected);
+    failed = 0;
     if (r.status === 200 && r.data.public_only) {  // B's link after a no-show
       stopped = true;
       if (current) current.stop();
@@ -87,6 +96,7 @@ export function casePage(root, side, token) {
       key.startsWith("story") ? STORY_POLL_MS : POLL_MS);
   }
 
+  loadingScreen(root);
   poll(() => getMine(side, token));
   return () => {
     stopped = true;

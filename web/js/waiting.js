@@ -20,10 +20,16 @@ export function storyScreen(root, view, n, onDone, loadBrain) {
   const line = el("p", { class: "stage-line" });
   const meters = el("div", { class: "live-meters" });
   const judge = flyImg("seated");
+  const rail = el("ol", { class: "rail", "aria-hidden": "true" },
+    T.rail(v.name_a, v.no_show ? T.water : v.name_b).map((t) => el("li", {}, el("span", {}, t))));
+  const RAIL = ["queued", "mood", "tasteA", "tasteB", "deliberate", "reveal"];
+  const mark = (key) => [...rail.children].forEach((li, i) => {
+    const at = RAIL.indexOf(key);
+    li.className = i < at ? "done" : i === at ? "now" : "";
+  });
   ["tasting", "deliberating"].forEach((p) => { new Image().src = `/img/fly/${p}.svg`; });  // no flicker
   show(root, el("section", { class: "card waiting", "aria-live": "polite" },
-    judge, title, line, meters,
-    el("div", { class: "dots", "aria-hidden": "true" }, el("span"), el("span"), el("span")),
+    judge, title, line, meters, rail,
     el("p", { class: "note" }, T.personal)));
 
   async function fetchBrain() {
@@ -56,6 +62,7 @@ export function storyScreen(root, view, n, onDone, loadBrain) {
     const status = wanted && brain === null && !replay ? "running" : h.status;
     const s = step(state, status, Date.now(), ready && !replay);
     setPose(judge, stagePose(s.kind === "stage" ? s.key : s.kind));
+    mark(s.kind === "stage" ? s.key : s.kind);
     if (s.kind === "verdict") {
       clearInterval(ticker);
       return onDone();

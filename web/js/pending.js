@@ -8,6 +8,7 @@ import { clock, invite, nudge } from "./flow.js";
 import { flyImg } from "./fly.js";
 import { icon, withIcon } from "./icons.js";
 import { argumentField, feedback, form } from "./input.js";
+import { toast } from "./toast.js";
 
 const abs = (path) => `${location.origin}${path}`;
 
@@ -18,6 +19,7 @@ export function waitAScreen(root, view) {
   const send = el("a", { class: "button wa send", target: "_blank", rel: "noopener" }, withIcon("whatsapp", T.sendToB));
   const again = el("a", { class: "button secondary nudge", target: "_blank", rel: "noopener" },
     withIcon("whatsapp", T.nudgeB));
+  [send, again].forEach((b) => b.addEventListener("click", () => toast(T.openingWhatsApp, "info")));
   const update = (v) => {
     left.textContent = T.timeLeft(clock(v.deadline_in_s));
     send.href = invite(v, abs(v.link_b));

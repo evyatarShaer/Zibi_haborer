@@ -64,12 +64,3 @@
 .how p { margin: 0; }
 .credits { padding-inline-start: 18px; font-size: var(--fs-xs); text-align: left; overflow-wrap: anywhere; }
 
-.dots { display: flex; justify-content: center; gap: 6px; margin: 14px 0 4px; }
-.dots span {
-  width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-.dots span:nth-child(2) { animation-delay: 0.2s; }
-.dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes pulse { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
-@media (prefers-reduced-motion: reduce) { .dots span { animation: none; } }

@@ -33,8 +33,17 @@ export function meterNode(m, bar = true) {
     el("div", { class: "meter-head" }, el("strong", {}, m.name, m.winner ? icon("gavel", "icon winner-mark") : null),
       bar ? el("span", { class: "share" }, `${T.appetite} ${m.share}%`) : null),
     bar ? el("div", { class: "bar", role: "img", "aria-label": `${T.appetite} ${m.share}%` },
-      el("div", { class: "fill", style: `width: ${m.width}%` })) : null,
+      el("div", { class: "fill", style: `width: ${m.width}%`, "data-width": m.width })) : null,
     m.text ? el("p", { class: "argument" }, `“${m.text}”`) : null);
+}
+
+// The staged reveal: the bars start empty and grow to their width (states.css adds the delay).
+function reveal(root) {
+  const fills = [...root.querySelectorAll(".verdict .fill")];
+  fills.forEach((f) => { f.style.width = "0%"; });
+  requestAnimationFrame(() => requestAnimationFrame(() => fills.forEach((f) => {
+    f.style.width = `${f.dataset.width}%`;
+  })));
 }
 
 // onAppeal() files the appeal and resolves to an error message, or null when filed.
@@ -71,5 +80,6 @@ export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain, o
       brainToggle({ name_a: view.name_a, name_b: v.meters[1].name }, loadBrain),
       el("a", { class: "button secondary", href: "/" }, withIcon("plus", T.newCase))),
     el("p", { class: "note" }, T.personal)));
+  reveal(root);
   return { update: () => {}, stop: () => {} };
 }
