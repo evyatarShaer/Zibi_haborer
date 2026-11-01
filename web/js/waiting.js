@@ -6,6 +6,7 @@
 // two tasting stages. On Froze there are no meters.
 import { el, show } from "./dom.js";
 import { T, moodLine } from "./copy.js";
+import { flyImg, setPose, stagePose } from "./fly.js";
 import { hasMeters, replayFill, revealAt } from "./meters.js";
 import { step } from "./stages.js";
 import { meterNode } from "./verdict.js";
@@ -18,8 +19,10 @@ export function storyScreen(root, view, n, onDone, loadBrain) {
   const title = el("p", { class: "stage-title" });
   const line = el("p", { class: "stage-line" });
   const meters = el("div", { class: "live-meters" });
+  const judge = flyImg("seated");
+  ["tasting", "deliberating"].forEach((p) => { new Image().src = `/img/fly/${p}.svg`; });  // no flicker
   show(root, el("section", { class: "card waiting", "aria-live": "polite" },
-    el("div", { class: "judge buzz", "aria-hidden": "true" }, "🪰"), title, line, meters,
+    judge, title, line, meters,
     el("div", { class: "dots", "aria-hidden": "true" }, el("span"), el("span"), el("span")),
     el("p", { class: "note" }, T.personal)));
 
@@ -52,6 +55,7 @@ export function storyScreen(root, view, n, onDone, loadBrain) {
     // Live, decided but its curves still on the way: keep deliberating a moment.
     const status = wanted && brain === null && !replay ? "running" : h.status;
     const s = step(state, status, Date.now(), ready && !replay);
+    setPose(judge, stagePose(s.kind === "stage" ? s.key : s.kind));
     if (s.kind === "verdict") {
       clearInterval(ticker);
       return onDone();

@@ -4,6 +4,7 @@
 import { el, show } from "./dom.js";
 import { getPublic, postReport } from "./api.js";
 import { T, topicLine } from "./copy.js";
+import { flyImg, outcomePose } from "./fly.js";
 import { noticeScreen } from "./notice.js";
 
 // Pure (tested in Node).
@@ -12,6 +13,7 @@ export function publicModel(c) {
   const h = decided[decided.length - 1];
   return {
     topic: topicLine(c), names: `${c.name_a} נגד ${c.name_b}`,
+    pose: c.status === "error" ? "fainted" : h && c.status !== "hearing" ? outcomePose(h.outcome) : "seated",
     headline: c.status === "error" ? c.error_message
       : h && c.status !== "hearing" ? h.headline : T.notDecided,
     history: c.history,
@@ -44,7 +46,7 @@ export async function publicPage(root, id) {
 export function publicCard(root, card) {
   const id = card.id, m = publicModel(card);
   show(root, el("section", { class: "card verdict public" },
-    el("div", { class: "judge", "aria-hidden": "true" }, "🪰⚖️"),
+    flyImg(m.pose),
     m.topic ? el("p", { class: "topic" }, m.topic) : null,
     el("p", { class: "names" }, m.names),
     el("h2", { class: "headline" }, m.headline),

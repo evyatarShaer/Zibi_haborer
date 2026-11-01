@@ -6,10 +6,11 @@ import urllib.parse
 
 import pytest
 
-from fake import needs_node, node
+from fake import ROOT, needs_node, node
 
 pytestmark = needs_node
 
+POSE = {"win": "gavel", "dithered": "gavel", "plain": "shrug", "froze": "frozen", "lunch": "eating"}
 OUTCOME = {"win": ("win", "A"), "dithered": ("dithered", "B"), "plain": ("tie", None),
            "froze": ("froze", None), "lunch": ("food", None)}
 
@@ -62,6 +63,7 @@ def test_verdict_for_every_outcome(tmp_path, topic):
         assert (v["appeal"], v["history"], v["final"], v["canAppeal"]) == (None, None, False, True)
         assert v["appealLeft"] == "אפשר לערער עוד 2:00 שעות"
         assert v["showMeters"] == (k != "froze")  # SPEC §7: no meters on Froze
+        assert v["pose"] == POSE[k]
         a, b = v["meters"]
         assert (a["name"], a["text"], b["name"], b["text"]) == ("דנה", "טענה א", "יוסי", "טענה ב")
         assert (a["winner"], b["winner"]) == (OUTCOME[k][1] == "A", OUTCOME[k][1] == "B")
@@ -107,9 +109,22 @@ def test_public_card_model(tmp_path):
              pub | {"status": "error", "error_message": "תקלה"}]
     got = run(tmp_path, "V.map(publicModel)", V=cases)
     assert got[0] == {"topic": "התיק: פיצה", "names": "דנה נגד יוסי",
-                      "headline": "headline win B", "history": "line"}
+                      "headline": "headline win B", "history": "line", "pose": "gavel"}
     assert got[1]["headline"] == got[2]["headline"] == "הזבוב עוד לא פסק בתיק הזה"
-    assert got[3]["headline"] == "תקלה"
+    assert got[1]["pose"] == got[2]["pose"] == "seated"
+    assert got[3]["headline"] == "תקלה" and got[3]["pose"] == "fainted"
+
+
+def test_fly_poses_for_stages_and_notices(tmp_path):
+    """Every story stage, outcome and notice has its pose, and every pose its SVG file."""
+    got = node(tmp_path, 'import * as Y from "@/fly.js";',
+               '[["queued", "mood", "tasteA", "tasteB", "deliberate", "reveal"].map(Y.stagePose),'
+               ' ["error", "closed", "taken", "own"].map(Y.noticePose), Y.OUTCOME_POSE]')
+    stages, notices, outcomes = got
+    assert stages == ["seated", "seated", "tasting", "tasting", "deliberating", "deliberating"]
+    assert notices == ["fainted", "asleep", "seated", "seated"]
+    poses = set(stages) | set(notices) | set(outcomes.values())
+    assert poses == {p.stem for p in (ROOT / "web" / "img" / "fly").glob("*.svg")}  # all nine, no spare
 
 
 def test_meters_end_on_the_stored_share(tmp_path):

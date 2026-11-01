@@ -2,10 +2,11 @@
 // A's own device on B's link, a case that ended in error; each with "open a new case".
 import { el, show } from "./dom.js";
 import { T } from "./copy.js";
+import { flyImg, noticePose } from "./fly.js";
 
 export function noticeScreen(root, message, kind) {
   show(root, el("section", { class: `card waiting notice notice-${kind}` },
-    el("div", { class: "judge", "aria-hidden": "true" }, "🪰"),
+    flyImg(noticePose(kind)),
     el("p", { class: "stage-title" }, message),
     el("a", { class: "button primary", href: "/" }, T.newCase)));
   return { update: () => {}, stop: () => {} };

@@ -5,6 +5,7 @@ import { el, show } from "./dom.js";
 import { submitB } from "./api.js";
 import { T, topicLine } from "./copy.js";
 import { clock, invite, nudge } from "./flow.js";
+import { flyImg } from "./fly.js";
 import { argumentField, feedback, form } from "./input.js";
 
 const abs = (path) => `${location.origin}${path}`;
@@ -20,7 +21,7 @@ export function waitAScreen(root, view) {
     again.hidden = !v.nudge;
   };
   show(root, el("section", { class: "card waiting" },
-    el("div", { class: "judge buzz", "aria-hidden": "true" }, "🪰"),
+    flyImg("seated"),
     topicLine(view) ? el("p", { class: "topic" }, topicLine(view)) : null,
     el("p", { class: "stage-title" }, T.waitingFor(view.name_b)), left,
     el("div", { class: "actions" }, send, again),
@@ -37,7 +38,7 @@ export function writeBScreen(root, view, token, onSubmitted) {
   const fields = { text_b: argumentField(T.yourArgument, "text_b") };
   const submit = async (body) => feedback(await submitB(token, body.text_b), onSubmitted);
   show(root, el("section", { class: "card waiting" },
-    el("div", { class: "judge", "aria-hidden": "true" }, "🪰"),
+    flyImg("seated"),
     el("p", { class: "stage-title" }, T.summoned(view.name_a)),
     topicLine(view) ? el("p", { class: "topic" }, topicLine(view)) : null, left,
     el("p", { class: "hint center" }, T.blindHintB(view.name_a))),

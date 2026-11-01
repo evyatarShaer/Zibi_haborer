@@ -1,13 +1,9 @@
 /* Screens: the judge, the waiting story, verdict and meters, /how. */
 .tagline { text-align: center; color: var(--muted); margin: 0 0 12px; }
 
-.judge { font-size: 3.5rem; text-align: center; line-height: 1.2; }
-.buzz { animation: buzz 0.9s ease-in-out infinite; }
-@keyframes buzz {
-  0%, 100% { transform: translate(0, 0) rotate(0); }
-  25% { transform: translate(-6px, -3px) rotate(-8deg); }
-  50% { transform: translate(5px, 2px) rotate(6deg); }
-  75% { transform: translate(-3px, 4px) rotate(-4deg); }
+.judge {
+  display: block; width: 124px; height: 124px; margin: 0 auto 4px;
+  background: radial-gradient(circle at 50% 54%, var(--halo) 0 60%, transparent 61%);
 }
 
 .waiting { text-align: center; }
@@ -31,7 +27,7 @@
 .meter.winner .fill { background: var(--win); }
 .live-meters { margin: 14px 0 0; text-align: start; }
 .live-meters .fill { background: var(--accent); transition: width 0.25s linear; }
-.meter.winner strong::after { content: " ⚖️"; }
+.winner-mark { color: var(--win); }
 .argument { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
 .actions { margin-top: 8px; }
 .history { text-align: center; color: var(--muted); font-size: 0.9rem; margin: 4px 0 0; }
@@ -44,7 +40,7 @@
 .report.sure { color: var(--error); border-color: var(--error); }
 
 @media (prefers-reduced-motion: reduce) {
-  .buzz, .dots span { animation: none; }
+  .dots span { animation: none; }
 }
 
 .how h2 { margin: 0 0 4px; }

@@ -6,6 +6,8 @@ import { brainToggle } from "./brain.js";
 import { el, show } from "./dom.js";
 import { T, topicLine } from "./copy.js";
 import { appealLine, clock, shareVerdict } from "./flow.js";
+import { flyImg, outcomePose } from "./fly.js";
+import { icon } from "./icons.js";
 import { hasMeters, shares } from "./meters.js";
 
 // Pure (tested in Node): what the screen shows for hearing `n` of a personal view.
@@ -16,7 +18,7 @@ export function verdictModel(view, n) {
   const meter = (s, name, text) => ({ name, text, winner: h.winner === s, ...end[s] });
   return {
     appeal: appealLine(view, h), accepted: Boolean(h.accepted), topic: topicLine(view),
-    headline: h.headline, outcome: h.outcome, history: view.history,
+    headline: h.headline, outcome: h.outcome, pose: outcomePose(h.outcome), history: view.history,
     final: !view.can_appeal && view.hearings.length > 1,
     canAppeal: Boolean(view.can_appeal), showMeters: hasMeters(h.outcome),
     appealLeft: view.can_appeal ? T.appealLeft(clock(view.appeal_closes_in_s)) : null,
@@ -28,7 +30,7 @@ export function verdictModel(view, n) {
 // One side: name, appetite bar (when shown) and argument (when there is one).
 export function meterNode(m, bar = true) {
   return el("div", { class: `meter${m.winner ? " winner" : ""}` },
-    el("div", { class: "meter-head" }, el("strong", {}, m.name),
+    el("div", { class: "meter-head" }, el("strong", {}, m.name, m.winner ? icon("gavel", "icon winner-mark") : null),
       bar ? el("span", { class: "share" }, `${T.appetite} ${m.share}%`) : null),
     bar ? el("div", { class: "bar", role: "img", "aria-label": `${T.appetite} ${m.share}%` },
       el("div", { class: "fill", style: `width: ${m.width}%` })) : null,
@@ -55,7 +57,7 @@ export function verdictScreen(root, view, n, { onAppeal, publicUrl, loadBrain, o
   }
   show(root, el("section", { class: `card verdict outcome-${v.outcome}` },
     v.appeal ? el("p", { class: `appeal-result${v.accepted ? " accepted" : ""}` }, v.appeal) : null,
-    el("div", { class: "judge", "aria-hidden": "true" }, "🪰⚖️"),
+    flyImg(v.pose),
     v.topic ? el("p", { class: "topic" }, v.topic) : null,
     el("h2", { class: "headline" }, v.headline),
     v.meters.map((m) => meterNode(m, v.showMeters)),
