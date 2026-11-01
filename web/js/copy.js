@@ -63,6 +63,7 @@ export const T = {
   brainHide: "הסתר את המוח",
   brainLoading: "פותחים את המוח…",
   how: "איך זה עובד?",
+  nightMode: "מצב לילה",
 };
 
 const HUNGER = [[0.25, "שבע"], [0.5, "קצת רעב"], [0.8, "רעב"], [Infinity, "מורעב"]];

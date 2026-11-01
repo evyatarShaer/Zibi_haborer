@@ -1,4 +1,5 @@
 /* Screens: the judge, the waiting story, verdict and meters, /how. */
+.tagline { text-align: center; color: var(--muted); margin: 0 0 12px; }
 
 .judge { font-size: 3.5rem; text-align: center; line-height: 1.2; }
 .buzz { animation: buzz 0.9s ease-in-out infinite; }
@@ -25,7 +26,7 @@
 .verdict .headline { text-align: center; font-size: 1.45rem; font-weight: 800; margin: 6px 0 16px; }
 .meter { margin-bottom: 14px; }
 .meter-head { display: flex; justify-content: space-between; gap: 8px; }
-.bar { height: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
+.bar { height: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
 .fill { height: 100%; background: var(--muted); border-radius: 8px; transition: width 0.8s ease-out; }
 .meter.winner .fill { background: var(--win); }
 .live-meters { margin: 14px 0 0; text-align: start; }
@@ -47,7 +48,7 @@
 }
 
 .how h2 { margin: 0 0 4px; }
-.how h3 { margin: 16px 0 2px; color: var(--brand); font-size: 1.05rem; }
+.how h3 { margin: 16px 0 2px; color: var(--brand-text); font-size: 1.05rem; }
 .how p { margin: 0; }
 .credits { padding-inline-start: 18px; font-size: 0.8rem; text-align: left; overflow-wrap: anywhere; }
-.credits a { color: var(--brand); }
+.credits a { color: var(--brand-text); }

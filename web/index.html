@@ -2,7 +2,16 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<script>
+// Day or night court before the first paint (same rule as js/theme.js).
+(function () {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem("theme")); } catch (e) {}
+  document.documentElement.dataset.theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+})();
+</script>
 <title>הבורר</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +23,10 @@
 </head>
 <body>
 <header class="court">
-  <a href="/" class="brand"><span aria-hidden="true">⚖️</span> הבורר</a>
-  <p>בית המשפט העליון לענייני זבובים</p>
+  <div class="court-bar">
+    <a href="/" class="brand"><span class="brand-name"><b>הבורר</b><small>בית המשפט העליון לענייני זבובים</small></span></a>
+    <nav class="tools"><a class="icon-button how-link" href="/how" aria-label="איך זה עובד?"></a></nav>
+  </div>
 </header>
 <main id="app"></main>
 <footer>140 אלף נוירונים של מוח זבוב אמיתי. בלי AI. · <a href="/how">איך זה עובד?</a></footer>

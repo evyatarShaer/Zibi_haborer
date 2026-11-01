@@ -1,28 +1,39 @@
 /* Design tokens (DECISIONS 2026-10-29, UI refresh). Every colour, radius, shadow and
-   timing the pages use comes from here; the night-court theme redefines the colours. */
+   timing the pages use comes from here. Day court below; night court redefines the colours
+   under [data-theme="dark"], which index.html's head script sets before the first paint (the
+   saved toggle, else the system setting). Text pairs pass WCAG AA in both. */
 :root {
-  --bg: #fbf6ec;
+  color-scheme: light;
+  --bg: #faf6ee;
   --surface: #ffffff;
-  --surface-2: #fbf6ec;
-  --ink: #2b2118;
-  --muted: #7a6a58;
-  --line: #e4d8c3;
-  --brand: #5b3a24;
-  --brand-2: #3e2716;
+  --surface-2: #f4ede1;
+  --ink: #241a12;
+  --muted: #6b5c4e;
+  --line: #e3d8c5;
+  --brand: #4a2e1b;
+  --brand-2: #33200f;
   --brand-ink: #ffffff;
+  --brand-ink-2: #ecdcc2;
+  --brand-text: #6b4428;
+  --primary: #4a2e1b;
+  --primary-ink: #ffffff;
   --accent: #c99a2e;
-  --win: #2f7d4f;
-  --win-bg: #e6f2ea;
+  --win: #2a6e44;
+  --win-bg: #e3f1e8;
   --error: #b3261e;
-  --side-a: #3b6ea8;
-  --side-b: #a8483b;
-  --wa: #1f8f4e;
+  --side-a: #2f62a0;
+  --side-b: #a3432f;
+  --wa: #157a42;
   --wa-ink: #ffffff;
+  --header-bg: rgb(74 46 27 / 0.86);
+  --halo: #efe4d0;
+  --shimmer: rgb(255 255 255 / 0.6);
 
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow-1: 0 2px 8px rgb(62 39 22 / 0.08);
-  --shadow-2: 0 8px 28px rgb(36 26 18 / 0.14);
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow-1: 0 1px 2px rgb(36 26 18 / 0.06), 0 4px 14px rgb(36 26 18 / 0.07);
+  --shadow-2: 0 10px 30px rgb(36 26 18 / 0.18);
+  --ring: 0 0 0 3px rgb(201 154 46 / 0.4);
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   --t-fast: 150ms;
   --t: 250ms;
@@ -32,5 +43,18 @@
   --fs-base: 1rem;
   --fs-lg: 1.2rem;
   --fs-xl: 1.45rem;
-  --fs-hero: clamp(1.6rem, 6vw, 2rem);
+  --fs-hero: clamp(1.55rem, 6.5vw, 2rem);
+}
+
+/* Night court */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15110d; --surface: #201a14; --surface-2: #2b231c; --ink: #f3eadc; --muted: #b9aa98;
+  --line: #3d3229; --brand: #241810; --brand-2: #160e08; --brand-ink: #f6ecd9;
+  --brand-ink-2: #cdbb9f; --brand-text: #e6b84a; --primary: #e6b84a; --primary-ink: #1d140c;
+  --accent: #e6b84a; --win: #6fd29a; --win-bg: #1b3325; --error: #ff9a8f; --side-a: #8bb4e8;
+  --side-b: #ec9585; --wa: #157a42; --wa-ink: #ffffff; --header-bg: rgb(28 19 12 / 0.82);
+  --halo: #2e251d; --shimmer: rgb(255 255 255 / 0.07);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.25);
+  --shadow-2: 0 10px 30px rgb(0 0 0 / 0.55); --ring: 0 0 0 3px rgb(230 184 74 / 0.45);
 }
