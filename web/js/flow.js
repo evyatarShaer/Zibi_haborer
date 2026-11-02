@@ -17,6 +17,10 @@ export function screen(view, seen) {
   return { kind: "verdict", n: h.n };
 }
 
+// When the screen must be rebuilt: a new kind or hearing, or (on the verdict only) the appeal
+// window closing. A story keeps running when the hearing it tells is decided mid-way.
+export const screenKey = (s, view) => (s.kind === "verdict" ? `verdict:${s.n}:${view.can_appeal}` : `${s.kind}:${s.n}`);
+
 // "An appeal is accepted if its winner differs from the previous verdict's" (API field).
 export function appealLine(view, h) {
   if (h.n === 0) return null;

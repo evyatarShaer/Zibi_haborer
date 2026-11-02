@@ -83,6 +83,16 @@ def test_appeal_chain_lines_and_history(tmp_path):
     assert not got[2]["canAppeal"] and got[2]["appealLeft"] is None
 
 
+def test_story_is_not_rebuilt_when_its_hearing_is_decided(tmp_path):
+    """The verdict lands mid-story (can_appeal turns true): the live story carries on to its
+    reveal instead of restarting as a replay; the verdict screen still updates its appeal."""
+    running = view(hearing(0, status="running"), can_appeal=False)
+    decided = view(hearing(0))
+    got = run(tmp_path, "[[V, W].map((v) => F.screenKey({kind: 'story', n: 0}, v)),"
+              " [V, W].map((v) => F.screenKey({kind: 'verdict', n: 0}, v))]", V=running, W=decided)
+    assert got[0][0] == got[0][1] and got[1][0] != got[1][1]
+
+
 def test_links_and_clock(tmp_path):
     v = view(status="waiting", deadline_in_s=3 * 3600 - 61, topic=None)
     got = run(tmp_path, "[F.invite(V, 'https://x/b/T'), F.nudge(V, 'https://x/b/T'),"

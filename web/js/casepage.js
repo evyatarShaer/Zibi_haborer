@@ -4,7 +4,7 @@
 // remembered, so a verdict it has not seen is replayed once.
 import { getBrain, getMine, postAppeal, postShared } from "./api.js";
 import { T } from "./copy.js";
-import { screen } from "./flow.js";
+import { screen, screenKey } from "./flow.js";
 import { loadingScreen, noticeScreen } from "./notice.js";
 import { publicCard } from "./public.js";
 import { waitAScreen, writeBScreen } from "./pending.js";
@@ -44,7 +44,7 @@ export function casePage(root, side, token) {
 
   function render() {
     const s = screen(view, recall(seenKey(), -1));
-    const k = `${s.kind}:${s.n}:${view.can_appeal}`;
+    const k = screenKey(s, view);
     if (k === key) return current.update(view);
     if (current) current.stop();
     key = k;
