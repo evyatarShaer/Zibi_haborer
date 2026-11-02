@@ -130,11 +130,12 @@ def shrug():
 def frozen():
     ice = "".join(f'<path d="M{x} {y} l5 {h} l5 -{h}Z" fill="#cfeaff" stroke="#6fa8d6" stroke-width="1.5"/>'
                   for x, y, h in ((40, 172, 14), (70, 172, 20), (150, 172, 16), (190, 172, 12), (88, 56, 12), (140, 56, 10)))
-    frost = '<rect x="0" y="0" width="240" height="240" fill="#bfe3ff" fill-opacity=".35"/>'
+    frost = ('<filter id="ice"><feColorMatrix type="matrix" values=".55 .15 .15 0 .08 .12 .6 .2 0 .16 '
+             '.15 .25 .7 0 .3 0 0 0 1 0"/></filter>')  # tints only the fly, not the square around it
     flakes = "".join(f'<path d="M{x - 6} {y} h12 M{x} {y - 6} v12 M{x - 4} {y - 4} l8 8 M{x + 4} {y - 4} l-8 8" '
                      f'stroke="#6fa8d6" stroke-width="2" stroke-linecap="round"/>' for x, y in ((24, 40), (214, 30), (206, 140)))
-    return (f'<g id="f">{wings()}{robe()}{head("wide", "wavy")}{bench()}{"".join(REST + FOLDED)}</g>'
-            + frost + ice + flakes), "#f{animation:shiver 3s linear infinite}@keyframes shiver{0%,80%,100%" \
+    return (frost + f'<g id="f" filter="url(#ice)">{wings()}{robe()}{head("wide", "wavy")}{bench()}'
+            f'{"".join(REST + FOLDED)}</g>' + ice + flakes), "#f{animation:shiver 3s linear infinite}@keyframes shiver{0%,80%,100%" \
         "{transform:translateX(0)}82%,86%,90%{transform:translateX(-1.5px)}84%,88%{transform:translateX(1.5px)}}", ""
 
 
