@@ -15,10 +15,12 @@ SITE_TITLE = "הבורר"
 SITE_TEXT = "יש ויכוח? זבוב אמיתי יכריע. 140 אלף נוירונים, בלי AI."
 TEASER_TEXT = "הוגשה נגדך תביעה. יש לך 3 שעות להתגונן."
 NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
+# The judge fly's pose per outcome (same as web/js/fly.js).
+POSE = {"win": "gavel", "dithered": "gavel", "tie": "shrug", "froze": "frozen", "food": "eating"}
 
 
 def site() -> dict:
-    return {"title": SITE_TITLE, "text": SITE_TEXT, "image": "/og/site.png",
+    return {"title": SITE_TITLE, "text": SITE_TEXT, "image": "/og/site.png", "pose": "gavel",
             "lines": [("headline", "שני צדדים, זבוב אחד מכריע"), ("note", "בלי AI. רק מוח של זבוב.")]}
 
 
@@ -29,7 +31,7 @@ def teaser(case: dict) -> dict:
     topic = f"התיק: {case['topic']}" if case["topic"] else None
     title = topic or f"📜 {SUMMONS}"  # Heebo has no emoji: the image drops it
     return {"title": f"{SITE_TITLE} · {title}", "text": TEASER_TEXT,
-            "image": f"/og/t/{case['id']}.png",
+            "image": f"/og/t/{case['id']}.png", "pose": "seated",
             "lines": [("headline", topic or SUMMONS), ("note", TEASER_TEXT)]}
 
 
@@ -41,7 +43,8 @@ def card(case: dict, hearings: list[dict]) -> dict:
     history = verdicts.history_line(hearings) if final else None
     lines = [("topic", topic), ("names", names), ("headline", head),
              ("history", history and history.replace("←", "·"))]  # Heebo has no arrows
-    return {"title": head, "text": " · ".join(t for t in (topic, names, history) if t),
+    pose = "fainted" if case["status"] == "error" else POSE[final["outcome"]] if final else "seated"
+    return {"title": head, "text": " · ".join(t for t in (topic, names, history) if t), "pose": pose,
             "image": f"/og/c/{case['id']}.png?v={len(hearings)}{case['status']}",
             "lines": [(role, text) for role, text in lines if text]}
 

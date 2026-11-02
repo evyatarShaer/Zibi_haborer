@@ -102,6 +102,29 @@ def test_hebrew_is_laid_out_right_to_left(text):
 @needs_raqm
 def test_card_matches_the_golden_image():
     """Checked by eye on 2026-10-27: RTL lines, right-aligned, final letters (Pillow 13.0.0,
-    raqm with FriBiDi 1.0.8 / HarfBuzz 14.5.0, Heebo). Regenerate only on purpose."""
-    got = ogimage.render(CARD)
+    raqm with FriBiDi 1.0.8 / HarfBuzz 14.5.0, Heebo). The gavel fly since 2026-10-29 (UI
+    refresh), checked by eye again. Regenerate only on purpose."""
+    got = ogimage.render(CARD, "gavel")
     assert ImageChops.difference(got, Image.open(GOLDEN).convert("RGB")).getbbox() is None
+
+
+@pytest.mark.parametrize("outcome,pose", [("win", "gavel"), ("dithered", "gavel"), ("tie", "shrug"),
+                                          ("froze", "frozen"), ("food", "eating")])
+def test_preview_fly_pose_follows_the_verdict(client, sim, outcome, pose):
+    from borer_api import og
+    case = open_case(client)
+    assert og.teaser(client.app.state.store.case(case["case_id"]))["pose"] == "seated"
+    sim.outcome = outcome
+    decided(client, case)
+    c, hs = client.app.state.store.snapshot(case["case_id"])
+    assert og.card(c, hs)["pose"] == pose and og.site()["pose"] == "gavel"
+
+
+def test_every_pose_has_its_png_and_shows_in_the_image():
+    from borer_api import og
+    poses = set(og.POSE.values()) | {"seated", "fainted"}
+    assert all((ogimage.FLY / f"{p}.png").exists() for p in poses)
+    fly_box, text_box = (10, 170, 370, 530), (400, 120, 1200, 630)
+    a, b = ogimage.render(CARD, "gavel"), ogimage.render(CARD, "shrug")
+    assert ImageChops.difference(a.crop(fly_box), b.crop(fly_box)).getbbox() is not None
+    assert ImageChops.difference(a.crop(text_box), b.crop(text_box)).getbbox() is None

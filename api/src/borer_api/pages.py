@@ -59,7 +59,7 @@ def c_page(request: Request, cid: str):
 
 
 def _png(meta: dict) -> Response:
-    return Response(ogimage.png(meta["lines"]), media_type="image/png",
+    return Response(ogimage.png(meta["lines"], meta["pose"]), media_type="image/png",
                     headers={"Cache-Control": "public, max-age=300"})
 
 

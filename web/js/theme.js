@@ -20,9 +20,11 @@ export function themeToggle() {
     button.replaceChildren(icon(isDark() ? "sun" : "moon"));
   };
   button.addEventListener("click", () => {
-    remember(KEY, isDark() ? "light" : "dark");
-    apply();
-    draw();
+    const flip = () => { remember(KEY, isDark() ? "light" : "dark"); apply(); draw(); };
+    if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return flip();
+    const t = document.startViewTransition(flip);  // a cross-fade where the browser has it
+    t.ready.catch(() => {});  // skipped (hidden tab, another transition): harmless
+    t.finished.catch(() => {});
   });
   system().addEventListener("change", () => { apply(); draw(); });
   apply();

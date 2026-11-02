@@ -1,6 +1,6 @@
 /* Feedback and motion (DECISIONS 2026-10-29): screens enter, the verdict is revealed in
-   stages, skeletons while loading, toasts. All of it stops under reduced motion. */
-@view-transition { navigation: auto; }
+   stages, skeletons while loading, toasts; the day/night switch is a View Transition
+   (theme.js). All of it stops under reduced motion. */
 #app > * { animation: enter var(--t) var(--ease) both; }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } }
 
@@ -42,7 +42,6 @@
 .toast.in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  @view-transition { navigation: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important; animation-delay: 0s !important;
     animation-iteration-count: 1 !important; transition-duration: 0.01ms !important;

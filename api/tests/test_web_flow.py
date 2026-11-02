@@ -148,3 +148,8 @@ def test_replay_fills_a_then_b(tmp_path):
     stages = [["mood", 0.5], ["tasteA", 0.25], ["tasteB", 0.5], ["deliberate", 1]]
     got = run(tmp_path, "S.map(([k, p]) => M.replayFill(k, p))", S=stages)
     assert got == [None, [0.25, 0], [1, 0.5], [1, 1]]
+
+
+def test_page_and_preview_poses_agree(tmp_path):
+    from borer_api import og
+    assert node(tmp_path, 'import * as Y from "@/fly.js";', "Y.OUTCOME_POSE") == og.POSE

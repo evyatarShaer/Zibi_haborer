@@ -1,8 +1,8 @@
 """Link-preview images (SPEC §9): 1200×630 PNGs drawn with Pillow. Hebrew is laid out right
 to left by libraqm (FriBiDi + HarfBuzz; on a server it needs the libfribidi0 package).
-Font: Heebo (SIL OFL 1.1, assets/fonts). The courtroom look of the pages; the fly is a
-placeholder drawing until the owner's art. Only the lines it is given are drawn, so what
-an image can show is decided in og.py."""
+Font: Heebo (SIL OFL 1.1, assets/fonts). The courtroom look of the pages, with the judge
+fly in a pose (assets/fly/{pose}.png, rendered from web/img/fly by scripts/render_fly.py).
+Only the lines and pose it is given are drawn, so what an image can show is decided in og.py."""
 import functools
 import io
 from pathlib import Path
@@ -10,7 +10,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, features
 
 W, H = 1200, 630
-FONT = Path(__file__).resolve().parents[2] / "assets" / "fonts" / "Heebo[wght].ttf"
+ASSETS = Path(__file__).resolve().parents[2] / "assets"
+FONT, FLY = ASSETS / "fonts" / "Heebo[wght].ttf", ASSETS / "fly"
 PAPER, WOOD, WOOD_DARK, GOLD = (251, 246, 236), (91, 58, 36), (62, 39, 22), (201, 154, 46)
 INK, MUTED = (43, 33, 24), (122, 106, 88)
 MARGIN, TEXT_W = 70, 760
@@ -41,20 +42,14 @@ def wrap(text: str, f: ImageFont.FreeTypeFont, width: int) -> list[str]:
     return lines + [line] if line else lines
 
 
-def fly(d: ImageDraw.ImageDraw, x: int, y: int) -> None:
-    """The placeholder judge: a fly seen from above, with a gold gavel."""
-    for dx in (-62, 62):
-        d.ellipse((x + dx - 58, y - 70, x + dx + 58, y + 10), fill=(214, 228, 236), outline=MUTED, width=3)
-    d.ellipse((x - 46, y - 40, x + 46, y + 120), fill=WOOD_DARK)
-    d.ellipse((x - 40, y - 100, x + 40, y - 30), fill=WOOD)
-    for dx in (-24, 24):
-        d.ellipse((x + dx - 18, y - 96, x + dx + 18, y - 60), fill=(178, 34, 34))
-    d.rectangle((x + 70, y + 110, x + 160, y + 132), fill=GOLD)
-    d.rectangle((x + 106, y + 132, x + 124, y + 190), fill=GOLD)
+@functools.cache
+def fly(pose: str) -> Image.Image:
+    """The judge fly in `pose`, 360 px square, with its transparency."""
+    return Image.open(FLY / f"{pose}.png").convert("RGBA").resize((360, 360), Image.LANCZOS)
 
 
-def render(lines: list[tuple[str, str]]) -> Image.Image:
-    """The card: the header band, the fly, and (role, text) lines right-aligned in RTL."""
+def render(lines: list[tuple[str, str]], pose: str) -> Image.Image:
+    """The card: the header band, the fly in `pose`, and (role, text) lines right-aligned in RTL."""
     im = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(im)
     d.rectangle((0, 0, W, 110), fill=WOOD)
@@ -62,7 +57,7 @@ def render(lines: list[tuple[str, str]]) -> Image.Image:
     d.text((W - MARGIN, 55), "הבורר", font=font(58, "ExtraBold"), fill=(255, 255, 255), anchor="rm", **RTL)
     d.text((MARGIN, 55), "בית המשפט העליון לענייני זבובים", font=font(30, "Regular"),
            fill=(240, 230, 214), anchor="lm", **RTL)
-    fly(d, 210, 330)
+    im.paste(fly(pose), (10, 170), fly(pose))
     y = 170
     for role, text in lines:
         size, weight, colour = STYLE[role]
@@ -75,7 +70,7 @@ def render(lines: list[tuple[str, str]]) -> Image.Image:
     return im
 
 
-def png(lines: list[tuple[str, str]]) -> bytes:
+def png(lines: list[tuple[str, str]], pose: str) -> bytes:
     out = io.BytesIO()
-    render(lines).save(out, "PNG", optimize=True)
+    render(lines, pose).save(out, "PNG", optimize=True)
     return out.getvalue()

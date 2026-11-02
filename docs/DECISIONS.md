@@ -2604,9 +2604,12 @@ Inter has no Hebrew letters.
   plus a WhatsApp glyph. No CDN, no icon font.
 - **States:** a skeleton while a case page loads, a progress rail in
   the waiting story, a staged verdict reveal (headline, then meters,
-  then the winner's mark), toasts for transient events, View
-  Transitions where the browser has them. Everything moves only with
-  CSS and stops under `prefers-reduced-motion`.
+  then the winner's mark), toasts for transient events, and a View
+  Transition (cross-fade) on the day/night switch where the browser has
+  one. Screens fade in with CSS. Cross-page View Transitions were tried
+  and dropped: aborted ones threw script errors, and they broke the
+  replay of a verdict in the page tests. Everything moves only with CSS
+  and stops under `prefers-reduced-motion`.
 - **Judge fly:** an original cartoon fruit fly in a judge's wig and
   robe replaces the 🪰/⚖️ emoji. It has nine poses, one SVG each in
   `web/img/fly/`, so the owner can swap in their own art without code
