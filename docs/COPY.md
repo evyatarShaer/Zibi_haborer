@@ -1,6 +1,6 @@
 # User-facing Hebrew copy
 
-Every Hebrew string a user can see, as of 2026-10-28. Status:
+Every Hebrew string a user can see, as of 2026-11-01. Status:
 **decided** = fixed by SPEC (change it there first, with a DECISIONS
 entry); **placeholder** = written for the build, for the owner to
 replace; **placeholder → owner-approved** = the owner's text (2026-10-28). `{x}` marks a value filled in at run time.
@@ -19,6 +19,7 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `<title>` | browser tab (replaced by the preview tags, see `og.py`) | הבורר | decided (name) |
 | header brand | top of every page | הבורר | decided (name) |
 | header subtitle | under the brand, every page | בית המשפט העליון לענייני זבובים | placeholder; same as `ogimage.py` header |
+| header help link (`aria-label`) | `[?]` icon in the header, read by screen readers | איך זה עובד? | placeholder; same as `T.how` |
 | footer | bottom of every page | 140 אלף נוירונים של מוח זבוב אמיתי. בלי AI. · איך זה עובד? | placeholder; same as `LAB.noAi`, `ogimage.FOOTER` |
 
 ## Page copy — `web/js/copy.js` (`T`)
@@ -26,7 +27,10 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | Key | Where it appears | Current text | Status |
 |---|---|---|---|
 | `T.title` | not shown (kept for the pages) | הבורר | decided (name) |
-| `T.tagline` | open-case screen, above the form | יש ויכוח? תנו לזבוב להכריע. | placeholder → owner-approved |
+| `T.tagline` | open-case screen, hero headline above the form | יש ויכוח? תנו לזבוב להכריע. | placeholder → owner-approved |
+| `T.trust` | open-case screen, chip under the hero headline | מוח זבוב אמיתי · בלי AI | placeholder (UI refresh, 2026-10-29) |
+| `T.sideA` | open-case form, badge on A's card (name + argument) | הצד שלך | placeholder (UI refresh) |
+| `T.sideB` | open-case form, badge on B's card (name) | הצד השני | placeholder (UI refresh) |
 | `T.topic` | open-case form, topic label | על מה הוויכוח? (לא חובה) | placeholder |
 | `T.topicHint` | open-case form, under the topic | הזבוב לא טועם את הנושא, הוא רק יופיע בפסק הדין | placeholder |
 | `T.yourName` | open-case form, A's name label | השם שלך | placeholder |
@@ -39,7 +43,7 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `T.opening` | open-case button while sending | פותחים את התיק… | placeholder |
 | `T.letters` | argument counter | {n}/{min} אותיות בעברית | placeholder |
 | `T.chars` | argument counter | {n}/{max} תווים | placeholder |
-| `T.noConnection` | any screen, network error | אין חיבור לשרת. נסו שוב | placeholder |
+| `T.noConnection` | any form, network error; toast on a case page after 3 failed polls | אין חיבור לשרת. נסו שוב | placeholder |
 | `T.failed` | any form, unexpected error | משהו השתבש. נסו שוב | placeholder |
 | `T.personal` | bottom of every personal-page screen | הקישור הזה אישי. אל תשתפו אותו, שתפו רק את פסק הדין | placeholder |
 | `T.waitingFor` | A's waiting page, title | בית המשפט ממתין לטענה של {name B} | placeholder |
@@ -79,7 +83,13 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `T.brain` | verdict, brain-view button | מה קרה במוח? | placeholder; same as `LAB.title` |
 | `T.brainHide` | brain-view button when open | הסתר את המוח | placeholder |
 | `T.brainLoading` | brain-view button while loading | פותחים את המוח… | placeholder |
-| `T.how` | /how page title | איך זה עובד? | placeholder; same as the footer link |
+| `T.how` | /how page title | איך זה עובד? | placeholder; same as the footer link, the header help link |
+| `T.nightMode` | header day/night toggle (`aria-label`, read by screen readers) | מצב לילה | placeholder (UI refresh) |
+| `T.loading` | skeleton while a case page loads (`aria-label`) | פותחים את התיק… | placeholder (UI refresh) |
+| `T.rail` | story, labels of the progress rail | בתור / כניסה / {name A} / {name B or כוס מים} / הכרעה | placeholder (UI refresh) |
+| `T.appealFiled` | toast after an appeal is filed | הערעור הוגש. השופט חוזר לאולם | placeholder (UI refresh) |
+| `T.openingWhatsApp` | toast on a WhatsApp button tap | פותחים את וואטסאפ… | placeholder (UI refresh) |
+| `T.reconnected` | toast when the connection is back (after "no connection") | החיבור חזר | placeholder (UI refresh) |
 
 ## Mood and topic lines — `web/js/copy.js`
 

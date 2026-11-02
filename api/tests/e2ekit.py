@@ -51,6 +51,17 @@ class Shift:
         return time.time() + self.offset
 
 
+SMALL_TAPS = ("[...document.querySelectorAll('button, a.button, .icon-button, input, textarea')]"
+              ".filter((e) => e.offsetParent && e.getBoundingClientRect().height < 44).map((e) => e.outerHTML.slice(0, 80))")
+
+
+def fits_and_taps(page) -> bool:
+    """No sideways scroll at 360 px and every control at least 44 px tall."""
+    small = page.js(SMALL_TAPS)
+    assert not small, small
+    return page.fits()
+
+
 def link_in(wa_href: str, kind: str) -> str:
     """The /b/ or /c/ link inside a wa.me share text."""
     text = urllib.parse.unquote(wa_href.split("text=")[1])
@@ -62,18 +73,18 @@ def open_case(a, topic: str | None = "פיצה") -> tuple[str, str]:
     a.goto(BASE + "/")
     for name, value in (("topic", topic or ""), ("name_a", "דנה"), ("name_b", "יוסי"), ("text_a", TEXT_A)):
         a.fill(name, value)
-    assert a.fits()
+    assert fits_and_taps(a)
     a.click("form button[type=submit]")
     a.wait("location.pathname.startsWith('/a/')")
     a.wait_text("בית המשפט ממתין לטענה של יוסי")
-    assert a.fits() and a.attr("a.nudge", "href") is None  # no nudge before 1 h
+    assert fits_and_taps(a) and a.attr("a.nudge", "href") is None  # no nudge before 1 h
     return BASE + a.path(), link_in(a.attr("a.send", "href"), "b")
 
 
 def b_writes(b, link_b: str, text: str = TEXT_B) -> None:
     b.goto(link_b)
     b.wait("!!document.querySelector('[name=text_b]')")
-    assert TEXT_A not in b.text() and b.fits()  # blind
+    assert TEXT_A not in b.text() and fits_and_taps(b)  # blind
     b.fill("text_b", text)
     b.click("form button[type=submit]")
 
@@ -83,7 +94,7 @@ def see_story_then(page, headline: str, first: str = ENTERS) -> None:
     page.wait_text(first, 10)
     assert headline not in page.text() and page.fits()
     page.wait_text(headline, 25)
-    assert page.fits()
+    assert fits_and_taps(page)
 
 
 def get(url: str) -> int:
