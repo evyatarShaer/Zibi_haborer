@@ -8,7 +8,7 @@ function make(node, props, children) {
     else if (v === true) node.setAttribute(k, "");
     else if (v !== false && v !== null && v !== undefined) node.setAttribute(k, v);
   }
-  for (const c of children.flat()) {
+  for (const c of children.flat(Infinity)) {
     if (c !== null && c !== undefined && c !== false) {
       node.append(typeof c === "string" || typeof c === "number" ? String(c) : c);
     }

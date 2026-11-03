@@ -116,6 +116,10 @@ def test_how_it_works_page(rig):
     assert p.js("document.querySelectorAll('.credits li').length") == 7
     assert p.js("document.querySelectorAll('.credits a[href^=\"https://doi.org/\"]').length") == 7
     assert "CC BY-NC" in p.text() and p.fits()
+    sections = p.js("import('/js/how.js').then((m) => m.HOW.sections)")
+    shown = p.js("""[...document.querySelectorAll('.how h3')].filter((h) => h.offsetHeight)
+      .map((h) => [h.textContent, h.nextElementSibling.offsetHeight ? h.nextElementSibling.textContent : ''])""")
+    assert len(sections) == 5 and all(s in shown for s in sections), shown
 
 
 def test_no_show_b_link_shows_only_the_public_card(rig):

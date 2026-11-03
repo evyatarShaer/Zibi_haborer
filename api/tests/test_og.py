@@ -128,3 +128,11 @@ def test_every_pose_has_its_png_and_shows_in_the_image():
     a, b = ogimage.render(CARD, "gavel"), ogimage.render(CARD, "shrug")
     assert ImageChops.difference(a.crop(fly_box), b.crop(fly_box)).getbbox() is not None
     assert ImageChops.difference(a.crop(text_box), b.crop(text_box)).getbbox() is None
+
+
+def test_error_card_says_the_judge_fainted():
+    from borer_api import og
+    case = {"id": "x1", "status": "error", "topic": None, "name_a": "דנה", "name_b": "יוסי", "text_b": "t"}
+    meta = og.card(case, [{"status": "failed"}])
+    assert (meta["title"], meta["pose"]) == (verdicts.FAILED, "fainted")
+    assert ("headline", verdicts.FAILED) in meta["lines"]

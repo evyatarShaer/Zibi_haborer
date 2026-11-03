@@ -119,7 +119,8 @@ class Page:
                        f" return e && !e.hidden ? e.getAttribute({json.dumps(name)}) : null; }})()")
 
     def fits(self) -> bool:
-        """No horizontal overflow at this width."""
+        """No horizontal overflow at this width (and no node printed as "[object ...]")."""
+        assert "[object " not in self.text(), self.text()[:300]
         return self.js("document.documentElement.scrollWidth <= window.innerWidth")
 
     def path(self) -> str:

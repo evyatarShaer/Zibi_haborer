@@ -86,7 +86,6 @@ Not listed (not copy): the letter tables in `web/js/letters.js` and
 | `T.how` | /how page title | איך זה עובד? | placeholder; same as the footer link, the header help link |
 | `T.nightMode` | header day/night toggle (`aria-label`, read by screen readers) | מצב לילה | placeholder (UI refresh) |
 | `T.loading` | skeleton while a case page loads (`aria-label`) | פותחים את התיק… | placeholder (UI refresh) |
-| `T.rail` | story, labels of the progress rail | בתור / כניסה / {name A} / {name B or כוס מים} / הכרעה | placeholder (UI refresh) |
 | `T.appealFiled` | toast after an appeal is filed | הערעור הוגש. השופט חוזר לאולם | placeholder (UI refresh) |
 | `T.openingWhatsApp` | toast on a WhatsApp button tap | פותחים את וואטסאפ… | placeholder (UI refresh) |
 | `T.reconnected` | toast when the connection is back (after "no connection") | החיבור חזר | placeholder (UI refresh) |

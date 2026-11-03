@@ -38,6 +38,7 @@ def shot(p: Page, name: str, theme: str) -> None:
     p.js("document.fonts.ready.then(() => true)")
     p.js("window.scrollTo({top: 0, behavior: 'instant'})")  # the sticky header stays on top
     time.sleep(0.5)
+    assert "[object " not in p.text(), (name, p.text()[:300])
     h = p.js("Math.max(document.documentElement.scrollHeight, window.innerHeight)")
     r = p.b.send("Page.captureScreenshot", p.s, format="png", captureBeyondViewport=True,
                  clip={"x": 0, "y": 0, "width": 360, "height": h, "scale": 1})

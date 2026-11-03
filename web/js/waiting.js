@@ -20,9 +20,8 @@ export function storyScreen(root, view, n, onDone, loadBrain) {
   const line = el("p", { class: "stage-line" });
   const meters = el("div", { class: "live-meters" });
   const judge = flyImg("seated");
-  const rail = el("ol", { class: "rail", "aria-hidden": "true" },
-    T.rail(v.name_a, v.no_show ? T.water : v.name_b).map((t) => el("li", {}, el("span", {}, t))));
   const RAIL = ["queued", "mood", "tasteA", "tasteB", "deliberate", "reveal"];
+  const rail = el("ol", { class: "rail", "aria-hidden": "true" }, RAIL.slice(0, -1).map(() => el("li")));
   const mark = (key) => [...rail.children].forEach((li, i) => {
     const at = RAIL.indexOf(key);
     li.className = i < at ? "done" : i === at ? "now" : "";

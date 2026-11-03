@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from apikit import as_b, decided, device, open_case, settled
-from borer_api import court, views
+from borer_api import court, verdicts, views
 from borer_api.app import create_app
 from borer_sim import mood
 from fake import OK, TEXT_B, FakeSim, wait_for
@@ -159,10 +159,10 @@ def test_failed_run_retried_twice_from_the_same_seed(tmp_path, fails, status):
         a = wait_for(c, f"/api/a/{case['a']}", lambda v: v["status"] == status)
         assert len(sim.calls) == court.ATTEMPTS and len(set(sim.calls)) == 1
         if status == "error":
-            assert a["hearings"][0]["status"] == "failed" and a["error_message"] == views.FAILED
+            assert a["hearings"][0]["status"] == "failed" and a["error_message"] == verdicts.FAILED
             assert not a["can_appeal"] and not a["no_show"]
             pub = c.get(f"/api/c/{case['case_id']}").json()
-            assert (pub["status"], pub["error_message"]) == ("error", views.FAILED)
+            assert (pub["status"], pub["error_message"]) == ("error", verdicts.FAILED)
         else:
             assert a["error_message"] is None
 

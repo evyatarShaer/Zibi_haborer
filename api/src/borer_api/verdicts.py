@@ -11,6 +11,7 @@ HEADLINES = {  # SPEC §7 (decided 2026-10-25)
 }
 PREFERRED_WATER = "הזבוב העדיף מים"  # SPEC §8: a no-show that water wins
 NO_SHOW = "הצד השני לא התייצב לדיון"   # SPEC §8: any other no-show verdict
+FAILED = "השופט התעלף באמצע הדיון. אפשר לפתוח תיק חדש"  # the hearing failed (status error)
 STEPS = {None: "פסק דין", True: "ערעור התקבל", False: "ערעור נדחה"}
 
 

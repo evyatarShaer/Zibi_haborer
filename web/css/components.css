@@ -20,17 +20,15 @@
 .waiting .argument { margin-top: 14px; }
 .countdown { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; color: var(--muted); }
 
-/* The story's progress rail: queued, the judge enters, tasting A, tasting B, deliberating. */
+/* The story's progress rail, a bar only (the stage title names each stage): queued, the
+   judge enters, tasting A, tasting B, deliberating. */
 .rail { display: flex; gap: 6px; margin: 16px 0 4px; padding: 0; list-style: none; }
-.rail li { flex: 1; min-width: 0; font-size: var(--fs-xs); color: var(--muted); }
-.rail li::before {
-  content: ""; display: block; height: 5px; margin-bottom: 4px; background: var(--line); border-radius: 999px;
+.rail li {
+  flex: 1; height: 6px; background: var(--line); border-radius: 999px;
   transition: background-color var(--t) var(--ease);
 }
-.rail li span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.rail li.done::before { background: var(--accent); }
-.rail li.now { font-weight: 700; color: var(--ink); }
-.rail li.now::before { background: var(--accent); animation: glow 1.2s ease-in-out infinite; }
+.rail li.done { background: var(--accent); }
+.rail li.now { background: var(--accent); animation: glow 1.2s ease-in-out infinite; }
 @keyframes glow { 50% { opacity: 0.35; } }
 
 .verdict .topic { margin: 4px 0 0; text-align: center; font-weight: 500; color: var(--muted); }

@@ -68,7 +68,6 @@ export const T = {
   how: "איך זה עובד?",
   nightMode: "מצב לילה",
   loading: "פותחים את התיק…",
-  rail: (a, b) => ["בתור", "כניסה", a, b, "הכרעה"],
   appealFiled: "הערעור הוגש. השופט חוזר לאולם",
   openingWhatsApp: "פותחים את וואטסאפ…",
   reconnected: "החיבור חזר",

@@ -15,7 +15,6 @@ NOT_DECIDED = "הזבוב עוד לא פסק בתיק הזה"
 APPEALED = "כבר ערערת בתיק הזה"
 FINAL = "הפסק סופי. אין עוד ערעורים בתיק הזה"
 APPEAL_LATE = "עברו 3 שעות מפסק הדין. הפסק סופי"
-FAILED = "השופט התעלף באמצע הדיון. אפשר לפתוח תיק חדש"
 
 NUDGE_AFTER_S = 3600          # A's "nudge again" button (SPEC §3.2)
 APPEAL_WINDOW_S = 3 * 3600    # appeals within 3 h of the latest verdict (§15.4)
@@ -71,7 +70,7 @@ def hearing_list(case: dict, hearings: list[dict], public: bool = False) -> list
 def _common(case: dict, hearings: list[dict], public: bool) -> dict:
     return {k: case[k] for k in ("id", "status", "topic", "name_a", "name_b")} | {
         "no_show": case["status"] not in ("waiting", "error") and case["text_b"] is None,
-        "error_message": FAILED if case["status"] == "error" else None,
+        "error_message": verdicts.FAILED if case["status"] == "error" else None,
         "hearings": hearing_list(case, hearings, public),
         "history": verdicts.history_line(hearings)}
 

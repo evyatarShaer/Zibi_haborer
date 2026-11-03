@@ -45,6 +45,10 @@ def eye(cx, kind):
     if kind == "closed":
         return base + (f'<path d="M{cx - 17} 80 A17 21 0 0 1 {cx + 17} 80 Z" fill="{AMBER}" stroke="{AMBER_D}" '
                        f'stroke-width="2.5"/>' + line([(cx - 14, 82), (cx, 88), (cx + 14, 82)], AMBER_D, 3))
+    if kind == "happy":  # wide and sparkling: a big shine and a second glint
+        return base + (f'<circle cx="{cx - 5}" cy="72" r="7" fill="#fff" fill-opacity=".95"/>'
+                       f'<circle cx="{cx + 6}" cy="88" r="3.5" fill="#fff" fill-opacity=".9"/>'
+                       f'<circle cx="{cx + 8}" cy="70" r="2" fill="#fff"/>')
     if kind == "x":
         return base + line([(cx - 8, 72), (cx + 8, 88)], "#fff", 3.5) + line([(cx + 8, 72), (cx - 8, 88)], "#fff", 3.5)
     shine = f'<circle cx="{cx - 6}" cy="71" r="4.5" fill="#fff" fill-opacity=".85"/>'
@@ -55,7 +59,7 @@ def eye(cx, kind):
 
 MOUTHS = {"smile": "M110 99 Q120 106 130 99", "flat": "M111 101 L129 101",
           "o": "M116 101 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0", "wavy": "M108 101 l4 -3 l4 3 l4 -3 l4 3 l4 -3 l4 3",
-          "frown": "M110 104 Q120 97 130 104"}
+          "frown": "M110 104 Q120 97 130 104", "open": "M106 96 Q120 118 134 96 Z"}
 
 
 def head(eyes="open", mouth="smile", extra=""):
@@ -140,15 +144,22 @@ def frozen():
 
 
 def eating():
-    napkin = '<path d="M98 108 L142 108 L120 146 Z" fill="#fff" stroke="#a89c86" stroke-width="2"/>'
-    pizza = ('<path d="M136 102 L176 92 L162 132 Z" fill="#f2c14e" stroke="#b5761f" stroke-width="2.5"/>'
-             '<path d="M136 102 L176 92" stroke="#c98a3a" stroke-width="6" stroke-linecap="round"/>'
-             '<circle cx="158" cy="104" r="4" fill="#c62828"/><circle cx="160" cy="118" r="3.5" fill="#c62828"/>')
-    return (wings() + robe() + napkin + head("closed", "smile") + bench() + "".join(REST)
+    """Lunch break: a big slice held up to an open grin, happy eyes. Reads apart from
+    deliberating (flat mouth, rubbing legs) even at header size."""
+    grin = (f'<path d="{MOUTHS["open"]}" fill="#6b1414"/>'
+            '<path d="M113 106 Q120 101 127 106 Q120 112 113 106 Z" fill="#e57373"/>')
+    blush = "".join(f'<ellipse cx="{x}" cy="104" rx="7" ry="4" fill="#e57373" fill-opacity=".55"/>' for x in (92, 148))
+    pizza = ('<path d="M144 110 L200 46 L231 96 Z" fill="#f6cf5a" stroke="#b5761f" stroke-width="3" stroke-linejoin="round"/>'
+             '<path d="M200 46 L231 96" stroke="#c98a3a" stroke-width="11" stroke-linecap="round"/>'
+             + "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="#c62828" stroke="#7a1616" stroke-width="1.5"/>'
+                       for x, y, r in ((197, 73, 7), (210, 90, 6), (177, 92, 5.5)))
+             + '<path d="M164 99 q2 9 -2 12" stroke="#f6cf5a" stroke-width="4" stroke-linecap="round" fill="none"/>')
+    napkin = '<path d="M98 112 L142 112 L120 148 Z" fill="#fff" stroke="#a89c86" stroke-width="2"/>'
+    return (wings() + robe() + napkin + head("happy", "open", blush + grin) + bench() + "".join(REST)
             + leg([(84, 128), (92, 156), (114, 164)])
-            + f'<g id="z">{pizza}{leg([(156, 128), (170, 120), (160, 110)])}</g>'), \
+            + f'<g id="z">{leg([(156, 128), (196, 118), (206, 96)])}{pizza}</g>'), \
         "#z{animation:chew 1.2s ease-in-out infinite}@keyframes chew{0%,100%{transform:translate(0,0)}" \
-        "50%{transform:translate(-4px,-2px)}}", ""
+        "50%{transform:translate(-5px,3px)}}", ""
 
 
 def fainted():
